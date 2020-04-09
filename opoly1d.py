@@ -9,6 +9,135 @@ Contains classes/methods for general univariate orthogonal polynomial families.
 import numpy as np
 from scipy import special as sp
 
+def eval_driver(x, n, d, ab):
+    # Evaluates univariate orthonormal polynomials given their
+    # three-term recurrence coefficients ab (a, b).
+    #
+    # Evaluates the d'th derivative. (Default = 0)
+    #
+    # Returns a numel(x) x numel(n) x numel(d) array.
+
+    nmax = np.max(n)
+
+    p = np.zeros( x.shape + (nmax+1,) )
+    xf = x.flatten()
+
+    p[:,0] = 1/ab[0,1]
+
+    if nmax > 0:
+        p[:,1] = 1/ab[1,1] * ( (xf - ab[1,0])*p[:,0] )
+
+    for j in range(2, nmax+1):
+        p[:,j] = 1/ab[j,1] * ( (xf - ab[j,0])*p[:,j-1] - ab[j-1,1]*p[:,j-2] )
+
+    if type(d) == int:
+        if d == 0:
+            return p[:,n.flatten()]
+        else:
+            d = [d]
+
+    preturn = np.zeros([p.shape[0], n.size, len(d)])
+
+    # Parse the list d to find which indices contain which
+    # derivative orders
+
+    indlocations = [i for i,val in enumerate(d) if val==0]
+    for i in indlocations:
+        preturn[:,:,i] = p[:,n.flatten()]
+
+    for qd in range(1, max(d)+1):
+
+        pd = np.zeros(p.shape)
+
+        for qn in range(qd,nmax+1):
+            if qn == qd:
+                # The following is an over/underflow-resistant way to
+                # compute ( qd! * kappa_{qd} ), where qd is the
+                # derivative order and kappa_{qd} is the leading-order
+                # coefficient of the degree-qd orthogonal polynomial.
+                # The explicit formula for the lading coefficient of the
+                # degree-qd orthonormal polynomial is prod(1/b[j]) for
+                # j=0...qd.
+                pd[:,qn] = np.exp( sp.gammaln(qd+1) - np.sum( np.log( ab[:(qd+1),1] ) ) )
+            else:
+                pd[:,qn] = 1/ab[qn,1] * ( ( xf - ab[qn,0] ) * pd[:,qn-1] - ab[qn-1,1] * pd[:,qn-2] + qd*p[:,qn-1] )
+
+        # Assign pd to proper locations
+        indlocations = [i for i,val in enumerate(d) if val==qd]
+        for i in indlocations:
+            preturn[:,:,i] = pd[:,n.flatten()]
+
+        p = pd
+
+    if len(d) == 1:
+        return preturn.squeeze(axis=2)
+    else:
+        return preturn
+
+def ratio_driver(x, n, d, ab):
+    """
+    Evalutes ratios of orthonormal polynomials. These are given by
+
+      r_n(x) = p_n(x) / p_{n-1}(x),  n >= 1
+
+    The output is a x.size x n.size array.
+    """
+    nmax = np.max(n)
+
+    r = np.zeros( x.shape + (nmax+1,) )
+    xf = x.flatten()
+
+    r[:,0] = 1/ab[0,1]
+    if nmax > 0:
+        r[:,1] = 1/ab[1,1] * ( x - ab[1,0] )
+
+    for j in range(2, nmax+1):
+        r[:,j] = 1/ab[j,1] * ( (xf - ab[j,0]) - ab[j-1,1]/r[:,j-1] )
+
+    r = r[:,n.flatten()]
+
+    if type(d) == int:
+        if d == 0:
+            return r
+        else:
+            raise NotImplementedError()
+    else:
+        raise NotImplementedError()
+
+def s_driver(x, n, ab):
+    """
+    The output is a x.size x (n+1) array.
+    
+    s_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
+    
+    s_0(x) = p_0(x)
+    
+    s_1(x) = 1 / b_1 * (x - a_1)
+    
+    s_2(x) = 1 / (b_2 * sqrt(1+s_1^2)) * ((x - a_2)*s_1 - b_1)
+    
+    Need {a_k, b_k} k up to n
+    """
+    
+    
+    s = np.zeros( x.shape + (n+1,) )
+    
+    s[:,0] = 1 / ab[0,1]
+    
+    if n > 0:
+        s[:,1] = 1 / ab[1,1] * (x - ab[1,0])
+    
+    if n > 1:
+        s[:,2] = 1 / np.sqrt(1 + s[:,1]**2) * ((x - ab[2,0]) * s[:,1] - ab[1,1])
+        s[:,2] = s[:,2] / ab[2,1]
+        
+    for j in range(3, n+1):
+        s[:,j] = 1 / np.sqrt(1 + s[:,j-1]**2) * ((x - ab[j,0]) * s[:,j-1] - ab[j-1,1] * s[:,j-2] / np.sqrt(1 + s[:,j-2]**2))
+        s[:,j] = s[:,j] / ab[j,1]
+        
+    return s
+
+
 def jacobi_matrix_driver(ab, N):
     """
     Returns the N x N jacobi matrix associated to the input recurrence
@@ -227,60 +356,7 @@ class OrthogonalPolynomialBasis1D:
         assert np.min(n) > -1
         assert np.all(d >= 0)
 
-        p = np.zeros( x.shape + (nmax+1,) )
-        xf = x.flatten()
-
-        p[:,0] = 1/ab[0,1]
-
-        if nmax > 0:
-            p[:,1] = 1/ab[1,1] * ( (xf - ab[1,0])*p[:,0] )
-
-        for j in range(2, nmax+1):
-            p[:,j] = 1/ab[j,1] * ( (xf - ab[j,0])*p[:,j-1] - ab[j-1,1]*p[:,j-2] )
-
-        if type(d) == int:
-            if d == 0:
-                return p[:,n.flatten()]
-            else:
-                d = [d]
-
-        preturn = np.zeros([p.shape[0], n.size, len(d)])
-
-        # Parse the list d to find which indices contain which
-        # derivative orders
-
-        indlocations = [i for i,val in enumerate(d) if val==0]
-        for i in indlocations:
-            preturn[:,:,i] = p[:,n.flatten()]
-
-        for qd in range(1, max(d)+1):
-
-            pd = np.zeros(p.shape)
-
-            for qn in range(qd,nmax+1):
-                if qn == qd:
-                    # The following is an over/underflow-resistant way to
-                    # compute ( qd! * kappa_{qd} ), where qd is the
-                    # derivative order and kappa_{qd} is the leading-order
-                    # coefficient of the degree-qd orthogonal polynomial.
-                    # The explicit formula for the lading coefficient of the
-                    # degree-qd orthonormal polynomial is prod(1/b[j]) for
-                    # j=0...qd.
-                    pd[:,qn] = np.exp( sp.gammaln(qd+1) - np.sum( np.log( ab[:(qd+1),1] ) ) )
-                else:
-                    pd[:,qn] = 1/ab[qn,1] * ( ( xf - ab[qn,0] ) * pd[:,qn-1] - ab[qn-1,1] * pd[:,qn-2] + qd*p[:,qn-1] )
-
-            # Assign pd to proper locations
-            indlocations = [i for i,val in enumerate(d) if val==qd]
-            for i in indlocations:
-                preturn[:,:,i] = pd[:,n.flatten()]
-
-            p = pd
-
-        if len(d) == 1:
-            return preturn.squeeze(axis=2)
-        else:
-            return preturn
+        return eval_driver(x, n, d, ab)
 
     def jacobi_matrix_driver(ab, N):
         """
@@ -337,12 +413,6 @@ class OrthogonalPolynomialBasis1D:
         """
 
         return gauss_quadrature_driver(self.recurrence(N+1), N)
-
-        #from numpy.linalg import eigh
-
-        #lamb,v = eigh(self.jacobi_matrix(N))
-
-        #return lamb, v[0,:]**2 #* self.recurrence(N)[0,1]**2
 
     def gauss_radau_quadrature(self, N, anchor=0.):
         """
@@ -607,23 +677,34 @@ class OrthogonalPolynomialBasis1D:
         assert np.min(n) > -1
         assert np.all(d >= 0) and np.all(d < 1)
 
-        r = np.zeros( x.shape + (nmax+1,) )
-        xf = x.flatten()
+        return ratio_driver(x, n, d, ab)
 
-        r[:,0] = 1/ab[0,1]
-        if nmax > 0:
-            r[:,1] = 1/ab[1,1] * ( x - ab[1,0] )
+    def s_eval(self, x, n):
+        """
+        The output is a x.size x (n+1) array.
+        
+        s_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
+        
+        s_0(x) = p_0(x)
+        
+        s_1(x) = 1 / b_1 * (x - a_1)
+        
+        s_2(x) = 1 / (b_2 * sqrt(1+s_1^2)) * ((x - a_2)*s_1 - b_1)
+        
+        Need {a_k, b_k} k up to n
+        """
 
-        for j in range(2, nmax+1):
-            r[:,j] = 1/ab[j,1] * ( (xf - ab[j,0]) - ab[j-1,1]/r[:,j-1] )
+        assert n < a.size
+        assert n < b.size
+        
+        if isinstance(x, float) or isinstance(x, int):
+            x = np.asarray([x])
+        else:
+            x = np.asarray(x)
 
-        r = r[:,n.flatten()]
+        ab = self.recurrence(n+1)
 
-        if type(d) == int:
-            if d == 0:
-                return r
-            else:
-                d = [d]
+        return s_driver(x, n, ab)
 
     def qpoly1d_eval(self, x, n, d=0):
         """
@@ -656,8 +737,10 @@ class OrthogonalPolynomialBasis1D:
                 return q
             else:
                 d = [d]
+                raise NotImplementedError()
 
-        assert False
+        raise NotImplementedError()
+
         qreturn = np.zeros([q.shape[0], q.shape[1], len(d)])
         for (qi,qval) in enumerate(d):
             if qval == 0:
