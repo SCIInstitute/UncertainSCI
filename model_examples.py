@@ -34,7 +34,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
 
     where, for a d-dimensional parameter p, a(x,p) has the form
     
-      a(x,p) = pi^2/5 + sum_{j=1}^d p[j] * sin(j*pi*x),
+      a(x,p) = pi^2/5 + sum_{j=1}^d p_j * sin(j*pi*x) / j^2,
 
     which is positive for all x if all values of p lie between [-1,1].
 
