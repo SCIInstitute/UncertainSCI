@@ -8,7 +8,7 @@ from distributions import BetaDistribution
 from model_examples import sine_modulation, laplace_ode
 
 dimension = 2
-order = 10 
+order = 5
 set_type = 'td' # Total degree. Can also be 'hc' (hyperbolic cross)
 
 # Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)

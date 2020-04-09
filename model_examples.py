@@ -53,8 +53,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
     def a_eval(x, p):
         a_eval = np.ones(x.shape)*np.pi**2/5
         for q in range(p.size):
-            a_eval += p[q] * np.sin(q*np.pi*x)
-        #print(a_eval)
+            a_eval += p[q] * np.sin((q+1)*np.pi*x)/(q+1)**2
         return a_eval
 
     def create_system(p):
@@ -62,7 +61,6 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
         A = np.diag(a[1:], k=1) + np.diag(a[1:], k=-1) - (np.diag(np.roll(a, 1) + a))
         A[-1,0] = a[0]
         A[0,-1] = a[0]
-        print(A)
         return A
 
     def solve_system(p):
