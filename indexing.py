@@ -128,6 +128,28 @@ def total_degree_indices_N(d, N):
 
     return total_degree_indices(d, degree_encompassing_N(d,N))[:N,:]
 
+class MultiIndexSet():
+    def __init__(self):
+        pass
+
+class TotalDegreeSet(MultiIndexSet):
+    def __init__(self, dim=1, order=0):
+        assert dim > 0 and order >= 0
+
+        self.dim, self.order = dim,order 
+
+    def indices(self):
+        return total_degree_indices(self.dim,self.order)
+
+class HyperbolicCrossSet(MultiIndexSet):
+    def __init__(self, dim=1, order=0):
+        assert dim > 0 and order >= 0
+
+        self.dim, self.order = dim, order
+
+    def indices(self):
+        return hyperbolic_cross_indices(self.dim,self.order)
+
 if __name__ == "__main__":
 
     from matplotlib import pyplot as plt

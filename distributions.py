@@ -5,7 +5,11 @@ from opolynd import TensorialPolynomials
 from indexing import total_degree_indices, hyperbolic_cross_indices
 from transformations import AffineTransform
 
-class BetaDistribution:
+class ProbabilityDistribution:
+    def __init__(self):
+        pass
+
+class BetaDistribution(ProbabilityDistribution):
     def __init__(self, alpha=1., beta=1., dim=1, domain=None):
 
         assert alpha>0 and beta>0 and dim>0
@@ -25,61 +29,21 @@ class BetaDistribution:
 
         self.indices = None
 
-    def set_indices(self, set_type='td', order=0):
-        """
-        td : Total degree
-        hc : Hyperbolic cross
-        """
+#    def set_indices(self, set_type='td', order=0):
+#        """
+#        td : Total degree
+#        hc : Hyperbolic cross
+#        """
+#
+#        assert order >= 0
+#
+#        if set_type == 'td':
+#            self.indices = total_degree_indices(self.dim, order)
+#        elif set_type == 'hc':
+#            self.indices = hyperbolic_cross_indices(self.dim, order)
+#        else:
+#            raise ValueError('Unrecognized index set type')
 
-        assert order >= 0
-
-        if set_type == 'td':
-            self.indices = total_degree_indices(self.dim, order)
-        elif set_type == 'hc':
-            self.indices = hyperbolic_cross_indices(self.dim, order)
-        else:
-            raise ValueError('Unrecognized index set type')
-
-    def pce_approximation_wafp(self, model, **sampler_options):
-        """
-        Computes PCE coefficients. Uses a WAFP grid to compute a least-squares
-        collocation solution.
-
-        model should have the syntax:
-
-        output = model(input_parmaeter_value),
-
-        where input_parameter_value is a vector of size self.dim containing a
-        parametric sample, and output is a 1D numpy array.
-        """
-
-        if self.indices is None:
-            raise ValueError('First set indices with set_indices')
-
-        # Samples on standard domain
-        p_standard = self.polys.wafp_sampling(self.indices, **sampler_options)
-        # Maps to domain
-        p = self.transform_to_standard.mapinv(p_standard)
-
-        output = None
-
-        for ind in range(p.shape[0]):
-            if output is None:
-                output = model(p[ind,:])
-                M = output.size
-                output = np.concatenate( [ output.reshape([1, M]), np.zeros([p.shape[0]-1, M]) ], axis=0 )
-            else:
-                output[ind,:] = model(p[ind,:])
-
-        V = self.polys.eval(p_standard, self.indices)
-
-        # Precondition for stability
-        norms = 1/np.sqrt(np.sum(V**2, axis=1))
-        V = np.multiply(V.T, norms).T
-        output = np.multiply(output.T, norms).T
-        pce,residuals = np.linalg.lstsq(V, output, rcond=None)[:2]
-
-        return pce, p, np.multiply(output.T, 1/norms).T, residuals
 
 if __name__ == "__main__":
 
