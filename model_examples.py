@@ -1,5 +1,7 @@
 # Contains some rudimentary (physical-space) models for testing PCE
-# approximations
+# approximations. All these functions support the syntax output = f(p), where p
+# is a d-dimensional vector, and output is a vector whose size is the dimension
+# of the model output.
 
 import numpy as np
 
@@ -51,12 +53,13 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
     fx = f(x)
 
     def a_eval(x, p):
-        a_eval = np.ones(x.shape)*np.pi**2/5
+        a_val = np.ones(x.shape)*np.pi**2/5
         for q in range(p.size):
-            a_eval += p[q] * np.sin((q+1)*np.pi*x)/(q+1)**2
-        return a_eval
+            a_val += p[q] * np.sin((q+1)*np.pi*x)/(q+1)**2
+        return a_val
 
     def create_system(p):
+        nonlocal x
         a = a_eval(x, p)
         A = np.diag(a[1:], k=1) + np.diag(a[1:], k=-1) - (np.diag(np.roll(a, 1) + a))
         A[-1,0] = a[0]
@@ -68,11 +71,28 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
 
     return lambda p: solve_system(p)
 
+def genz_oscillatory(w=0., c=None):
+    """
+    Returns a pointer to the "oscillatory" Genz test function defined as
+
+       f(p) = \cos{ 2\pi w + \sum_{i=1}^dim c_i p_i }
+
+    where p \in R^d. The default value for w is 0, and that for c is a
+    d-dimensional vector of ones.
+    """
+
+    def cos_eval(p):
+        nonlocal c
+        if c is None:
+            c = np.ones(p.size)
+        return np.cos(2*np.pi*w + np.dot(c,p))
+
+    return lambda p: cos_eval(p)
 
 if __name__ == "__main__":
 
     import pdb
-    model = laplace_ode(N=10)
+    model = genz_oscillatory(c=4)
 
     p = np.random.random(2)
 

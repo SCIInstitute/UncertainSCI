@@ -9,10 +9,16 @@ class JacobiTestCase(unittest.TestCase):
     Performs basic tests for univariate Jacobi polynomials
     """
 
+    def setUp(self):
+        self.longMessage=True
+
+    #def test_eval(self):
+    #    """
+    #    Evaluation of orthogonal polynomials.
+    #    """
+
     def test_ratio(self):
-        """
-        Evaluation of orthogonal polynomial ratios.
-        """
+        """ Evaluation of orthogonal polynomial ratios.  """
 
         alpha = -1. + 10*np.random.rand(1)[0]
         beta =  -1. + 10*np.random.rand(1)[0]
@@ -30,7 +36,15 @@ class JacobiTestCase(unittest.TestCase):
 
         r = J.r_eval(x, range(N+1))
 
-        self.assertAlmostEqual(np.linalg.norm(r-rdirect,ord=np.inf), 0.)
+        delta = 1e-6
+        errs = np.abs(r-rdirect)
+        i,j = np.where(errs > delta)[:2]
+        if i.size > 0:
+            errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, x={3:1.6f}'.format(alpha, beta, j[0], x[i[0]])
+        else:
+            errstr = ''
+
+        self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta, msg=errstr)
 
     def test_gq(self):
         """Gaussian quadrature integration accuracy"""
