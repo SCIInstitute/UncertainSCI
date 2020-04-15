@@ -3,12 +3,22 @@ import numpy as np
 from families import JacobiPolynomials
 from opolynd import TensorialPolynomials
 from indexing import total_degree_indices, hyperbolic_cross_indices
+from transformations import AffineTransform
 
 class BetaDistribution:
-    def __init__(self, alpha=1., beta=1., dim=1):
+    def __init__(self, alpha=1., beta=1., dim=1, domain=None):
 
         assert alpha>0 and beta>0 and dim>0
         self.alpha, self.beta, self.dim = alpha, beta, dim
+
+        self.standard_domain = np.ones([2, self.dim])
+        self.standard_domain[0,:] = -1.
+
+        if domain is None:
+            self.domain = self.standard_domain.copy()
+            self.domain[0,:] = 0.
+
+        self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
 
         J = JacobiPolynomials(alpha=beta-1., beta = alpha-1.)
         self.polys = TensorialPolynomials(polys1d=J, dim=self.dim)
@@ -46,7 +56,10 @@ class BetaDistribution:
         if self.indices is None:
             raise ValueError('First set indices with set_indices')
 
-        p = self.polys.wafp_sampling(self.indices, **sampler_options)
+        # Samples on standard domain
+        p_standard = self.polys.wafp_sampling(self.indices, **sampler_options)
+        # Maps to domain
+        p = self.transform_to_standard.mapinv(p_standard)
 
         output = None
 
@@ -58,14 +71,15 @@ class BetaDistribution:
             else:
                 output[ind,:] = model(p[ind,:])
 
-        V = self.polys.eval(p, self.indices)
+        V = self.polys.eval(p_standard, self.indices)
 
         # Precondition for stability
         norms = 1/np.sqrt(np.sum(V**2, axis=1))
         V = np.multiply(V.T, norms).T
         output = np.multiply(output.T, norms).T
+        pce,residuals = np.linalg.lstsq(V, output, rcond=None)[:2]
 
-        return np.linalg.lstsq(V, output, rcond=None)[0]
+        return pce, p, np.multiply(output.T, 1/norms).T, residuals
 
 if __name__ == "__main__":
 
