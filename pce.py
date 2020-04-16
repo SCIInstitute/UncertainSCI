@@ -82,3 +82,21 @@ class PolynomialChaosExpansion():
         """
 
         return np.sqrt(np.sum(self.coefficients[1:,:]**2, axis=0))
+
+    def pce_eval(self, p):
+        """
+        Evaluations the PCE at the parameter locations p.
+        """
+
+        p_std = self.distribution.transform_to_standard.map(p)
+        return np.dot( self.distribution.polys.eval( p_std, self.indices.indices() ), self.coefficients)
+
+    def quantile(self, q, M=100):
+        """
+        Computes q-quantiles using M-point Monte Carlo sampling.
+        """
+
+        p = self.distribution.MC_samples(M)
+        ensemble = self.pce_eval(p)
+
+        return np.quantile(ensemble, q, axis=0)

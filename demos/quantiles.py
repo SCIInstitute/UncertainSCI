@@ -1,4 +1,4 @@
-# Demonstrates generation of a PCE for a simple model
+# Demonstrates generation of a PCE for a simple model, and getting quantiles
 
 import pdb
 import numpy as np
@@ -37,13 +37,19 @@ model = sine_modulation(N=N)
 # Compute PCE (runs model)
 lsq_residuals = pce.build_pce_wafp(model)
 
-# Should have methods for these somewhere....
-mean = pce.mean()
-stdev = pce.stdev()
+Q = 6 # Number of quantile bands to plot
+
+dq = 0.5/(Q+1)
+q_lower = np.arange(dq, 0.5-1e-7, dq)[::-1]
+q_upper = np.arange(0.5 + dq, 1.0-1e-7, dq)
+
+# Meh, this triple calling is wasteful
+median = pce.quantile(0.5, M=int(1e3))
+quantiles_lower = pce.quantile(q_lower, M=int(1e3))
+quantiles_upper = pce.quantile(q_upper, M=int(1e3))
 
 ## Visualization
-M = 500 # Generate MC samples
-V = 50  # Number of MC samples to visualize
+M = 50 # Generate MC samples
 p_phys = dist.MC_samples(M)
 
 output = np.zeros([M, N])
@@ -51,16 +57,12 @@ output = np.zeros([M, N])
 for j in range(M):
     output[j,:] = model(p_phys[j,:])
 
-empirical_mean = np.mean(output, axis=0)
-empirical_stdev = np.std(output, axis=0)
+plt.plot(x, output[:M,:].T, 'k', alpha=0.8, linewidth=0.2)
+plt.plot(x, median, 'b', label='PCE median')
 
-plt.plot(x, output[:V,:].T, 'k', alpha=0.8, linewidth=0.2)
-plt.plot(x, mean, 'b', label='PCE mean')
-plt.fill_between(x, mean-stdev, mean+stdev, interpolate=True, facecolor='red', alpha=0.5, label='PCE 1 stdev range')
-
-plt.plot(x, empirical_mean, 'b:', label='MC mean')
-plt.plot(x, empirical_mean+empirical_stdev, 'r:', label='MC mean $\pm$ stdev')
-plt.plot(x, empirical_mean-empirical_stdev, 'r:')
+for ind in range(Q):
+    alpha = (Q-ind) * 1/Q - (1/(2*Q))
+    plt.fill_between(x, quantiles_lower[ind,:], quantiles_upper[ind,:], interpolate=True, facecolor='red', alpha=alpha)
 
 plt.xlabel('x')
 

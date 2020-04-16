@@ -15,9 +15,11 @@ class BetaDistribution(ProbabilityDistribution):
         assert alpha>0 and beta>0 and dim>0
         self.alpha, self.beta, self.dim = alpha, beta, dim
 
+        # Standard domain is [-1,1]^dim
         self.standard_domain = np.ones([2, self.dim])
         self.standard_domain[0,:] = -1.
 
+        # "Physical" domain is whatever user inputs
         if domain is None:
             self.domain = self.standard_domain.copy()
             self.domain[0,:] = 0.
@@ -29,37 +31,29 @@ class BetaDistribution(ProbabilityDistribution):
 
         self.indices = None
 
-#    def set_indices(self, set_type='td', order=0):
-#        """
-#        td : Total degree
-#        hc : Hyperbolic cross
-#        """
-#
-#        assert order >= 0
-#
-#        if set_type == 'td':
-#            self.indices = total_degree_indices(self.dim, order)
-#        elif set_type == 'hc':
-#            self.indices = hyperbolic_cross_indices(self.dim, order)
-#        else:
-#            raise ValueError('Unrecognized index set type')
-
+    def MC_samples(self, M=100):
+        """
+        Returns M Monte Carlo samples from the distribution.
+        """
+        p = 2*np.random.beta(self.alpha, self.beta, [M,self.dim]) - 1.
+        return self.transform_to_standard.mapinv(p)
 
 if __name__ == "__main__":
 
-    import pdb
+    pass
+    #import pdb
 
-    d = 2
-    k = 3
-    set_type = 'td'
+    #d = 2
+    #k = 3
+    #set_type = 'td'
 
-    alpha = 1.
-    beta = 1.
+    #alpha = 1.
+    #beta = 1.
 
-    dist = BetaDistribution(alpha, beta, d)
-    dist.set_indices(set_type, k)
+    #dist = BetaDistribution(alpha, beta, d)
+    #dist.set_indices(set_type, k)
 
-    x = np.linspace(-1, 1, 100)
-    mymodel = lambda p: np.sin((p[0] + p[1]**2) * np.pi * x)
+    #x = np.linspace(-1, 1, 100)
+    #mymodel = lambda p: np.sin((p[0] + p[1]**2) * np.pi * x)
 
-    pce = dist.pce_approximation_wafp(mymodel)
+    #pce = dist.pce_approximation_wafp(mymodel)
