@@ -9,6 +9,7 @@ from model_examples import sine_modulation, laplace_ode, genz_oscillatory
 from indexing import TotalDegreeSet, HyperbolicCrossSet
 from pce import PolynomialChaosExpansion
 
+# Number of parameters
 dimension = 3
 
 # Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
@@ -19,16 +20,16 @@ beta = 1.
 dist = BetaDistribution(alpha, beta, dimension)
 
 # Indices setup
-order = 5
-set_type = 'td' # Total degree. Can also be 'hc' (hyperbolic cross)
-
+order = 5 # polynomial degree
 indices = TotalDegreeSet(dim=dimension, order=order)
+
+print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
 
 # Initializes a pce object
 pce = PolynomialChaosExpansion(indices, dist)
 
 # Define model
-N = 10 # Number of degrees of freedom of model
+N = 10 # Number of degrees of freedom of model output
 left = -1.
 right = 1.
 x = np.linspace(left, right, N)
