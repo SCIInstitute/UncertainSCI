@@ -31,6 +31,7 @@ class TensorialPolynomials:
         if polys1d is None:
             raise TypeError('A one-dimemsional polynomial family is required.')
 
+        # Isotropic tensorization of 1D family
         elif isinstance(polys1d, OrthogonalPolynomialBasis1D):
             self.polys1d = polys1d
             self.isotropic = True
@@ -39,8 +40,19 @@ class TensorialPolynomials:
             else:
                 self.dim = dim
 
-        else: # For list of 1d families
-            raise NotImplementedError('TODO')
+        # Anistropic tensorization of 1D family
+        elif isinstance(polys1d, list) or isinstance(polys1d, tuple):
+            if dim is not None:
+                raise ValueError('If polys1d is a list/tuple, the scalar dim cannot be set.')
+            for item in polys1d:
+                if not isinstance(item, OrthogonalPolynomialBasis1D):
+                    raise ValueError('Elements of polys1d must be OrthogonalPolynomialBasis1D objects')
+            self.polys1d = list(polys1d)
+            self.isotropic = False
+            self.dim = len(self.polys1d)
+
+        else: 
+            raise TypeError('Unrecognized type for input polys1d')
 
     def eval(self, x, lambdas):
         """
@@ -64,7 +76,8 @@ class TensorialPolynomials:
             for qd in range(self.dim):
                 p = p * self.polys1d.eval(x[:,qd], lambdas[:,qd])
         else:
-            raise NotImplementedError('TODO')
+            for qd in range(self.dim):
+                p = p * self.polys1d[qd].eval(x[:,qd], lambdas[:,qd])
     
         return p
 
@@ -98,12 +111,15 @@ class TensorialPolynomials:
         ks[np.where(ks > K)] = K
         Lambdas = Lambdas[ks-1, :]
 
-        #univ_inv = lambda uu, nn: self.polys1d.idistinv(uu, nn)
-        #from idistinv_jacobi import idistinv_jacobi
-        #from families import idistinv_jacobi_driver as idistinv_jacobi
-        #univ_inv = lambda uu,nn: idistinv_jacobi(uu, nn, self.polys1d.alpha, self.polys1d.beta)
-        univ_inv = lambda uu,nn: self.polys1d.idistinv(uu, nn)
-        return univ_inv(np.random.random([M,d]), Lambdas)
+        if self.isotropic:
+            univ_inv = lambda uu,nn: self.polys1d.idistinv(uu, nn)
+            return univ_inv(np.random.random([M,d]), Lambdas)
+        else:
+            x = np.zeros([M, d])
+            for qd in range(self.dim):
+                univ_inv = lambda uu,nn: self.polys1d[qd].idistinv(uu, nn)
+                x[:,qd] = univ_inv(np.random.random(M), Lambdas[:,qd])
+            return x
 
     def wafp_sampling(self, indices, oversampling=10, sampler='idist', K=None):
         """

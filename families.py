@@ -8,7 +8,7 @@ Contains routines that specialize opoly1d things for classical orthogonal polyno
 import numpy as np
 from scipy import special as sp
 from opoly1d import OrthogonalPolynomialBasis1D
-
+from transformations import AffineTransform
 
 def jacobi_recurrence_values(N, alpha, beta):
     
@@ -80,10 +80,6 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
         
     F = np.zeros(x.size)
     
-    #    mrs_centroid = medapprox_jacobi(alph, bet, n)
-    #    xreflect = np.where(x > mrs_centroid)
-    #    F[xreflect] = 1 - idist_jacobi(-x[xreflect], n, bet, alph, M)
-    
     ab = jacobi_recurrence_values(n,alpha, beta)
     ab[0,1] = 1
     
@@ -104,7 +100,6 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
             F[ind] = 0
             continue
         
-        #ab = JacobiPolynomials(0.,self.beta).recurrence(n+A+M)
         ab = jacobi_recurrence_values(n+A+M, 0, beta)
         a = ab[:,0]; b = ab[:,1]; b[0] = 1.
         
@@ -140,11 +135,15 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
 
 
 class JacobiPolynomials(OrthogonalPolynomialBasis1D):
-    def __init__(self, alpha=0., beta=0.):
+    def __init__(self, alpha=0., beta=0., domain=[-1.,1.]):
         OrthogonalPolynomialBasis1D.__init__(self)
         assert alpha > -1., beta > -1.
         self.alpha, self.beta = alpha, beta
 
+        assert len(domain)==2
+        self.domain = np.array(domain).reshape([2,1])
+        self.standard_domain = np.array([-1,1]).reshape([2,1])
+        self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
 
     def recurrence_driver(self,N):
         # Returns the first N+1 recurrence coefficient pairs for the Jacobi
@@ -178,13 +177,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
 
         F = np.zeros(x.size,)
 
-        #mrs_centroid = self.idist_medapprox(n)
-        
-        #F[np.where(x<=mrs_centroid)] = jacobi_idist_driver(x[np.where(x<=mrs_centroid)],n,self.alpha, self.beta, M)
-        #F[np.where(x>mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x>mrs_centroid)],n,self.beta, self.alpha, M)
-
         if n == 0:
-            #F = 1 - idist_jacobi(-x,n,bet,alph,M)
             F = 1 - jacobi_idist_driver(-x, n, self.beta, self.alpha, M)
         else:
             mrs_centroid = self.idist_medapprox(n)
