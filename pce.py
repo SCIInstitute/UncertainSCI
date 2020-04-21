@@ -6,6 +6,7 @@ from distributions import ProbabilityDistribution
 class PolynomialChaosExpansion():
     def __init__(self, indices=None, distribution=None):
 
+        self.coefficients = None
         self.indices, self.distribution = indices, distribution
 
     def set_indices(self, indices):
@@ -100,3 +101,61 @@ class PolynomialChaosExpansion():
         ensemble = self.pce_eval(p)
 
         return np.quantile(ensemble, q, axis=0)
+
+    def total_sensitivity(self, dim_indices = None):
+        """
+        Computes total sensitivity associated to dimensions dim_indices from
+        PCE coefficients. dim_indices should be a list-type containing
+        dimension indices.
+
+        The output is len(js) x self.coefficients.shape[1]
+        """
+
+        if self.coefficients is None:
+            raise ValueError('First build the PCE with pce.build()')
+
+        if dim_indices is None:
+            dim_indices = range(self.distribution.dim)
+
+        dim_indices = np.asarray(dim_indices,dtype=int)
+
+        indices = self.indices.indices()
+        variance_rows = np.linalg.norm(indices, axis=1) > 0.
+
+        #variances = np.sum(self.coefficients[variance_rows,:]**2, axis=0)
+        variance = self.stdev()**2
+        total_sensitivities = np.zeros([dim_indices.size, self.coefficients.shape[1]])
+
+        for (qj,j) in enumerate(dim_indices):
+            total_sensitivities[qj,:] = np.sum(self.coefficients[indices[:,j]>0,:]**2, axis=0)/variance
+
+        return total_sensitivities
+
+    def global_sensitivity(self, dim_lists=None):
+        """
+        Computes global sensitivity associated to dimensional indices dim_lists
+        from PCE coefficients. 
+
+        dim_lists should be a list of index lists. The global sensitivity for each
+        index list is returned.
+        The output is len(dim_lists) x self.coefficients.shape[1]
+        """
+
+        #unique_rows = np.vstack({tuple(row) for row in lambdas})
+        ## Just making sure
+        #assert unique_rows.shape[0] == lambdas.shape[0]
+
+        indices = self.indices.indices()
+        variance_rows = np.linalg.norm(indices, axis=1) > 0.
+        #assert np.sum(np.invert(variance_rows)) == 1
+
+        variance = self.stdev()**2
+        global_sensitivities = np.zeros([len(dim_lists), self.coefficients.shape[1]])
+        dim = self.distribution.dim
+        for (qj,j) in enumerate(dim_lists):
+            jc = np.setdiff1d(range(dim), j)
+            inds = np.logical_and( np.all(indices[:,j] > 0, axis=1), \
+                                   np.all(indices[:,jc]==0, axis=1) )
+            global_sensitivities[qj,:] = np.sum(self.coefficients[inds,:]**2, axis=0)/variance
+
+        return global_sensitivities

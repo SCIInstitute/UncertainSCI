@@ -38,9 +38,13 @@ model = sine_modulation(N=N)
 # Compute PCE (runs model)
 lsq_residuals = pce.build_pce_wafp(model)
 
-# Should have methods for these somewhere....
+
 mean = pce.mean()
 stdev = pce.stdev()
+total_sensitivity = pce.total_sensitivity()
+if dimension == 3: # Hard coded for now
+    interactions = [ [0,], [1,], [2,], [0, 1], [1, 2], [0, 2], [0, 1, 2] ]
+    global_sensitivity = pce.global_sensitivity(interactions)
 
 ## Visualization
 M = 500 # Generate MC samples
