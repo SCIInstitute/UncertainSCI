@@ -43,8 +43,10 @@ class PolynomialChaosExpansion():
 
         # Samples on standard domain
         p_standard = self.distribution.polys.wafp_sampling(self.indices.indices(), **sampler_options)
+
         # Maps to domain
-        p = self.distribution.transform_to_standard.mapinv(p_standard)
+        p = self.distribution.transform_to_standard.mapinv( \
+                self.distribution.transform_standard_dist_to_poly.mapinv(p_standard) )
 
         output = None
 
@@ -89,7 +91,9 @@ class PolynomialChaosExpansion():
         Evaluations the PCE at the parameter locations p.
         """
 
-        p_std = self.distribution.transform_to_standard.map(p)
+        p_std = self.distribution.transform_to_standard.map( \
+                    self.distribution.transform_standard_dist_to_poly.map(p) )
+
         return np.dot( self.distribution.polys.eval( p_std, self.indices.indices() ), self.coefficients)
 
     def quantile(self, q, M=100):

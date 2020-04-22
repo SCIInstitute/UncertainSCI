@@ -17,7 +17,7 @@ alpha = 1.
 beta = 1.
 
 # Distribution setup
-dist = BetaDistribution(alpha, beta, dimension)
+dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
 
 # Indices setup
 order = 5 # polynomial degree

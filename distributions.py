@@ -10,9 +10,16 @@ class ProbabilityDistribution:
         pass
 
 class BetaDistribution(ProbabilityDistribution):
-    def __init__(self, alpha=1., beta=1., dim=1, domain=None):
+    def __init__(self, alpha=None, beta=None, mean=None, stdev=None, dim=1, domain=None):
 
-        # Tons of type/value checking
+        # Convert mean/stdev inputs to alpha/beta
+        if mean is not None and stdev is not None:
+            if alpha is not None or beta is not None:
+                raise ValueError('Cannot simultaneously specify alpha/beta parameters and mean/stdev parameters')
+
+            alpha, beta = self._convert_meanstdev_to_alphabeta(alpha, beta)
+
+        # Tons of type/value checking for alpha/beta vs dim
         alphiter = isinstance(alpha, (list, tuple))
         betaiter = isinstance(beta, (list, tuple))
         if alphiter and betaiter:
@@ -46,9 +53,15 @@ class BetaDistribution(ProbabilityDistribution):
 
         self.alpha, self.beta, self.dim = alpha, beta, dim
 
-        # Standard domain is [-1,1]^dim since that's what the internal orthogonal polynomials use
+        # Standard domain is [0,1]^dim
         self.standard_domain = np.ones([2, self.dim])
-        self.standard_domain[0,:] = -1.
+        self.standard_domain[0,:] = 0.
+
+        # Low-level routines use Jacobi Polynomials, which operate on [-1,1]
+        # instead of the standard Beta domain of [0,1]
+        self.jacobi_domain = np.ones([2, self.dim])
+        self.jacobi_domain[0,:] = -1.
+        self.transform_standard_dist_to_poly = AffineTransform(domain=self.standard_domain, image=self.jacobi_domain)
 
         # "Physical" domain is whatever user inputs
         if domain is None:
@@ -66,10 +79,70 @@ class BetaDistribution(ProbabilityDistribution):
         Js = []
         for qd in range(self.dim):
             Js.append(JacobiPolynomials(alpha=beta[qd]-1., beta=alpha[qd]-1.))
-        #J = JacobiPolynomials(alpha=beta-1., beta = alpha-1.)
         self.polys = TensorialPolynomials(polys1d=Js)
 
         self.indices = None
+
+    def _convert_meanstdev_to_alphabeta(self, mean, stdev, dim):
+        """
+        Converts user-given mean and stdev to an iterable alpha, beta.
+        """
+
+        meaniter = isinstance(mean, (list, tuple))
+        stdviter = isinstance(stdev, (list, tuple))
+        alpha = []
+        beta = []
+
+        # If they're both iterables:
+        if meaniter and stdviter:
+
+            # If one has length 1 and the other has length > 1:
+            if (len(mean) == 1) and (len(stdev) > 1):
+                mean = [mean for i in range(len(stdev))]
+            elif (len(stdev) == 1) and (len(mean) > 1):
+                stdev = [stdev for i in range(len(mean))]
+
+            for ind in range(mean.len):
+                alph, bet = beta_meanstdev_to_alphabeta(mean[ind], stdev[ind])
+                alpha.append(alph)
+                beta.append(bet)
+
+        # If mean is an iterable but stdev is not
+        elif meaniter:
+            for ind in range(mean.len):
+                alph, bet = beta_meanstdev_to_alphabeta(mean[ind], stdev)
+                alpha.append(alph)
+                beta.append(bet)
+
+        # If stdev is an iterable but mean is not
+        elif stdviter:
+            for ind in range(mean.len):
+                alph, bet = beta_meanstdev_to_alphabeta(mean, stdev[ind])
+                alpha.append(alph)
+                beta.append(bet)
+
+        # If they're both scalars, let the following alpha/beta checker cf vs dim
+        else:
+            alpha, beta = self.meanstdev_to_alphabeta(mean, stdev)
+
+        return alpha, beta
+
+
+    def meanstdev_to_alphabeta(mu, stdev):
+        """
+        Returns alpha, beta given an input mean (mu) and standard deviation (stdev)
+        for a Beta distribution on the interval [0, 1].
+        """
+
+        if 0. <= mu or mu >= 1.:
+            raise ValueError('Mean of a standard Beta distribution must be between 0 and 1.')
+
+        if stdev < np.sqrt(mu*(1-mu)):
+            raise ValueError('Standard deviation of a Beta random variable must be smaller than the geometric mean of mu and (1-mu)')
+
+        temp = (mu * (1-mu) - stdev**2)/stdev**2
+
+        return mu*temp, (1-mu)*temp
 
     def MC_samples(self, M=100):
         """
@@ -79,8 +152,6 @@ class BetaDistribution(ProbabilityDistribution):
         p = np.zeros([M, self.dim])
         for qd in range(self.dim):
             p[:,qd] = np.random.beta(self.alpha[qd], self.beta[qd], M)
-
-        p = 2*p - 1. # Transform to [-1,1]^dim
 
         return self.transform_to_standard.mapinv(p)
 
