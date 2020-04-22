@@ -49,8 +49,6 @@ def jacobi_recurrence_values(N, alpha, beta):
         
 
     if N > 2:
-#        ab[2,0] /= (2. + alpha + beta) * (4. + alpha + beta)
-
         inds = np.arange(2.,N+1)
         ab[3:,0] /= (2. * inds[:-1] + alpha + beta) * (2 * inds[:-1] + alpha + beta + 2.)
         ab[2:,1] = 4 * inds * (inds + alpha) * (inds + beta) * (inds + alpha + beta)
@@ -122,10 +120,6 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
 
         ab = np.vstack([a,b]).T
 
-        #J = np.diag(b[1:M], k=1) + np.diag(a[1:M+1],k=0) + np.diag(b[1:M], k=-1) 
-        #u,v = np.linalg.eigh(J)
-        #w = v[0,:]**2
-
         u, w = gauss_quadrature_driver(ab, M)
 
         I = np.sum(w * ( 2 - 1/2 * (u+1) * (x[ind]+1) )**Aa)
@@ -148,8 +142,6 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     def recurrence_driver(self,N):
         # Returns the first N+1 recurrence coefficient pairs for the Jacobi
         # polynomial family.
-        
-        alpha, beta = self.alpha, self.beta
         ab = jacobi_recurrence_values(N, self.alpha, self.beta)
         if self.probability_measure and N > 0:
             ab[0,1] = 1.
@@ -162,7 +154,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         distribution.
         """
 
-        assert n > 0
+        #assert n > 0
         return (self.beta**2-self.alpha**2) / (2*n+self.alpha+self.beta)**2
 
     def idist(self, x, n, M=10):
@@ -176,21 +168,29 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             x = np.asarray(x)
 
         F = np.zeros(x.size,)
+        mrs_centroid = self.idist_medapprox(n)
+        F[np.where(x<=mrs_centroid)] = jacobi_idist_driver(x[np.where(x<=mrs_centroid)],n,self.alpha,self.beta,M)
+        F[np.where(x>mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x>mrs_centroid)],n,self.beta,self.alpha,M)
 
-        if n == 0:
-            F = 1 - jacobi_idist_driver(-x, n, self.beta, self.alpha, M)
-        else:
-            mrs_centroid = self.idist_medapprox(n)
-            F[np.where(x<=mrs_centroid)] = jacobi_idist_driver(x[np.where(x<=mrs_centroid)],n,self.alpha,self.beta,M)
-            F[np.where(x>mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x>mrs_centroid)],n,self.beta,self.alpha,M)
+        #if n == 0:
+        #   F = 1 - jacobi_idist_driver(-x, n, self.beta, self.alpha, M)
+        #else:
+        #    mrs_centroid = self.idist_medapprox(n)
+        #    F[np.where(x<=mrs_centroid)] = jacobi_idist_driver(x[np.where(x<=mrs_centroid)],n,self.alpha,self.beta,M)
+        #    F[np.where(x>mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x>mrs_centroid)],n,self.beta,self.alpha,M)
     
         return F
 
     def idistinv(self, u, n):
 
         from opoly1d import idistinv_driver
+
+        if isinstance(u, float) or isinstance(u, int):
+            u = np.asarray([u])
+        else:
+            u = np.asarray(u)
         
-        x = np.zeros(u.shape)
+        x = np.zeros(u.size)
         supp = [-1,1]
         
         if isinstance(n, float) or isinstance(n, int):
