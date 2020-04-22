@@ -9,15 +9,20 @@ from model_examples import sine_modulation, laplace_ode, genz_oscillatory
 from indexing import TotalDegreeSet, HyperbolicCrossSet
 from pce import PolynomialChaosExpansion
 
+## Distribution setup
+
 # Number of parameters
 dimension = 3
 
 # Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
 alpha = 1.
 beta = 1.
-
-# Distribution setup
 dist = BetaDistribution(alpha=alpha, beta=alpha, dim=dimension)
+
+# Or can define distribution through mean + stdev on [0,1]
+mu = [1/2., 1/2., 3/4.]
+stdev = [np.sqrt(1/12.), 1/5., 0.3]
+dist = BetaDistribution(mean=mu, stdev=stdev)
 
 # Indices setup
 order = 5

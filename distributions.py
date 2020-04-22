@@ -146,22 +146,22 @@ class BetaDistribution(ProbabilityDistribution):
             elif (len(stdev) == 1) and (len(mean) > 1):
                 stdev = [stdev for i in range(len(mean))]
 
-            for ind in range(mean.len):
-                alph, bet = beta_meanstdev_to_alphabeta(mean[ind], stdev[ind])
+            for ind in range(len(mean)):
+                alph, bet = self.meanstdev_to_alphabeta(mean[ind], stdev[ind])
                 alpha.append(alph)
                 beta.append(bet)
 
         # If mean is an iterable but stdev is not
         elif meaniter:
-            for ind in range(mean.len):
-                alph, bet = beta_meanstdev_to_alphabeta(mean[ind], stdev)
+            for ind in range(len(mean)):
+                alph, bet = self.meanstdev_to_alphabeta(mean[ind], stdev)
                 alpha.append(alph)
                 beta.append(bet)
 
         # If stdev is an iterable but mean is not
         elif stdviter:
-            for ind in range(mean.len):
-                alph, bet = beta_meanstdev_to_alphabeta(mean, stdev[ind])
+            for ind in range(len(mean)):
+                alph, bet = self.meanstdev_to_alphabeta(mean, stdev[ind])
                 alpha.append(alph)
                 beta.append(bet)
 
@@ -211,16 +211,16 @@ class BetaDistribution(ProbabilityDistribution):
         return alpha, beta
 
 
-    def meanstdev_to_alphabeta(mu, stdev):
+    def meanstdev_to_alphabeta(self, mu, stdev):
         """
         Returns alpha, beta given an input mean (mu) and standard deviation (stdev)
         for a Beta distribution on the interval [0, 1].
         """
 
-        if 0. <= mu or mu >= 1.:
+        if 0. >= mu or mu >= 1.:
             raise ValueError('Mean of a standard Beta distribution must be between 0 and 1.')
 
-        if stdev < np.sqrt(mu*(1-mu)):
+        if stdev >= np.sqrt(mu*(1-mu)):
             raise ValueError('Standard deviation of a Beta random variable must be smaller than the geometric mean of mu and (1-mu)')
 
         temp = (mu * (1-mu) - stdev**2)/stdev**2

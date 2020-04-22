@@ -72,11 +72,16 @@ class PolynomialChaosExpansion():
 
         return residuals
 
+    def assert_pce_built(self):
+        if self.coefficients is None:
+            raise ValueError('First build the PCE with pce.build()')
+
     def mean(self):
         """
         Returns PCE mean.
         """
 
+        self.assert_pce_built()
         return self.coefficients[0,:]
 
     def stdev(self):
@@ -84,6 +89,7 @@ class PolynomialChaosExpansion():
         Returns PCE standard deviation
         """
 
+        self.assert_pce_built()
         return np.sqrt(np.sum(self.coefficients[1:,:]**2, axis=0))
 
     def pce_eval(self, p):
@@ -91,6 +97,7 @@ class PolynomialChaosExpansion():
         Evaluations the PCE at the parameter locations p.
         """
 
+        self.assert_pce_built()
         p_std = self.distribution.transform_to_standard.map( \
                     self.distribution.transform_standard_dist_to_poly.map(p) )
 
@@ -115,8 +122,7 @@ class PolynomialChaosExpansion():
         The output is len(js) x self.coefficients.shape[1]
         """
 
-        if self.coefficients is None:
-            raise ValueError('First build the PCE with pce.build()')
+        self.assert_pce_built()
 
         if dim_indices is None:
             dim_indices = range(self.distribution.dim)
