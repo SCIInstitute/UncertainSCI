@@ -153,9 +153,12 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         Computes an approximation to the median of the degree-n induced
         distribution.
         """
-
-        #assert n > 0
-        return (self.beta**2-self.alpha**2) / (2*n+self.alpha+self.beta)**2
+        
+        if n > 0:
+            m = (self.beta**2-self.alpha**2) / (2*n+self.alpha+self.beta)**2
+        else:
+            m = 2/( 1 + (self.alpha+1) / (self.beta+1) ) - 1
+        return m
 
     def idist(self, x, n, M=10):
         """
@@ -171,14 +174,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         mrs_centroid = self.idist_medapprox(n)
         F[np.where(x<=mrs_centroid)] = jacobi_idist_driver(x[np.where(x<=mrs_centroid)],n,self.alpha,self.beta,M)
         F[np.where(x>mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x>mrs_centroid)],n,self.beta,self.alpha,M)
-
-        #if n == 0:
-        #   F = 1 - jacobi_idist_driver(-x, n, self.beta, self.alpha, M)
-        #else:
-        #    mrs_centroid = self.idist_medapprox(n)
-        #    F[np.where(x<=mrs_centroid)] = jacobi_idist_driver(x[np.where(x<=mrs_centroid)],n,self.alpha,self.beta,M)
-        #    F[np.where(x>mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x>mrs_centroid)],n,self.beta,self.alpha,M)
-    
+        
         return F
 
     def idistinv(self, u, n):
@@ -212,11 +208,9 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             nmax = np.amax(n)
             ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
             
-            #J = JacobiPolynomials(self.alpha, self.beta)
             ab = self.recurrence(2*nmax + M+1); a = ab[:,0]; b = ab[:,1]
             
             for i in range(nmax+1):
-                
                 flags = ind == i+1
                 primitive = lambda xx: self.idist(xx,i,M=M)
                 x[flags] = idistinv_driver(u[flags], i, primitive, a, b, supp)

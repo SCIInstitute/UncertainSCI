@@ -189,8 +189,9 @@ def markov_stiltjies(u, n, a, b, supp):
     
     """
     from quad_mod import quad_mod
-
-
+    
+    assert type(n) == int
+    
     J = np.diag(b[1:n], k=1) + np.diag(a[1:n+1],k=0) + np.diag(b[1:n], k=-1)
     x,v = np.linalg.eigh(J)
     
@@ -218,6 +219,12 @@ def markov_stiltjies(u, n, a, b, supp):
     W[np.where(W > 1)] = 1 # Just in case for machine eps issues
     W[-1] = 1
     
+    
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
+    else:
+        u = np.asarray(u)
+            
     j = np.digitize(u, W, right = False) # bins[i-1] <= x < bins[i], left bin end is open
     jleft = j - 1
     jright = j + 1
@@ -249,26 +256,21 @@ def idistinv_driver(u, n, primitive, a, b, supp):
     """
     from scipy import optimize
     
-    if isinstance(n, float) or isinstance(n, int):
-        n = np.asarray([n])
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
     else:
-        n = np.asarray(n)
+        u = np.asarray(u)
     
-    if n.size == 1:
-        n = int(n)
-        intervals = markov_stiltjies(u, n, a, b, supp)
-        
+    if isinstance(n, int):
+        intervals = markov_stiltjies(u, n, a, b, supp)    
     else:
-        """
-        maybe need n.size = u.size
-        """
         intervals = np.zeros((n.size, 2))
         nmax = max(n)
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
         for i in range(nmax+1):
             flags = ind == i+1
             intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
-    
+        
     x = np.zeros(u.size,)
     for j in range(u.size):
         fun = lambda xx: primitive(xx) - u[j]
