@@ -1,3 +1,5 @@
+from packaging import version 
+
 import numpy as np
 
 from indexing import MultiIndexSet
@@ -64,7 +66,11 @@ class PolynomialChaosExpansion():
         norms = 1/np.sqrt(np.sum(V**2, axis=1))
         V = np.multiply(V.T, norms).T
         output = np.multiply(output.T, norms).T
-        coeffs,residuals = np.linalg.lstsq(V, output, rcond=None)[:2]
+
+        if version.parse(np.__version__) < version.parse('1.14.0'):
+            coeffs,residuals = np.linalg.lstsq(V, output, rcond=-1)[:2]
+        else:
+            coeffs,residuals = np.linalg.lstsq(V, output, rcond=None)[:2]
 
         self.coefficients = coeffs
         self.p = p
