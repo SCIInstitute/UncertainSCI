@@ -190,7 +190,7 @@ def markov_stiltjies(u, n, a, b, supp):
     """
     from quad_mod import quad_mod
     
-    assert type(n) == int
+    assert type(n) is int
     
     J = np.diag(b[1:n], k=1) + np.diag(a[1:n+1],k=0) + np.diag(b[1:n], k=-1)
     x,v = np.linalg.eigh(J)
