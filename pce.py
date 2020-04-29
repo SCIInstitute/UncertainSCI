@@ -23,7 +23,7 @@ class PolynomialChaosExpansion():
         else:
             raise ValueError('Distribution must be a ProbabilityDistribution object')
 
-    def build_pce_wafp(self, model, **sampler_options):
+    def build_pce_wafp(self, model, samples=None, **sampler_options):
         """
         Computes PCE coefficients. Uses a WAFP grid to compute a least-squares
         collocation solution.
@@ -42,11 +42,18 @@ class PolynomialChaosExpansion():
             raise ValueError('First set distribution with set_distribution')
 
         # Samples on standard domain
-        p_standard = self.distribution.polys.wafp_sampling(self.indices.indices(), **sampler_options)
+        if samples is None:
+            p_standard = self.distribution.polys.wafp_sampling(self.indices.indices(), **sampler_options)
 
-        # Maps to domain
-        p = self.distribution.transform_to_standard.mapinv( \
-                self.distribution.transform_standard_dist_to_poly.mapinv(p_standard) )
+            # Maps to domain
+            p = self.distribution.transform_to_standard.mapinv( \
+                    self.distribution.transform_standard_dist_to_poly.mapinv(p_standard) )
+        else:
+            p = samples
+            if p.shape[1] != self.indices.indices().shape[1]:
+                raise ValueError('Input parameter samples p have wrong dimension')
+            p_standard = self.distribution.transform_standard_dist_to_poly.map( \
+                    self.distribution.transform_to_standard.map( p ) )
 
         output = None
 
@@ -71,6 +78,14 @@ class PolynomialChaosExpansion():
         self.output = np.multiply(output.T, 1/norms).T
 
         return residuals
+
+    def build(self, model, **options):
+        """
+        Builds PCE from sampling and approximation settings.
+        """
+
+        # For now, we only have 1 method:
+        return self.build_pce_wafp(model, **options)
 
     def assert_pce_built(self):
         if self.coefficients is None:

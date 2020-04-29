@@ -43,7 +43,18 @@ x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
 ## Compute PCE (runs model)
-lsq_residuals = pce.build_pce_wafp(model)
+lsq_residuals = pce.build(model)
+
+# The parameter samples and model evaluations are accessible:
+parameter_samples = pce.p
+model_evaluations = pce.output
+
+# And a second PCE could be built on the same parameter samples
+pce2 = PolynomialChaosExpansion(indices, dist)
+pce2.build(model, samples=parameter_samples)
+
+# pce and pce2 have the same coefficients:
+#np.linalg.norm( pce.coefficients - pce2.coefficients )
 
 ## Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()

@@ -1,7 +1,8 @@
 import numpy as np
-import scipy as sp
 
 from opoly1d import OrthogonalPolynomialBasis1D
+
+from linalg_utils import greedy_d_optimal
 
 def opolynd_eval(x, lambdas, ab):
     # Evaluates tensorial orthonormal polynomials associated with the
@@ -137,15 +138,17 @@ class TensorialPolynomials:
 
         if sampler == 'idist':
             x = self.idist_mixture_sampling(K, indices)
+        else:
+            raise ValueError('Unrecognized string "{0:s}" for input "sampler"'.format(sampler))
 
         V = self.eval(x, indices)
 
         # Precondition rows to have unit norm
         V = np.multiply(V.T, 1/np.sqrt(np.sum(V**2, axis=1))).T
 
-        _,P = sp.linalg.qr(V.T, pivoting=True, mode='r')
+        P = greedy_d_optimal(V, M)
 
-        return x[P[:M],:]
+        return x[P,:]
 
 if __name__ == "__main__":
 
