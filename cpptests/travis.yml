@@ -1,0 +1,10 @@
+language: cpp
+
+script:
+  - mkdir -p build/run
+  - cd build/run
+  - cmake ../..
+  - make install
+  - cd ../..
+  - ./bin/divider_tests
+  - ./bin/divider 15 7
