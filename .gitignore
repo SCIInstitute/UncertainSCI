@@ -130,3 +130,5 @@ dmypy.json
 
 # Swap files
 .*.sw[o,p]
+
+**/.DS_Store
