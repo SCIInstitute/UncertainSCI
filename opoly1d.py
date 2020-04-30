@@ -831,14 +831,20 @@ class OrthogonalPolynomialBasis1D:
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
-    from families import JacobiPolynomials
+    from families import jacobi_recurrence_values
 
-    J = JacobiPolynomials()
+    # @Dan: you can also implement jacobi_recurrence_values, which doesn't
+    # have any other dependencies in this repo.
+
+    alpha = 0.
+    beta = 0.
     N = 100
     k = 15
 
-    x,w = J.gauss_quadrature(N)
-    V = J.eval(x, range(k))
+    ab = jacobi_recurrence_values(N, alpha, beta)
+
+    x,w = gauss_quadrature_driver(ab, N)
+    V = eval_driver(x, np.arange(k), 0, ab)
 
     plt.plot(x, V[:,:k])
     plt.show()
