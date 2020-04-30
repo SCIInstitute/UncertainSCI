@@ -128,6 +128,54 @@ def total_degree_indices_N(d, N):
 
     return total_degree_indices(d, degree_encompassing_N(d,N))[:N,:]
 
+
+def tensor_product(d,k):
+    # Returns multi-indices associated with d-variate polynomials of
+    # degree less than or equal to k. Each row is a multi-index, ordered
+    # in p degree, where p = Inf
+    
+    from itertools import product
+    
+    I = np.empty(shape=[0, d], dtype = int)
+    
+    for t in ( _ for _ in product(range(k+1), repeat=d) ):
+        I = np.vstack((I, np.asarray(t)))
+    
+    return I
+
+
+
+def multi_indices_degree(d, k, p):
+    # Returns multi-indices associated with d-variate polynomials of
+    # degree less than or equal to k. Each row is a multi-index, ordered
+    # in p degree, p could be any positive number including numpy.inf
+    
+    if p < 1:
+        lambdas = total_degree_indices(d,k)
+        norm = ( np.sum(lambdas**p, axis=1) )**(1/p)
+        norm = np.round(norm, decimals=8)
+        flags = (norm <= k)
+        lambdas = lambdas[flags]
+        
+        return lambdas
+    
+    elif p == np.inf:
+        return tensor_product(d,k)
+    
+    elif p == 1:
+        return total_degree_indices(d,k)
+    
+    else:
+        lambdas = tensor_product(d,k)
+        norm = ( np.sum(lambdas**p, axis=1) )**(1/p)
+        norm = np.round(norm, decimals=8)
+        flags = (norm <= k)
+        lambdas = lambdas[flags]
+        
+        return lambdas
+
+
+
 class MultiIndexSet():
     def __init__(self):
         pass
