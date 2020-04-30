@@ -31,6 +31,7 @@ order = 5
 indices = TotalDegreeSet(dim=dimension, order=order)
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
+# Why +10? That's the default for PolynomialChaosExpansion.build_pce_wafp
 
 ## Initializes a pce object
 pce = PolynomialChaosExpansion(indices, dist)
@@ -63,7 +64,10 @@ stdev = pce.stdev()
 # Power set of [0, 1, ..., dimension-1]
 variable_interactions = list(chain.from_iterable(combinations(range(dimension), r) for r in range(1, dimension+1)))
 
+# "Total sensitivity" is a non-partitive relative sensitivity measure per parameter.
 total_sensitivity = pce.total_sensitivity()
+
+# "Global sensitivity" is a partitive relative sensitivity measure per set of parameters.
 global_sensitivity = pce.global_sensitivity(variable_interactions)
 
 Q = 4 # Number of quantile bands to plot
