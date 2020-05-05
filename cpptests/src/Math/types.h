@@ -9,7 +9,7 @@
 namespace UncertainSCI
 {
   using Vector1D = Eigen::Matrix<double, Eigen::Dynamic, 1>;
-  using IntList = std::vector<int>;
+  using IntList = Eigen::ArrayXd;
   using Matrix2D = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
   using Matrix3D = std::vector<Matrix2D>;
   using XType = std::variant<int, double, Vector1D>;
@@ -18,6 +18,7 @@ namespace UncertainSCI
   {
   public:
     static IntList arange(int k);
+    static IntList arange(int start, int end);
     static Matrix2D ones(int r, int c);
   };
 }

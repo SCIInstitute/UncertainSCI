@@ -1,4 +1,5 @@
 #include "families.h"
+#include <iostream>
 
 using namespace UncertainSCI;
 
@@ -44,15 +45,17 @@ Matrix2D Families::jacobi_recurrence_values(int N, double alpha, double beta)
     ab(2,1) = 4 * inds * (inds + alpha) * (inds + beta) * (inds + alpha + beta);
     ab(2,1) /= std::pow((2. * inds + alpha + beta), 2) * (2. * inds + alpha + beta + 1.) * (2. * inds + alpha + beta - 1);
   }
-#if 0
   if (N > 2)
   {
-    auto inds = np::arange(2., N+1);
-    ab(3:,0) /= (2. * inds[:-1] + alpha + beta) * (2 * inds[:-1] + alpha + beta + 2.);
-    ab(2:,1) = 4 * inds * (inds + alpha) * (inds + beta) * (inds + alpha + beta);
-    ab(2:,1) /= (2. * inds + alpha + beta)**2 * (2. * inds + alpha + beta + 1.) * (2. * inds + alpha + beta - 1);
+    auto inds = np::arange(2, N+1);
+    auto inds_1 = inds.block(0,0,N-2,1);
+    auto rhs1 = (2. * inds_1 + alpha + beta) * (2 * inds_1 + alpha + beta + 2.);
+    ab.block(3,0,N+1-3,1) = ab.block(3,0,N+1-3,1).array().cwiseQuotient(rhs1);
+    ab.block(2,1,N+1-2,1) = 4 * inds * (inds + alpha) * (inds + beta) * (inds + alpha + beta);
+    ab.block(2,1,N+1-2,1) = ab.block(2,1,N+1-2,1).array().cwiseQuotient(
+       (2. * inds + alpha + beta).square() * (2. * inds + alpha + beta + 1.) * (2. * inds + alpha + beta - 1));
   }
-#endif
+
   ab.col(1) = ab.col(1).cwiseSqrt();
 
   return ab;
