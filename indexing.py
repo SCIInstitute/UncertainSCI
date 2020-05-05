@@ -156,14 +156,12 @@ def multi_indices_degree(d, k, p):
         norm = np.round(norm, decimals=8)
         flags = (norm <= k)
         lambdas = lambdas[flags]
-        
-        return lambdas
     
     elif p == np.inf:
-        return tensor_product(d,k)
+        lambdas = tensor_product(d,k)
     
     elif p == 1:
-        return total_degree_indices(d,k)
+        lambdas = total_degree_indices(d,k)
     
     else:
         lambdas = tensor_product(d,k)
@@ -171,9 +169,39 @@ def multi_indices_degree(d, k, p):
         norm = np.round(norm, decimals=8)
         flags = (norm <= k)
         lambdas = lambdas[flags]
+    
+    return lambdas
+
+
+class LpSet():
+    def __init__(self, dim = 1, order = 0, p = 1):
+        assert dim > 0 and order >= 0 and p>= 0
+        self.dim = dim
+        self.order = order
+        self.p = p
+        
+    def indices(self):
+        if self.p < 1:
+            lambdas = total_degree_indices(self.dim, self.order)
+            norm = ( np.sum(lambdas**self.p, axis=1) )**(1/self.p)
+            norm = np.round(norm, decimals=8)
+            flags = (norm <= self.order)
+            lambdas = lambdas[flags]
+            
+        elif self.p == np.inf:
+            lambdas = tensor_product(self.dim,self.order)
+            
+        elif self.p == 1:
+            lambdas = total_degree_indices(self.dim,self.order)
+            
+        else:
+            lambdas = tensor_product(self.dim,self.order)
+            norm = ( np.sum(lambdas**self.p, axis=1) )**(1/self.p)
+            norm = np.round(norm, decimals=8)
+            flags = (norm <= self.order)
+            lambdas = lambdas[flags]
         
         return lambdas
-
 
 
 class MultiIndexSet():
