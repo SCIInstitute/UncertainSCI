@@ -5,7 +5,6 @@
 
 namespace UncertainSCI
 {
-  using namespace TODO_REPLACE_WITH_EIGEN;
 
 class OPoly1D
 {

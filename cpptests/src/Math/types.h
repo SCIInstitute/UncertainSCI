@@ -4,19 +4,21 @@
 #include <variant>
 #include <vector>
 #include <string>
+#include <Eigen/Dense>
 
-namespace TODO_REPLACE_WITH_EIGEN
+namespace UncertainSCI
 {
-  using Vector1D = std::vector<double>;
+  using Vector1D = Eigen::Matrix<double, Eigen::Dynamic, 1>;
   using IntList = std::vector<int>;
-  using Matrix2D = std::vector<std::vector<double>>;
-  using Matrix3D = std::vector<std::vector<std::vector<double>>>;
+  using Matrix2D = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+  using Matrix3D = std::vector<Matrix2D>;
   using XType = std::variant<int, double, Vector1D>;
 
   class np
   {
   public:
     static IntList arange(int k);
+    static Matrix2D ones(int r, int c);
   };
 }
 

@@ -1,8 +1,6 @@
 #include "opoly1d.h"
 
 using namespace UncertainSCI;
-using namespace TODO_REPLACE_WITH_EIGEN;
-
 
 Matrix3D OPoly1D::eval_driver(const XType& x, const IntList& n, int d, const Matrix2D& ab)
 {

@@ -3,8 +3,6 @@
 
 #include "types.h"
 
-using namespace TODO_REPLACE_WITH_EIGEN;
-
 namespace UncertainSCI
 {
   class Families
