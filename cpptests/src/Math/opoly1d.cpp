@@ -1,6 +1,8 @@
+#include <Eigen/Eigenvalues>
 #include "opoly1d.h"
 
 using namespace UncertainSCI;
+using namespace Eigen;
 
 Matrix3D OPoly1D::eval_driver(const XType& x, const IntList& n, int d, const Matrix2D& ab)
 {
@@ -19,12 +21,28 @@ Matrix2D OPoly1D::s_driver(const XType& x, int n, const Matrix2D& ab)
 
 Matrix2D OPoly1D::jacobi_matrix_driver(const Matrix2D& ab, int N)
 {
-  ERROR_NOT_IMPLEMENTED
+  Matrix2D ret(N,N);
+  ret.fill(0);
+  ret.diagonal(-1) = ab.block(1, 1, N-1, 1);
+  ret.diagonal() = ab.block(1, 0, N, 1);
+  ret.diagonal(1) = ret.diagonal(-1);
+  return ret;//np.diag(ab[1:N,1], k=1) + np.diag(ab[1:(N+1),0],k=0) + np.diag(ab[1:N,1], k=-1);
 }
 
-std::tuple<double, Matrix2D> OPoly1D::gauss_quadrature_driver(const Matrix2D& ab, int N)
+std::tuple<Vector1D, Matrix2D> OPoly1D::gauss_quadrature_driver(const Matrix2D& ab, int N)
 {
-  ERROR_NOT_IMPLEMENTED
+  //from numpy.linalg import eigh
+  //print(ab);
+  auto m = jacobi_matrix_driver(ab, N);
+  //print(m);
+
+  EigenSolver<Matrix2D> es;
+  es.compute(m, true);
+
+  auto lamb = es.eigenvalues();
+  //print(lamb);
+  auto v = es.eigenvectors();
+  return {lamb.real(), (std::pow(ab(0,1), 2) * v.col(0).array().square()).matrix().real()};
 }
 
 Matrix2D OPoly1D::markov_stiltjies(const XType& u, int n, const Vector1D& a, const Vector1D& b, const Vector1D& supp)

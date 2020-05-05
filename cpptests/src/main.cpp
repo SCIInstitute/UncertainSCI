@@ -1,16 +1,8 @@
-#include <iostream>
-#include <iomanip>
 #include "opoly1d.h"
 #include "families.h"
 #include "main.h"
 
 using namespace UncertainSCI;
-
-template <typename T>
-void print(const T& t)
-{
-  std::cout << std::setprecision(8) << t << std::endl;
-}
 
 int main(int argc, const char *argv[])
 {
@@ -32,7 +24,7 @@ int main(int argc, const char *argv[])
   {
     auto ab = Families::jacobi_recurrence_values(N, alpha, beta);
 
-    print(ab);
+    //print(ab);
 
     auto [x,w] = OPoly1D::gauss_quadrature_driver(ab, N);
     auto V = OPoly1D::eval_driver(x, np::arange(k), 0, ab);

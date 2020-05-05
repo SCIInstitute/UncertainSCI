@@ -4,6 +4,8 @@
 #include <variant>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <iomanip>
 #include <Eigen/Dense>
 
 namespace UncertainSCI
@@ -29,5 +31,11 @@ namespace UncertainSCI
 }
 
 #define ERROR_NOT_IMPLEMENTED throw __FUNCTION__ + std::string(" in ") + __FILE__ + ":" + std::to_string(__LINE__);
+
+template <typename T>
+void print(const T& t)
+{
+  std::cout << std::setprecision(8) << t << std::endl;
+}
 
 #endif

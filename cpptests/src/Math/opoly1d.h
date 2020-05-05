@@ -13,7 +13,7 @@ public:
   static Matrix2D ratio_driver(const XType& x, int n, int d, const Matrix2D& ab);
   static Matrix2D s_driver(const XType& x, int n, const Matrix2D& ab);
   static Matrix2D jacobi_matrix_driver(const Matrix2D& ab, int N);
-  static std::tuple<double, Matrix2D> gauss_quadrature_driver(const Matrix2D& ab, int N);
+  static std::tuple<Vector1D, Matrix2D> gauss_quadrature_driver(const Matrix2D& ab, int N);
   static Matrix2D markov_stiltjies(const XType& u, int n, const Vector1D& a, const Vector1D& b, const Vector1D& supp);
   static Vector1D idistinv_driver(const XType& u, const XType& n, Function1D primitive,
     const Vector1D& a, const Vector1D& b, const Vector1D& supp);
