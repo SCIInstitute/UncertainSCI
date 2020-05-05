@@ -3,6 +3,7 @@
 
 #include <variant>
 #include <vector>
+#include <string>
 
 namespace TODO_REPLACE_WITH_EIGEN
 {
@@ -23,5 +24,7 @@ namespace UncertainSCI
 {
   using Function1D = std::function<double(double)>;
 }
+
+#define ERROR_NOT_IMPLEMENTED throw __FUNCTION__ + std::string(" in ") + __FILE__ + ":" + std::to_string(__LINE__);
 
 #endif

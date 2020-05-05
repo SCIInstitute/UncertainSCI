@@ -5,5 +5,5 @@ using namespace UncertainSCI;
 
 Matrix2D Families::jacobi_recurrence_values(int N, double alpha, double beta)
 {
-  throw "TODO";
+  ERROR_NOT_IMPLEMENTED
 }
