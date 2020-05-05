@@ -1,5 +1,9 @@
-#include <opoly1d.h>
+#include <iostream>
+#include "opoly1d.h"
+#include "families.h"
 #include "main.h"
+
+using namespace UncertainSCI;
 
 int main(int argc, const char *argv[])
 {
@@ -17,10 +21,10 @@ int main(int argc, const char *argv[])
   auto N = 100;
   auto k = 15;
 
-  auto ab = jacobi_recurrence_values(N, alpha, beta);
+  auto ab = Families::jacobi_recurrence_values(N, alpha, beta);
 
-  auto [x,w] = gauss_quadrature_driver(ab, N);
-  auto V = eval_driver(x, np.arange(k), 0, ab);
+  auto [x,w] = OPoly1D::gauss_quadrature_driver(ab, N);
+  auto V = OPoly1D::eval_driver(x, np::arange(k), 0, ab);
 
   //plt.plot(x, V[:,:k])
   //plt.show()

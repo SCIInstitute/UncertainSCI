@@ -1,27 +1,16 @@
 #ifndef SCI_UNCERTAINSCI_OPOLY1D_H
 #define SCI_UNCERTAINSCI_OPOLY1D_H
 
-#include <variant>
-#include <vector>
-
-namespace TODO_REPLACE_WITH_EIGEN
-{
-  using Vector1D = std::vector<double>;
-  using Matrix2D = std::vector<std::vector<double>>;
-  using Matrix3D = std::vector<std::vector<std::vector<double>>>;
-  using XType = std::variant<int, double, Vector1D>;
-}
+#include "types.h"
 
 namespace UncertainSCI
 {
-
-  using Function1D = std::function<double(double)>;
   using namespace TODO_REPLACE_WITH_EIGEN;
 
 class OPoly1D
 {
 public:
-  static Matrix3D eval_driver(const XType& x, int n, int d, const Matrix2D& ab);
+  static Matrix3D eval_driver(const XType& x, const IntList& n, int d, const Matrix2D& ab);
   static Matrix2D ratio_driver(const XType& x, int n, int d, const Matrix2D& ab);
   static Matrix2D s_driver(const XType& x, int n, const Matrix2D& ab);
   static Matrix2D jacobi_matrix_driver(const Matrix2D& ab, int N);
@@ -58,7 +47,6 @@ private:
   bool probability_measure {true};
   Matrix2D ab;// = np.zeros([0,2]);
 };
-
 
 }
 
