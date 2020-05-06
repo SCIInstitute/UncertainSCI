@@ -6,7 +6,60 @@ using namespace Eigen;
 
 Matrix3D OPoly1D::eval_driver(const XType& x, const IntList& n, int d, const Matrix2D& ab)
 {
-  ERROR_NOT_IMPLEMENTED
+  auto nmax = static_cast<int>(*std::max_element(EIGEN_BEGIN_END(n)));
+
+  auto xf = std::get<Vector1D>(x);
+  auto p = Matrix2D( xf.rows(), nmax+1);
+  p.fill(0);
+
+  p.col(0) = p.col(0).array() + 1/ab(0,1);
+
+  if (nmax > 0)
+    p.col(1) = p.col(1).array() + 1/ab(1,1) * ( (xf.array() - ab(1,0)) * p.col(0).array() );
+
+  for (int j : np::range(2, nmax+1))
+    p.col(j) = 1/ab(j,1) * ( (xf.array() - ab(j,0)) * p.col(j-1).array() - ab(j-1,1)*p.col(j-2).array() );
+
+  std::vector<int> ds;
+  if (true) //type(d) == int)
+  {
+    if (d == 0)
+      return {p};//[:,n.flatten()]
+    else
+      ds = { d };
+  }
+
+#if 0
+  auto preturn = np.zeros([p.shape[0], n.size, len(d)]);
+
+  // # Parse the list d to find which indices contain which
+  // # derivative orders
+
+  for (i in [i for i,val in enumerate(d) if val==0])
+    preturn[:,:,i] = p[:,n.flatten()];
+
+  for qd in range(1, max(d)+1)
+  {
+    auto pd = np.zeros(p.shape)
+
+    for (qn in range(qd,nmax+1))
+    {
+      if (qn == qd)
+        pd[:,qn] = np.exp( sp.gammaln(qd+1) - np.sum( np.log( ab[:(qd+1),1] ) ) );
+      else
+        pd[:,qn] = 1/ab[qn,1] * ( ( xf - ab[qn,0] ) * pd[:,qn-1] - ab[qn-1,1] * pd[:,qn-2] + qd*p[:,qn-1] );
+    }
+
+    for (i in [i for i,val in enumerate(d) if val==qd])
+      preturn[:,:,i] = pd[:,n.flatten()];
+
+    p = pd;
+  }
+  if (len(d) == 1)
+    return preturn.squeeze(axis=2);
+  else
+    return preturn;
+#endif
 }
 
 Matrix2D OPoly1D::ratio_driver(const XType& x, int n, int d, const Matrix2D& ab)
@@ -39,10 +92,11 @@ std::tuple<Vector1D, Matrix2D> OPoly1D::gauss_quadrature_driver(const Matrix2D& 
   EigenSolver<Matrix2D> es;
   es.compute(m, true);
 
-  auto lamb = es.eigenvalues();
+  auto lamb = es.eigenvalues().real().eval();
+  std::sort(EIGEN_BEGIN_END(lamb));
   //print(lamb);
   auto v = es.eigenvectors();
-  return {lamb.real(), (std::pow(ab(0,1), 2) * v.col(0).array().square()).matrix().real()};
+  return {lamb, (std::pow(ab(0,1), 2) * v.col(0).array().square()).matrix().real()};
 }
 
 Matrix2D OPoly1D::markov_stiltjies(const XType& u, int n, const Vector1D& a, const Vector1D& b, const Vector1D& supp)

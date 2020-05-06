@@ -21,9 +21,12 @@ namespace UncertainSCI
   public:
     static IntList arange(int k);
     static IntList arange(int start, int end);
+    static std::vector<int> range(int start, int end);
     static Matrix2D ones(int r, int c);
   };
 }
+
+#define EIGEN_BEGIN_END(v) v.data(), v.data() + v.size()
 
 namespace UncertainSCI
 {

@@ -3,8 +3,6 @@
 
 using namespace UncertainSCI;
 
-#define EIGEN_BEGIN_END(v) v.data(), v.data() + v.size()
-
 IntList np::arange(int k)
 {
   IntList r(k);
@@ -23,5 +21,12 @@ IntList np::arange(int start, int end)
 {
   IntList r(end - start);
   std::iota(EIGEN_BEGIN_END(r), static_cast<double>(start));
+  return r;
+}
+
+std::vector<int> np::range(int start, int end)
+{
+  std::vector<int> r(end - start);
+  std::iota(r.begin(), r.end(), start);
   return r;
 }
