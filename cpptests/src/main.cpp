@@ -28,13 +28,21 @@ int main(int argc, const char *argv[])
     auto [x,w] = OPoly1D::gauss_quadrature_driver(ab, N);
     auto V = OPoly1D::eval_driver(x, np::arange(k), 0, ab);
 
+    if (V.size() < 1)
+    {
+      std::cerr << "Error computing V" << std::endl;
+      return 1;
+    }
+
+    std::cout << "Completed successfully: returned x(" << x.rows() << "x" << x.cols() << ") and V_0("
+      << V[0].rows() << "x" << V[0].cols() << ")." << std::endl;
+
     std::ofstream o("x.txt");
     o << std::setprecision(16) << x;
     std::ofstream v("v.txt");
     v << std::setprecision(16) << V[0];
 
-    std::cout << "Completed successfully: returned x(" << x.rows() << "x" << x.cols() << ") and V("
-      << V.rows() << "x" << V.cols() << ")." << std::endl;
+
 
     //plt.plot(x, V[:,:k])
     //plt.show()
