@@ -13,7 +13,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install libeigen3-dev
     - name: Configure
       working-directory: cpptests/bin
-      run: cmake .. -DEigen_DIR=/usr/include/eigen3/
+      run: cmake .. 
     - name: Build
       working-directory: cpptests/bin
       run: make && make install
