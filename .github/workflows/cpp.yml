@@ -1,0 +1,22 @@
+name: C++ conversion tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Prepare
+      run: sudo apt-get update && sudo apt-get install libeigen3-dev
+    - name: Configure
+      working-directory: cpptests/bin
+      run: cmake .. -DEigen_DIR="/usr/include/eigen3/"
+    - name: Build
+      run: make && make install
+    - name: Basic Test
+      working-directory: cpptests/bin
+      run: |
+        ./cppUncertainSCIMathDriver
