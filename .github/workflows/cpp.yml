@@ -15,6 +15,7 @@ jobs:
       working-directory: cpptests/bin
       run: cmake .. -DEigen_DIR="/usr/include/eigen3/"
     - name: Build
+      working-directory: cpptests/bin
       run: make && make install
     - name: Basic Test
       working-directory: cpptests/bin
