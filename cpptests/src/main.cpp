@@ -25,20 +25,11 @@ int main(int argc, const char *argv[])
   {
     auto ab = Families::jacobi_recurrence_values(N, alpha, beta);
 
-    //print(ab);
-
     auto [x,w] = OPoly1D::gauss_quadrature_driver(ab, N);
     auto V = OPoly1D::eval_driver(x, np::arange(k), 0, ab);
 
-    std::cout << "x:" << std::endl;
-    print(x);
     std::ofstream o("x.txt");
     o << std::setprecision(16) << x;
-    for (const auto& Vi : V)
-    {
-      std::cout << "V:" << std::endl;
-      print(Vi);
-    }
     std::ofstream v("v.txt");
     v << std::setprecision(16) << V[0];
 

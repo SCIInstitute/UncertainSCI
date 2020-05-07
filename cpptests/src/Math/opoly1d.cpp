@@ -21,6 +21,7 @@ Matrix3D OPoly1D::eval_driver(const XType& x, const IntList& n, int d, const Mat
     p.col(j) = 1/ab(j,1) * ( (xf.array() - ab(j,0)) * p.col(j-1).array() - ab(j-1,1)*p.col(j-2).array() );
 
   std::vector<int> ds;
+  //TODO: support other dynamic inputs
   if (true) //type(d) == int)
   {
     if (d == 0)
@@ -29,6 +30,7 @@ Matrix3D OPoly1D::eval_driver(const XType& x, const IntList& n, int d, const Mat
       ds = { d };
   }
 
+//TODO: no derivatives needed yet
 #if 0
   auto preturn = np.zeros([p.shape[0], n.size, len(d)]);
 
@@ -74,27 +76,23 @@ Matrix2D OPoly1D::s_driver(const XType& x, int n, const Matrix2D& ab)
 
 Matrix2D OPoly1D::jacobi_matrix_driver(const Matrix2D& ab, int N)
 {
-  Matrix2D ret(N,N);
-  ret.fill(0);
-  ret.diagonal(-1) = ab.block(1, 1, N-1, 1);
-  ret.diagonal() = ab.block(1, 0, N, 1);
-  ret.diagonal(1) = ret.diagonal(-1);
-  return ret;//np.diag(ab[1:N,1], k=1) + np.diag(ab[1:(N+1),0],k=0) + np.diag(ab[1:N,1], k=-1);
+  Matrix2D diag(N,N);
+  diag.fill(0);
+  diag.diagonal(-1) = ab.block(1, 1, N-1, 1);
+  diag.diagonal() = ab.block(1, 0, N, 1);
+  diag.diagonal(1) = diag.diagonal(-1);
+  return diag;
 }
 
 std::tuple<Vector1D, Matrix2D> OPoly1D::gauss_quadrature_driver(const Matrix2D& ab, int N)
 {
-  //from numpy.linalg import eigh
-  //print(ab);
   auto m = jacobi_matrix_driver(ab, N);
-  //print(m);
 
   EigenSolver<Matrix2D> es;
   es.compute(m, true);
 
   auto lamb = es.eigenvalues().real().eval();
   std::sort(EIGEN_BEGIN_END(lamb));
-  //print(lamb);
   auto v = es.eigenvectors();
   return {lamb, (std::pow(ab(0,1), 2) * v.col(0).array().square()).matrix().real()};
 }
