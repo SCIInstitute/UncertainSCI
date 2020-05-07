@@ -10,10 +10,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Prepare
-      run: sudo apt-get update && sudo apt-get install libeigen3-dev
+      working-directory: cpptests
+      run: sudo apt-get update && sudo apt-get install libeigen3-dev && mkdir bin
     - name: Configure
       working-directory: cpptests/bin
-      run: cmake .. 
+      run: cmake ..
     - name: Build
       working-directory: cpptests/bin
       run: make && make install
