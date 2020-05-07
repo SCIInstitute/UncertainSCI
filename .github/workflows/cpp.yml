@@ -1,6 +1,9 @@
 name: C++ conversion tests
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+    - 'cpptests/**.*'
 
 jobs:
   build:
