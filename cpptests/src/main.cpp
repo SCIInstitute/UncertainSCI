@@ -33,6 +33,9 @@ int main(int argc, const char *argv[])
     std::ofstream v("v.txt");
     v << std::setprecision(16) << V[0];
 
+    std::cout << "Completed successfully: returned x(" << x.rows() << "x" << x.cols() << ") and V("
+      << V.rows() << "x" << V.cols() << ")." << std::endl;
+
     //plt.plot(x, V[:,:k])
     //plt.show()
   }
