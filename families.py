@@ -7,8 +7,12 @@ Contains routines that specialize opoly1d things for classical orthogonal polyno
 
 import numpy as np
 from scipy import special as sp
-from opoly1d import OrthogonalPolynomialBasis1D
+from opoly1d import OrthogonalPolynomialBasis1D, eval_driver, idistinv_driver
 from transformations import AffineTransform
+import pickle
+from pathlib import Path
+import os
+
 
 def jacobi_recurrence_values(N, alpha, beta):
     
@@ -156,7 +160,6 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M):
     
 #    V = JacobiPolynomials(-1/2, -1/2).eval(vgrid, np.arange(M))
     ab = jacobi_recurrence_values(M, -1/2, -1/2)
-    from opoly1d import eval_driver
     V = eval_driver(vgrid, np.arange(M), 0, ab)
     
     iV = np.linalg.inv(V)
@@ -242,7 +245,6 @@ def driver_helper(u, data):
         
         q = qb - 1
         vgrid = ( u[umask] - data[0,q-1] ) / ( data[1,q-1] - data[0,q-1] ) * 2 - 1
-        from opoly1d import eval_driver
         V = eval_driver(vgrid, np.arange(M), 0, ab)
         temp = np.dot(V, data[6:,q-1])
         with np.errstate(divide='ignore', invalid='ignore'):
@@ -313,8 +315,6 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
 
     def idistinv(self, u, n):
 
-        from opoly1d import idistinv_driver
-
         if isinstance(u, float) or isinstance(u, int):
             u = np.asarray([u])
         else:
@@ -376,10 +376,16 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         return data
     
     def fidistinv(self, u, n):
-        import pickle
-        from pathlib import Path
+        
+        dirName = 'data_set'
+        try:
+            os.makedirs(dirName)
+            print ('Directory ', dirName, 'Created')
+        except FileExistsError:
+            print ('Directory ', dirName, 'already exists')
+
     
-        path = Path.cwd() / 'data_set' # need to mkdir data_set in cwd
+        path = Path.cwd() / dirName # need to mkdir data_set in cwd
         
         try:
             with open(path / 'data', 'wb') as f:
