@@ -7,7 +7,6 @@ Created on Sun Mar 29 11:18:48 2020
 """
 
 import numpy as np
-from families import JacobiPolynomials
 from C_eval import C_eval
 
 def quad_mod(alph, bet, z0):
@@ -35,6 +34,7 @@ def quad_mod(alph, bet, z0):
     return a,b
 
 if __name__ == "__main__":
+    from families import JacobiPolynomials
     alpha = 0.3
     beta = 0.2
     J = JacobiPolynomials(alpha,beta)

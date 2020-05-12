@@ -401,9 +401,11 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             n = np.asarray(n)
             
         if len(data) < max(n[:]) + 1:
+            print('Setting up', flush=True)
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
             with open(path / 'data', 'wb') as f:
                 pickle.dump(data, f)
+            print('Done setting up', flush=True)
         
         x = fidistinv_driver(u, n, data)
         
