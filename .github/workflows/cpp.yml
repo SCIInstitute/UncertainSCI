@@ -39,8 +39,8 @@ jobs:
     - name: Configure
       working-directory: cpptests/bin
       env:
-        CC: /usr/bin/gcc
-        CXX: /usr/bin/g++
+        CC: /usr/local/bin/gcc
+        CXX: /usr/local/bin/g++
       run: echo $CC && echo $CXX && cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX
     - name: Build
       working-directory: cpptests/bin
@@ -61,7 +61,7 @@ jobs:
       run: mkdir bin && brew install eigen
     - name: Configure
       working-directory: cpptests/bin
-      run: cmake .. 
+      run: cmake ..
     - name: Build
       working-directory: cpptests/bin
       run: make && make install
