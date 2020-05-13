@@ -9,8 +9,9 @@ Created on Wed Mar 25 14:13:43 2020
 import numpy as np
 from families import JacobiPolynomials
 from scipy import special as sp
-from quad_mod import quad_mod
+#from quad_mod import quad_mod
 from lin_mod import lin_mod
+from opoly1d import quadratic_modification
 
 
 # Rename this idist_jacobi_driver

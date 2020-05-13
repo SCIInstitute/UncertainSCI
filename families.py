@@ -10,6 +10,8 @@ from scipy import special as sp
 from opoly1d import OrthogonalPolynomialBasis1D
 from transformations import AffineTransform
 
+from opoly1d import linear_modification, quadratic_modification
+
 def jacobi_recurrence_values(N, alpha, beta):
     
     """
@@ -65,8 +67,7 @@ def jacobi_recurrence_values(N, alpha, beta):
 def jacobi_idist_driver(x, n, alpha, beta, M):
     
     from opoly1d import gauss_quadrature_driver
-    from quad_mod import quad_mod
-    from lin_mod import lin_mod
+    #from quad_mod import quad_mod
     
     A = int(np.floor(np.abs(alpha)))
     Aa = alpha - A
@@ -106,7 +107,8 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
             
         logfactor = 0.
         for j in range(n):
-            ab = quad_mod(ab, un[j])
+            #ab = quad_mod(ab, un[j])
+            ab = quadratic_modification(ab, un[j])
             logfactor = logfactor + np.log( ab[0,1]**2 * ((x[ind]+1)/2)**2 * kn_factor )
             ab[0,1] = 1.
             
@@ -114,7 +116,8 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
         root = (3.-x[ind]) / (1.+x[ind])
         
         for k in range(A):
-            ab = lin_mod(ab, root)
+            #ab = lin_mod(ab, root)
+            ab = linear_modification(ab, root)
             logfactor = logfactor + np.log( ab[0,1]**2 * 1/2 * (x[ind]+1) )
             ab[0,1] = 1.
 

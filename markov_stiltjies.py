@@ -5,13 +5,14 @@ Created on Wed Apr  1 18:32:40 2020
 
 @author: ZexinLiu
 """
+from deprecated import deprecated
 
 #from warnings import warn
 import numpy as np
 from quad_mod import quad_mod
 from families import JacobiPolynomials
 
-
+@deprecated(version='', reason="Use markov_stiltjies in opoly1d.py")
 def markov_stiltjies(u, n, a, b, supp):
     
     """ Uses the Markov-Stiltjies inequalities to provide a bounding interval for x, 

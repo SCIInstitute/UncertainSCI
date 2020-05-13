@@ -163,6 +163,29 @@ def gauss_quadrature_driver(ab, N):
     else:
         return np.zeros(0), np.zeros(0)
 
+def quadratic_modification(alphbet, z0):
+    """
+    The input is a single (N+1) x 2 array
+    
+    The output is a single (N) x 2 array
+    """
+    
+    ab = np.zeros([alphbet.shape[0] - 1, 2])
+    C = s_driver(z0, np.arange(alphbet.shape[0], dtype=int), alphbet)[0,:]
+
+    temp = alphbet[1:,1] * C[1:] * C[0:-1] / np.sqrt(1 + C[0:-1]**2)
+    temp[0] = alphbet[1,1] * C[1]
+    
+    acorrect = np.diff(temp)
+    ab[1:,0] = alphbet[2:,0] + acorrect
+    
+    temp = 1 + C[:]**2
+    bcorrect = temp[1:] / temp[0:-1]
+    bcorrect[0] = (1 + C[1]**2) / C[0]**2
+    ab[:,1] = alphbet[1:,1] * np.sqrt(bcorrect)
+    
+    return ab
+
 def markov_stiltjies(u, n, ab, supp):
     
     """ Uses the Markov-Stiltjies inequalities to provide a bounding interval for x, 
@@ -194,7 +217,7 @@ def markov_stiltjies(u, n, ab, supp):
     a.size >> n
     
     """
-    from quad_mod import quad_mod
+    #from quad_mod import quad_mod
     
     assert type(n) is int
     
@@ -204,7 +227,8 @@ def markov_stiltjies(u, n, ab, supp):
     ab[0,1] = 1
     
     for j in range(n):
-        ab = quad_mod(ab, x[j])
+        #ab = quad_mod(ab, x[j])
+        ab = quadratic_modification(ab, x[j])
         ab[0,1] = 1
     
     N = ab.shape[0] - 1
@@ -285,6 +309,34 @@ def idistinv_driver(u, n, primitive, a, b, supp):
         x[j] = optimize.bisect(fun, intervals[j,0], intervals[j,1])
         
     return x
+
+def linear_modification(alphbet, x0):
+    """
+    The input is a single (N+1) x 2 array
+    
+    The output is a single N x 2 array
+    
+    The appropriate sign of the modification (+/- (x-x0)) is inferred from the
+    sign of (alph(1) - x0). Since alph(1) is the zero of p_1, then it is in
+    \supp \mu
+    """
+    sgn = np.sign(alphbet[1,0] - x0)
+    
+    ns = np.arange(alphbet.shape[0], dtype=int)
+    r = np.abs(ratio_driver(x0, ns, 0, alphbet)[0,1:])
+    assert r.size == alphbet.shape[0] - 1
+
+    ab = np.zeros([alphbet.shape[0]-1, 2])
+    
+    acorrect = alphbet[1:-1,1] / r[:-1]
+    acorrect[1:] = np.diff(acorrect)
+    ab[1:,0] = alphbet[1:-1,0] + sgn * acorrect
+    
+    bcorrect = alphbet[1:,1] * r
+    bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
+    ab[:,1] = alphbet[:-1,1] * np.sqrt(bcorrect)
+    
+    return ab
 
 class OrthogonalPolynomialBasis1D:
     def __init__(self, recurrence=[]):
