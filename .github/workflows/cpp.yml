@@ -6,6 +6,10 @@ on:
     - 'cpptests/**.*'
     - '.github/workflows/cpp.yml'
 
+strategy:
+  matrix:
+    compiler: [gcc, clang]
+
 jobs:
   linux-build:
 
@@ -27,38 +31,10 @@ jobs:
       run: |
         ./cppUncertainSCIMathDriver
 
-  mac-clang-build:
+  mac-build:
 
     runs-on: macOS-latest
 
-    env:
-      - TARGET: x86_64-apple-darwin
-      - COMPILER: clang
-      - LINKER: clang
-    steps:
-    - uses: actions/checkout@v2
-    - name: Prepare
-      working-directory: cpptests
-      run: mkdir bin && brew install eigen
-    - name: Configure
-      working-directory: cpptests/bin
-      run: cmake ..
-    - name: Build
-      working-directory: cpptests/bin
-      run: make && make install
-    - name: Basic Test
-      working-directory: cpptests/bin
-      run: |
-        ./cppUncertainSCIMathDriver
-
-  mac-gcc-build:
-
-    runs-on: macOS-latest
-
-    env:
-      - TARGET: x86_64-apple-darwin
-      - COMPILER: gcc
-      - LINKER: gcc
     steps:
     - uses: actions/checkout@v2
     - name: Prepare
@@ -66,6 +42,8 @@ jobs:
       run: mkdir bin && brew install eigen gcc@9
     - name: Configure
       working-directory: cpptests/bin
+      env:
+        CC: ${{ matrix.compiler }}
       run: cmake ..
     - name: Build
       working-directory: cpptests/bin
