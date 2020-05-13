@@ -4,6 +4,7 @@ on:
   push:
     paths:
     - 'cpptests/**.*'
+    - '.github/workflows/cpp.yml'
 
 jobs:
   build:
