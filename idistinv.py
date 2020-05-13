@@ -5,6 +5,7 @@ Created on Fri Apr  3 17:08:07 2020
 
 @author: ZexinLiu
 """
+from deprecated import deprecated
 
 #from warnings import warn
 import numpy as np
@@ -13,6 +14,7 @@ from eval_F_jacobi import eval_F_jacobi
 from opoly1d import markov_stiltjies
 from families import JacobiPolynomials
 
+@deprecated(version='', reason="Use idistinv_driver in opoly1d.py")
 def idistinv(u, n, primitive, a, b, supp):
     
     """ Uses bisection to compute the (approximate) inverse of the order-n induced

@@ -5,10 +5,12 @@ Created on Wed Mar 25 14:19:21 2020
 
 @author: ZexinLiu
 """
+from deprecated import deprecated
 
 #import warnings
 import numpy as np
 
+@deprecated(version='', reason="Use JacobiPolynomials.idist_medapprox in families.py")
 def medapprox_jacobi(alph, bet, n):
 #    warnings.warn("Deprecated: instead use JacobiPolynomials().idist_medapprox", DeprecationWarning)
     assert n > 0

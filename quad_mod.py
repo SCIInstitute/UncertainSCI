@@ -6,6 +6,8 @@ Created on Sun Mar 29 11:18:48 2020
 @author: ZexinLiu
 """
 
+from deprecated import deprecated
+
 import numpy as np
 from families import JacobiPolynomials
 from opoly1d import s_driver

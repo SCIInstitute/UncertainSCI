@@ -6,6 +6,8 @@ Created on Sat Apr  4 22:39:04 2020
 @author: ZexinLiu
 """
 
+from deprecated import deprecated
+
 import numpy as np
 
 from eval_F_jacobi import eval_F_jacobi
@@ -14,6 +16,7 @@ from families import JacobiPolynomials
 
 #from warnings import warn
 
+@deprecated(version='', reason="Use JacobiPolynomials.idistinv in families.py")
 def idistinv_jacobi(u, n, alph, bet):
 #    warn("This module is deprecated. Use idistinv in families.py", DeprecationWarning, stacklevel=2)
     

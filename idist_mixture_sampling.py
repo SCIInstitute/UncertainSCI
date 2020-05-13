@@ -5,12 +5,14 @@ Created on Tue Apr  7 11:56:41 2020
 
 @author: ZexinLiu
 """
+from deprecated import deprecated
 
 import numpy as np
 from sampling_total_degree_indices import sampling_total_degree_indices
 from indexing import total_degree_indices
 from idistinv_jacobi import idistinv_jacobi
 
+@deprecated(version='', reason="Use idist_mixture_sampling in opolynd.py")
 def idist_mixture_sampling(M, Lambdas, univ_inv):
     
     """

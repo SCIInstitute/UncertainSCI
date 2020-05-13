@@ -8,7 +8,7 @@ Created on Tue Apr  7 11:40:13 2020
 
 import numpy as np
 from scipy import special as sp
-from discrete_sampling import discrete_sampling
+from prob_utils import discrete_sampling
 
 def pdjk(d,k):
     j = np.arange(k+1)

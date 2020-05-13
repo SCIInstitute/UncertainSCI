@@ -5,10 +5,13 @@ Created on Mon Apr  6 18:37:33 2020
 
 @author: ZexinLiu
 """
+from deprecated import deprecated
 
 import numpy as np
-from eval_F_jacobi import eval_F_jacobi
+from families import JacobiPolynomials
+#from eval_F_jacobi import eval_F_jacobi
 
+@deprecated(version='', reason="Use discrete_sampling in prob_utils.py")
 def discrete_sampling(N, probs, states):
     """ samples iid from a discrete probability measure
     
@@ -43,7 +46,9 @@ if __name__ == "__main__":
     bet = np.sqrt(101)
     states = np.linspace(-1,1,10)
     n = 4
-    probs = eval_F_jacobi(states,n,alph,bet,M=10)
+    J = JacobiPolynomials(alpha=alph,beta=bet)
+
+    probs = J.idist(states,n,M=10)
     
     N = 5
     print (discrete_sampling(N, probs, states))
