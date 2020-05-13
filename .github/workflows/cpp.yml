@@ -38,7 +38,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Prepare
       working-directory: cpptests
-      run: mkdir bin && brew install eigen
+      run: mkdir bin && brew install eigen gcc@9
     - name: Configure
       working-directory: cpptests/bin
       env:
