@@ -8,7 +8,7 @@ Created on Sun Mar 29 11:18:48 2020
 
 import numpy as np
 from families import JacobiPolynomials
-from C_eval import C_eval
+from opoly1d import s_driver
 
 def quad_mod(alphbet, z0):
     """
@@ -18,7 +18,7 @@ def quad_mod(alphbet, z0):
     """
     
     ab = np.zeros([alphbet.shape[0] - 1, 2])
-    C = C_eval(alphbet[:,0], alphbet[:,1], z0, alphbet.shape[0] - 1)[0,:]
+    C = s_driver(z0, np.arange(alphbet.shape[0], dtype=int), alphbet)[0,:]
 
     temp = alphbet[1:,1] * C[1:] * C[0:-1] / np.sqrt(1 + C[0:-1]**2)
     temp[0] = alphbet[1,1] * C[1]

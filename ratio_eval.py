@@ -12,7 +12,7 @@ import numpy as np
 from families import JacobiPolynomials
 from scipy import special as sp
 
-@deprecated(version='', reason="Use ratio_driver in opoly1d.py")
+@deprecated(version='', reason="Use s_driver in opoly1d.py")
 def ratio_eval(a, b, x, n):
     """
     The output is a x.size x (n+1) array.

@@ -6,16 +6,19 @@ Created on Wed Mar 25 15:19:20 2020
 @author: ZexinLiu
 """
 
+from deprecated import deprecated
+
 import numpy as np
 from families import JacobiPolynomials
 from scipy import special as sp
 
-def C_eval(a, b, x, n):
+@deprecated(version='', reason="Use ratio_driver in opoly1d.py")
+def C_eval(ab, x, n):
     
     """
     The output is a x.size x (n+1) array.
     
-    C_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
+    C_n(x) = p_n(x) / sqrt(sum_{j=0}^{n-1} p_j^2(x)), n >= 0
     
     C_0(x) = p_0(x)
     
@@ -26,28 +29,29 @@ def C_eval(a, b, x, n):
     Need {a_k, b_k} k up to n
     """
     
-    assert n < a.size
-    assert n < b.size
+    assert n < ab.shape[0]
+    #assert n < a.size
+    #assert n < b.size
     
     if isinstance(x, float) or isinstance(x, int):
         x = np.asarray([x])
     else:
         x = np.asarray(x)
     
-    C = np.zeros( x.shape + (n+1,) )
+    C = np.zeros( (x.size, n+1) )
     
-    C[:,0] = 1 / b[0]
+    C[:,0] = 1 / ab[0,1]
     
     if n > 0:
-        C[:,1] = 1 / b[1] * (x - a[1])
+        C[:,1] = 1 / ab[1,1] * (x - ab[1,0])
     
     if n > 1:
-        C[:,2] = 1 / np.sqrt(1 + C[:,1]**2) * ((x - a[2]) * C[:,1] - b[1])
-        C[:,2] = C[:,2] / b[2]
+        C[:,2] = 1 / np.sqrt(1 + C[:,1]**2) * ((x - ab[2,0]) * C[:,1] - ab[1,1])
+        C[:,2] = C[:,2] / ab[2,1]
         
     for j in range(3, n+1):
-        C[:,j] = 1 / np.sqrt(1 + C[:,j-1]**2) * ((x - a[j]) * C[:,j-1] - b[j-1] * C[:,j-2] / np.sqrt(1 + C[:,j-2]**2))
-        C[:,j] = C[:,j] / b[j]
+        C[:,j] = 1 / np.sqrt(1 + C[:,j-1]**2) * ((x - ab[j,0]) * C[:,j-1] - ab[j-1,1] * C[:,j-2] / np.sqrt(1 + C[:,j-2]**2))
+        C[:,j] = C[:,j] / ab[j,1]
         
     return C
 

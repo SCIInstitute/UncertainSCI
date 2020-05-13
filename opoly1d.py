@@ -120,22 +120,25 @@ def s_driver(x, n, ab):
     """
     
     
-    s = np.zeros( x.shape + (n+1,) )
-    
+    xf = x.flatten()
+    nmax = np.max(n)
+
+    s = np.zeros( (xf.size , nmax+1) )
+
     s[:,0] = 1 / ab[0,1]
     
-    if n > 0:
+    if nmax > 0:
         s[:,1] = 1 / ab[1,1] * (x - ab[1,0])
     
-    if n > 1:
+    if nmax > 1:
         s[:,2] = 1 / np.sqrt(1 + s[:,1]**2) * ((x - ab[2,0]) * s[:,1] - ab[1,1])
         s[:,2] = s[:,2] / ab[2,1]
         
-    for j in range(3, n+1):
+    for j in range(3, nmax+1):
         s[:,j] = 1 / np.sqrt(1 + s[:,j-1]**2) * ((x - ab[j,0]) * s[:,j-1] - ab[j-1,1] * s[:,j-2] / np.sqrt(1 + s[:,j-2]**2))
         s[:,j] = s[:,j] / ab[j,1]
         
-    return s
+    return s[:,n.flatten()]
 
 
 def jacobi_matrix_driver(ab, N):
@@ -690,7 +693,7 @@ class OrthogonalPolynomialBasis1D:
         """
         The output is a x.size x (n+1) array.
         
-        s_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
+        s_n(x) = p_n(x) / sqrt(sum_{j=0}^{n-1} p_j^2(x)), n >= 0
         
         s_0(x) = p_0(x)
         
