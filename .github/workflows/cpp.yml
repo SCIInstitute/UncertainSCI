@@ -43,7 +43,7 @@ jobs:
       working-directory: cpptests/bin
       env:
         CC: ${{ matrix.compiler }}
-      run: cmake .. -DCMAKE_CXX_COMPILER=$CC
+      run: echo $CC && cmake .. -DCMAKE_CXX_COMPILER=$CC
     - name: Build
       working-directory: cpptests/bin
       run: make && make install
