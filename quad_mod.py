@@ -10,6 +10,7 @@ import numpy as np
 from families import JacobiPolynomials
 from opoly1d import s_driver
 
+@deprecated(version='', reason="Use quadratic_modification in opoly1d.py")
 def quad_mod(alphbet, z0):
     """
     The input is a single (N+1) x 2 array

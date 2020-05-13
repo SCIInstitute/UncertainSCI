@@ -6,6 +6,8 @@ Created on Wed Mar 25 14:13:43 2020
 @author: ZexinLiu
 """
 
+from deprecated import deprecated
+
 import numpy as np
 from families import JacobiPolynomials
 from scipy import special as sp
@@ -14,6 +16,7 @@ from lin_mod import lin_mod
 from opoly1d import quadratic_modification
 
 
+@deprecated(version='', reason="Use jacobi_idist_driver in families.py")
 # Rename this idist_jacobi_driver
 def idist_jacobi(x,n,alph,bet,M):
     

@@ -6,12 +6,15 @@ Created on Sun Mar 29 18:29:30 2020
 @author: ZexinLiu
 """
 
+from deprecated import deprecated
+
 import numpy as np
 from medapprox_jacobi import medapprox_jacobi
 from idist_jacobi import idist_jacobi
 import matplotlib.pyplot as plt
 
 # Rename this idist_jacobi
+@deprecated(version='', reason="Use JacobiPolynomials.idist in families.py")
 def eval_F_jacobi(x,n,alph,bet,M=10):
     
     if isinstance(x, float) or isinstance(x, int):

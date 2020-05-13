@@ -10,6 +10,7 @@ import numpy as np
 from families import JacobiPolynomials
 from opoly1d import ratio_driver
 
+@deprecated(version='', reason="Use linear_modification in opoly1d.py")
 def lin_mod(alphbet, y0):
     
     """
