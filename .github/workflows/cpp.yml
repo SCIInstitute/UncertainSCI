@@ -7,18 +7,35 @@ on:
     - '.github/workflows/cpp.yml'
 
 jobs:
-  build:
+  linux-build:
 
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macOS-latest]
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     - name: Prepare
       working-directory: cpptests
       run: sudo apt-get update && sudo apt-get install libeigen3-dev && mkdir bin
+    - name: Configure
+      working-directory: cpptests/bin
+      run: cmake ..
+    - name: Build
+      working-directory: cpptests/bin
+      run: make && make install
+    - name: Basic Test
+      working-directory: cpptests/bin
+      run: |
+        ./cppUncertainSCIMathDriver
+
+  mac-build:
+
+    runs-on: macOS-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Prepare
+      working-directory: cpptests
+      run: mkdir bin && brew install eigen
     - name: Configure
       working-directory: cpptests/bin
       run: cmake ..
