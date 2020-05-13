@@ -33,7 +33,7 @@ jobs:
 
     strategy:
       matrix:
-        compiler: [gcc, clang]
+        compiler: [/usr/bin/gcc, /usr/bin/clang]
     steps:
     - uses: actions/checkout@v2
     - name: Prepare
