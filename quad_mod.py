@@ -10,29 +10,28 @@ import numpy as np
 from families import JacobiPolynomials
 from C_eval import C_eval
 
-def quad_mod(alph, bet, z0):
+def quad_mod(alphbet, z0):
     """
-    The input is two (N+1) x 1 arrays
+    The input is a single (N+1) x 2 array
     
-    The output is two (N) x 1 arrays
+    The output is a single (N) x 2 array
     """
     
-    C = C_eval(alph, bet, z0, alph.size - 1)[0,:]
-    
-    
-    temp = bet[1:] * C[1:] * C[0:-1] / np.sqrt(1 + C[0:-1]**2)
-    temp[0] = bet[1] * C[1]
+    ab = np.zeros([alphbet.shape[0] - 1, 2])
+    C = C_eval(alphbet[:,0], alphbet[:,1], z0, alphbet.shape[0] - 1)[0,:]
+
+    temp = alphbet[1:,1] * C[1:] * C[0:-1] / np.sqrt(1 + C[0:-1]**2)
+    temp[0] = alphbet[1,1] * C[1]
     
     acorrect = np.diff(temp)
-    a = np.zeros(alph.size - 1, )
-    a[1:] = alph[2:] + acorrect
+    ab[1:,0] = alphbet[2:,0] + acorrect
     
     temp = 1 + C[:]**2
     bcorrect = temp[1:] / temp[0:-1]
     bcorrect[0] = (1 + C[1]**2) / C[0]**2
-    b = np.sqrt(bet[1:]**2 * bcorrect)
+    ab[:,1] = alphbet[1:,1] * np.sqrt(bcorrect)
     
-    return a,b
+    return ab
 
 if __name__ == "__main__":
     alpha = 0.3

@@ -84,7 +84,7 @@ def ratio_driver(x, n, d, ab):
     """
     nmax = np.max(n)
 
-    r = np.zeros( x.shape + (nmax+1,) )
+    r = np.zeros( [x.size , nmax+1] )
     xf = x.flatten()
 
     r[:,0] = 1/ab[0,1]
@@ -154,10 +154,13 @@ def gauss_quadrature_driver(ab, N):
 
     from numpy.linalg import eigh
 
-    lamb,v = eigh(jacobi_matrix_driver(ab, N))
-    return lamb, ab[0,1]**2 * v[0,:]**2
+    if N > 0:
+        lamb,v = eigh(jacobi_matrix_driver(ab, N))
+        return lamb, ab[0,1]**2 * v[0,:]**2
+    else:
+        return np.zeros(0), np.zeros(0)
 
-def markov_stiltjies(u, n, a, b, supp):
+def markov_stiltjies(u, n, ab, supp):
     
     """ Uses the Markov-Stiltjies inequalities to provide a bounding interval for x, 
     the solution to F_n(x) = u
@@ -192,19 +195,18 @@ def markov_stiltjies(u, n, a, b, supp):
     
     assert type(n) is int
     
-    J = np.diag(b[1:n], k=1) + np.diag(a[1:n+1],k=0) + np.diag(b[1:n], k=-1)
-    x,v = np.linalg.eigh(J)
+    x,v = gauss_quadrature_driver(ab, n)
     
-    b[0] = 1
+    #b[0] = 1
+    ab[0,1] = 1
     
     for j in range(n):
-        a,b = quad_mod(a, b, x[j])
-        b[0] = 1
+        ab = quad_mod(ab, x[j])
+        ab[0,1] = 1
     
-    N = a.size - 1
-    J = np.diag(b[1:N], k=1) + np.diag(a[1:N+1],k=0) + np.diag(b[1:N], k=-1)
-    y,v = np.linalg.eigh(J)
-    w = v[0,:]**2
+    N = ab.shape[0] - 1
+
+    y,w = gauss_quadrature_driver(ab, N)
     
     if supp[1] > y[-1]:
         X = np.insert(y,[0,y.size], [supp[0],supp[1]])
@@ -262,14 +264,17 @@ def idistinv_driver(u, n, primitive, a, b, supp):
         u = np.asarray(u)
     
     if isinstance(n, int):
-        intervals = markov_stiltjies(u, n, a, b, supp)    
+        ab = np.vstack([a, b]).T
+        #intervals = markov_stiltjies(u, n, a, b, supp)    
+        intervals = markov_stiltjies(u, n, ab, supp)    
     else:
         intervals = np.zeros((n.size, 2))
         nmax = max(n)
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
         for i in range(nmax+1):
             flags = ind == i+1
-            intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
+            #intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
+            intervals[flags,:] = markov_stiltjies(u[flags], i, ab, supp)
         
     x = np.zeros(u.size,)
     for j in range(u.size):

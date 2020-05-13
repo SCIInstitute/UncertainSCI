@@ -8,35 +8,38 @@ Created on Sat Mar 28 15:46:08 2020
 
 import numpy as np
 from families import JacobiPolynomials
-from ratio_eval import ratio_eval
+#from ratio_eval import ratio_eval
+from opoly1d import ratio_driver
 
-def lin_mod(alph, bet, y0):
+def lin_mod(alphbet, y0):
     
     """
-    The input is two (N+1) x 1 arrays
+    The input is a single (N+1) x 2 array
     
-    The output is two N x 1 arrays
+    The output is a single N x 2 array
     
     The appropriate sign of the modification (+/- (x-x0)) is inferred from the
     sign of (alph(1) - x0). Since alph(1) is the zero of p_1, then it is in
     \supp \mu
     """
-    sgn = np.sign(alph[1] - y0)
+    sgn = np.sign(alphbet[1,0] - y0)
     
-    r = np.abs(ratio_eval(alph, bet, y0, alph.size - 1)[0,1:])
-    assert r.size == alph.size - 1
+    ns = np.arange(alphbet.shape[0], dtype=int)
+    r = np.abs(ratio_driver(y0, ns, 0, alphbet)[0,1:])
+    assert r.size == alphbet.shape[0] - 1
+
+    ab = np.zeros([alphbet.shape[0]-1, 2])
     
-    acorrect = bet[1:-1] / r[:-1]
+    acorrect = alphbet[1:-1,1] / r[:-1]
     acorrect[1:] = np.diff(acorrect)
-    a = np.zeros(alph.size - 1, )
-    a[1:] = alph[1:-1] + sgn * acorrect
+    ab[1:,0] = alphbet[1:-1,0] + sgn * acorrect
     
-    bcorrect = bet[1:] * r
+    bcorrect = alphbet[1:,1] * r
     bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
-    b = np.zeros(bet.size - 1, )
-    b = np.sqrt(bet[:-1]**2 * bcorrect)
+    ab[:,1] = alphbet[:-1,1] * np.sqrt(bcorrect)
     
-    return a,b
+    #return a,b
+    return ab
 
 if __name__ == "__main__":
     alpha = 0.3

@@ -99,26 +99,24 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
             continue
         
         ab = jacobi_recurrence_values(n+A+M, 0, beta)
-        a = ab[:,0]; b = ab[:,1]; b[0] = 1.
+        ab[0,1] = 1.
         
         if n > 0:
             un = (2./(x[ind]+1.)) * (xn + 1.) - 1.
             
         logfactor = 0.
         for j in range(n):
-            a,b = quad_mod(a, b, un[j])
-            logfactor = logfactor + np.log( b[0]**2 * ((x[ind]+1)/2)**2 * kn_factor )
-            b[0] = 1.
+            ab = quad_mod(ab, un[j])
+            logfactor = logfactor + np.log( ab[0,1]**2 * ((x[ind]+1)/2)**2 * kn_factor )
+            ab[0,1] = 1.
             
         
         root = (3.-x[ind]) / (1.+x[ind])
         
         for k in range(A):
-            a,b = lin_mod(a, b, root)
-            logfactor = logfactor + np.log( b[0]**2 * 1/2 * (x[ind]+1) )
-            b[0] = 1.
-
-        ab = np.vstack([a,b]).T
+            ab = lin_mod(ab, root)
+            logfactor = logfactor + np.log( ab[0,1]**2 * 1/2 * (x[ind]+1) )
+            ab[0,1] = 1.
 
         u, w = gauss_quadrature_driver(ab, M)
 
