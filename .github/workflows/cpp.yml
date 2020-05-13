@@ -6,10 +6,6 @@ on:
     - 'cpptests/**.*'
     - '.github/workflows/cpp.yml'
 
-strategy:
-  matrix:
-    compiler: [gcc, clang]
-
 jobs:
   linux-build:
 
@@ -35,6 +31,9 @@ jobs:
 
     runs-on: macOS-latest
 
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
     steps:
     - uses: actions/checkout@v2
     - name: Prepare
