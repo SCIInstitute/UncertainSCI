@@ -2,7 +2,7 @@ import numpy as np
 
 from opoly1d import OrthogonalPolynomialBasis1D
 
-from linalg_utils import greedy_d_optimal
+from utils.linalg import greedy_d_optimal
 
 def opolynd_eval(x, lambdas, ab):
     # Evaluates tensorial orthonormal polynomials associated with the
