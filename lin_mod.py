@@ -8,7 +8,6 @@ Created on Sat Mar 28 15:46:08 2020
 
 import numpy as np
 from families import JacobiPolynomials
-#from ratio_eval import ratio_eval
 from opoly1d import ratio_driver
 
 def lin_mod(alphbet, y0):
