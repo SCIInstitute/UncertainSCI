@@ -387,12 +387,15 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     
         path = Path.cwd() / dirName # need to mkdir data_set in cwd
         
+        filename = 'data_jacobi_{}_{}'.format(self.alpha, self.beta)
         try:
-            with open(path / 'data', 'wb') as f:
+            with open(path / filename, 'rb') as f:
                 data = pickle.load(f)
-        except Exception as e:
+                print ('Data loaded')
+        except Exception:
+            print ('Initialize data since not exist')
             data = []
-            with open(path / 'data', 'wb') as f:
+            with open(path / filename, 'ab+') as f:
                 pickle.dump(data, f)
         
         if isinstance(n, float) or isinstance(n, int):
@@ -401,8 +404,9 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             n = np.asarray(n)
             
         if len(data) < max(n[:]) + 1:
+            print ('Data added for new distribution parameter')
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
-            with open(path / 'data', 'wb') as f:
+            with open(path / filename, 'wb') as f:
                 pickle.dump(data, f)
         
         x = fidistinv_driver(u, n, data)
