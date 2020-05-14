@@ -7,7 +7,7 @@ Created on Wed Mar 25 15:19:20 2020
 """
 
 import numpy as np
-from families import JacobiPolynomials
+# from families import JacobiPolynomials
 from scipy import special as sp
 
 def C_eval(a, b, x, n):

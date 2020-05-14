@@ -7,7 +7,7 @@ Created on Sun Mar 29 11:18:48 2020
 """
 
 import numpy as np
-from families import JacobiPolynomials
+# from families import JacobiPolynomials
 from C_eval import C_eval
 
 def quad_mod(alph, bet, z0):

@@ -7,7 +7,7 @@ Created on Thu Mar 26 18:38:43 2020
 """
 
 import numpy as np
-from families import JacobiPolynomials
+# from families import JacobiPolynomials
 from scipy import special as sp
 
 def ratio_eval(a, b, x, n):

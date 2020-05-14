@@ -7,7 +7,7 @@ Created on Sat Mar 28 15:46:08 2020
 """
 
 import numpy as np
-from families import JacobiPolynomials
+# from families import JacobiPolynomials
 from ratio_eval import ratio_eval
 
 def lin_mod(alph, bet, y0):
