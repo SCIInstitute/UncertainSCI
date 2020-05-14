@@ -217,7 +217,7 @@ def fidistinv_driver(u, n, data):
     else:
         for q in range(N+1):
             nmask = (n == q)
-            x[nmask] = driver_helper(u[nmask], data[q+1])
+            x[nmask] = driver_helper(u[nmask], data[q])
     
     return x
 
@@ -382,18 +382,18 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             os.makedirs(dirName)
             print ('Directory ', dirName, 'Created')
         except FileExistsError:
-            print ('Directory ', dirName, 'already exists')
+            pass
+            #print ('Directory ', dirName, 'already exists')
 
     
         path = Path.cwd() / dirName # need to mkdir data_set in cwd
         
-        filename = 'data_jacobi_{}_{}'.format(self.alpha, self.beta)
+        filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
             with open(path / filename, 'rb') as f:
                 data = pickle.load(f)
-                print ('Data loaded')
+                #print ('Data loaded')
         except Exception:
-            print ('Initialize data since not exist')
             data = []
             with open(path / filename, 'ab+') as f:
                 pickle.dump(data, f)
@@ -404,11 +404,11 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             n = np.asarray(n)
             
         if len(data) < max(n[:]) + 1:
-            print('Setting up', flush=True)
+            print('Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'.format(self.alpha, self.beta), end='', flush=True)
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
             with open(path / filename, 'wb') as f:
                 pickle.dump(data, f)
-            print('Done setting up', flush=True)
+            print('Done', flush=True)
         
         x = fidistinv_driver(u, n, data)
         
