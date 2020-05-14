@@ -7,7 +7,6 @@ Created on Wed Mar 25 15:19:20 2020
 """
 
 import numpy as np
-from families import JacobiPolynomials
 from scipy import special as sp
 
 def C_eval(a, b, x, n):
@@ -55,6 +54,9 @@ if __name__ == "__main__":
     """
     compute C_n(x) n from 0 up to 4
     """
+
+    from families import JacobiPolynomials
+
     x = np.linspace(-1,1,6)
     alpha = 0.3
     beta = 0.2
