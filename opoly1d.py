@@ -9,7 +9,6 @@ Contains classes/methods for general univariate orthogonal polynomial families.
 import numpy as np
 from scipy import special as sp
 from numpy.linalg import eigh
-from quad_mod import quad_mod
 from scipy import optimize
 from scipy.special import gammaln
 
@@ -227,11 +226,9 @@ def markov_stiltjies(u, n, ab, supp):
     
     x,v = gauss_quadrature_driver(ab, n)
     
-    #b[0] = 1
     ab[0,1] = 1
     
     for j in range(n):
-        #ab = quad_mod(ab, x[j])
         ab = quadratic_modification(ab, x[j])
         ab[0,1] = 1
     
