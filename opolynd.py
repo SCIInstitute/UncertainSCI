@@ -82,7 +82,7 @@ class TensorialPolynomials:
     
         return p
 
-    def idist_mixture_sampling(self, M, Lambdas):
+    def idist_mixture_sampling(self, M, Lambdas, fast_sampler=True):
         """
         Performs tensorial inverse transform sampling from an additive mixture of
         tensorial induced distributions, generating M samples
@@ -112,17 +112,30 @@ class TensorialPolynomials:
         ks[np.where(ks > K)] = K
         Lambdas = Lambdas[ks-1, :]
 
+
+
         if self.isotropic:
-            univ_inv = lambda uu,nn: self.polys1d.idistinv(uu, nn)
+            if fast_sampler:
+                idistinv = self.polys1d.fidistinv
+            else:
+                idistinv = self.polys1d.idistinv
+
+            univ_inv = lambda uu,nn: idistinv(uu, nn)
             return univ_inv(np.random.random([M,d]), Lambdas)
+
         else:
             x = np.zeros([M, d])
             for qd in range(self.dim):
-                univ_inv = lambda uu,nn: self.polys1d[qd].idistinv(uu, nn)
+                if fast_sampler:
+                    idistinv = self.polys1d[qd].fidistinv
+                else:
+                    idistinv = self.polys1d[qd].idistinv
+
+                univ_inv = lambda uu,nn: idistinv(uu, nn)
                 x[:,qd] = univ_inv(np.random.random(M), Lambdas[:,qd])
             return x
 
-    def wafp_sampling(self, indices, oversampling=10, sampler='idist', K=None):
+    def wafp_sampling(self, indices, oversampling=10, sampler='idist', K=None, fast_sampler=True):
         """
         Computes (indices.shape[0] + oversampling) points using the WAFP
         strategy. This requires forming K random samples; the input sampler
@@ -137,7 +150,7 @@ class TensorialPolynomials:
             K = max(K, M)
 
         if sampler == 'idist':
-            x = self.idist_mixture_sampling(K, indices)
+            x = self.idist_mixture_sampling(K, indices, fast_sampler=fast_sampler)
         else:
             raise ValueError('Unrecognized string "{0:s}" for input "sampler"'.format(sampler))
 
