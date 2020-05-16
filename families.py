@@ -9,12 +9,12 @@ import numpy as np
 from scipy import special as sp
 from opoly1d import OrthogonalPolynomialBasis1D, gauss_quadrature_driver, idistinv_driver
 from transformations import AffineTransform
-from quad_mod import quad_mod
-from lin_mod import lin_mod
 import pickle
 from pathlib import Path
 import os
 
+
+from opoly1d import linear_modification, quadratic_modification
 
 def jacobi_recurrence_values(N, alpha, beta):
     
@@ -69,7 +69,10 @@ def jacobi_recurrence_values(N, alpha, beta):
 
 
 def jacobi_idist_driver(x, n, alpha, beta, M):
-       
+
+    from opoly1d import gauss_quadrature_driver
+    #from quad_mod import quad_mod
+    
     A = int(np.floor(np.abs(alpha)))
     Aa = alpha - A
     
@@ -101,26 +104,26 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
             continue
         
         ab = jacobi_recurrence_values(n+A+M, 0, beta)
-        a = ab[:,0]; b = ab[:,1]; b[0] = 1.
+        ab[0,1] = 1.
         
         if n > 0:
             un = (2./(x[ind]+1.)) * (xn + 1.) - 1.
             
         logfactor = 0.
         for j in range(n):
-            a,b = quad_mod(a, b, un[j])
-            logfactor = logfactor + np.log( b[0]**2 * ((x[ind]+1)/2)**2 * kn_factor )
-            b[0] = 1.
+            #ab = quad_mod(ab, un[j])
+            ab = quadratic_modification(ab, un[j])
+            logfactor = logfactor + np.log( ab[0,1]**2 * ((x[ind]+1)/2)**2 * kn_factor )
+            ab[0,1] = 1.
             
         
         root = (3.-x[ind]) / (1.+x[ind])
         
         for k in range(A):
-            a,b = lin_mod(a, b, root)
-            logfactor = logfactor + np.log( b[0]**2 * 1/2 * (x[ind]+1) )
-            b[0] = 1.
-
-        ab = np.vstack([a,b]).T
+            #ab = lin_mod(ab, root)
+            ab = linear_modification(ab, root)
+            logfactor = logfactor + np.log( ab[0,1]**2 * 1/2 * (x[ind]+1) )
+            ab[0,1] = 1.
 
         u, w = gauss_quadrature_driver(ab, M)
 
@@ -494,7 +497,7 @@ def hermite_recurrence_values(N, mu):
     
     return ab
 
-def f_idist(x, n, alpha, rho):
+def f_idist(x, n, alpha, rho, M=10):
     """
     for x <= 0
     """
@@ -521,8 +524,6 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
         self.rho = rho
 
     def recurrence_driver(self, N):
-        # Returns the first N+1 recurrence coefficient pairs for the Hermite
-        # polynomial family.
 
         ab = hermite_recurrence_values(N, self.rho/2)
         if self.probability_measure and N > 0:
@@ -546,11 +547,8 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
 
 
 
-
-
 def laguerre_recurrence_values(N, alpha, rho):
-    # Returns the first N+1 recurrence coefficient pairs for the Hermite
-    # Laguerre family.
+    # Returns the first N+1 recurrence coefficient pairs for the Laguerre family.
     assert alpha == 1.
 
     if N < 1:
@@ -614,16 +612,14 @@ def hfreud_idist_driver(x, n, alpha, rho, M):
 #             continue
 
         un = 2 * xn / x[ind] - 1
-        
-        a = ab_J[:,0]; b = ab_J[:,1]
+        ab = ab_J
         logfactor = logfactor0
 
         for j in range(n):
-            a,b = quad_mod(a, b, un[j])
-            logfactor = logfactor + np.log(b[0]**2)
-            b[0] = 1.
+            ab = quadratic_modification(ab, un[j])
+            logfactor = logfactor + np.log(ab[0,1]**2)
+            ab[0,1] = 1.
         
-        ab = np.vstack([a,b]).T
         u,w = gauss_quadrature_driver(ab, M)
 
         I = np.sum(w * np.exp(- (x[ind]/2)**alpha * (u+1)**alpha))
@@ -645,17 +641,6 @@ def hfreud_idistc_driver(x, n, alpha, rho, M):
         x = np.asarray(x)
         
     F = np.zeros(x.size)
-
-#     if alpha != 1:
-#         HF = LaguerrePolynomials(alpha, rho)
-#         x0 = HF.idist_medapprox(n)
-#         lflags = x <= x0
-#         F[lflags] = 1 - hfreud_idist_driver(x, n, alpha, rho, M)
-#         
-#     else:
-#         x0 = 50
-#         lflags = x <= x0
-#         F[lflags] = 1 - hfreud_idist_driver(x, n, alpha, rho, M)
 
     if alpha == 1:
         ab = laguerre_recurrence_values(n, alpha, rho)
@@ -680,26 +665,22 @@ def hfreud_idistc_driver(x, n, alpha, rho, M):
             F[ind] = 0
             continue
 
-#         if lflags[ind]:
-#             continue
-
         un = xn - x[ind]
         
-        a = ab_H[:,0]; b = ab_H[:,1]
+        ab = ab_H
         logfactor = logfactor0
 
         for j in range(n):
-            a,b = quad_mod(a, b, un[j])
-            logfactor = logfactor + np.log(b[0]**2)
-            b[0] = 1.
+            ab = quadratic_modification(ab, un[j])
+            logfactor = logfactor + np.log(ab[0,1]**2)
+            ab[0,1] = 1
         
         root = -x[ind]
         for k in range(R):
-            a,b = lin_mod(a, b, root)
-            logfactor = logfactor + np.log(b[0]**2)
-            b[0] = 1.
+            ab = linear_modification(ab, root)
+            logfactor = logfactor + np.log(ab[0,1]**2)
+            ab[0,1] = 1
         
-        ab = np.vstack([a,b]).T
         u,w = gauss_quadrature_driver(ab, M)
 
         I = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
@@ -754,8 +735,6 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
         self.rho = rho
 
     def recurrence_driver(self, N):
-        # Returns the first N+1 recurrence coefficient pairs for the Hermite
-        # Laguerre family.
         if self.alpha == 1.:
             ab = laguerre_recurrence_values(N, self.alpha, self.rho)
         else:

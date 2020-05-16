@@ -1,4 +1,5 @@
 from packaging import version 
+from math import floor
 
 import numpy as np
 
@@ -113,7 +114,7 @@ class PolynomialChaosExpansion():
         self.assert_pce_built()
         return np.sqrt(np.sum(self.coefficients[1:,:]**2, axis=0))
 
-    def pce_eval(self, p):
+    def pce_eval(self, p, components=None):
         """
         Evaluations the PCE at the parameter locations p.
         """
@@ -122,17 +123,39 @@ class PolynomialChaosExpansion():
         p_std = self.distribution.transform_to_standard.map( \
                     self.distribution.transform_standard_dist_to_poly.map(p) )
 
-        return np.dot( self.distribution.polys.eval( p_std, self.indices.indices() ), self.coefficients)
+        if components is None:
+            return np.dot( self.distribution.polys.eval( p_std, self.indices.indices() ), self.coefficients)
+        else:
+            return np.dot( self.distribution.polys.eval( p_std, self.indices.indices() ), self.coefficients[:,components])
 
     def quantile(self, q, M=100):
         """
         Computes q-quantiles using M-point Monte Carlo sampling.
         """
 
-        p = self.distribution.MC_samples(M)
-        ensemble = self.pce_eval(p)
+        self.assert_pce_built()
 
-        return np.quantile(ensemble, q, axis=0)
+        # Maximum number of floats generated at any given time
+        MF = max([int(1e6), M, self.distribution.dim])
+
+        # How many model degrees of freedom we can consider at any time
+        pce_batch_size = floor(MF/M)
+
+        quantiles = np.zeros([len(q), self.coefficients.shape[1]])
+
+        pce_counter = 0
+        p = self.distribution.MC_samples(M)
+
+        while pce_counter < self.coefficients.shape[1]:
+            end_ind = min([self.coefficients.shape[1], pce_counter + pce_batch_size])
+            inds = range(pce_counter, end_ind)
+            ensemble = self.pce_eval(p, components=inds)
+
+            quantiles[:, inds] = np.quantile(ensemble, q, axis=0)
+
+            pce_counter = end_ind
+
+        return quantiles
 
     def total_sensitivity(self, dim_indices = None):
         """

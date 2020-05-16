@@ -9,7 +9,6 @@ Contains classes/methods for general univariate orthogonal polynomial families.
 import numpy as np
 from scipy import special as sp
 from numpy.linalg import eigh
-from quad_mod import quad_mod
 from scipy import optimize
 from scipy.special import gammaln
 
@@ -89,7 +88,7 @@ def ratio_driver(x, n, d, ab):
     """
     nmax = np.max(n)
 
-    r = np.zeros( x.shape + (nmax+1,) )
+    r = np.zeros( [x.size , nmax+1] )
     xf = x.flatten()
 
     r[:,0] = 1/ab[0,1]
@@ -125,22 +124,25 @@ def s_driver(x, n, ab):
     """
     
     
-    s = np.zeros( x.shape + (n+1,) )
-    
+    xf = x.flatten()
+    nmax = np.max(n)
+
+    s = np.zeros( (xf.size , nmax+1) )
+
     s[:,0] = 1 / ab[0,1]
     
-    if n > 0:
+    if nmax > 0:
         s[:,1] = 1 / ab[1,1] * (x - ab[1,0])
     
-    if n > 1:
+    if nmax > 1:
         s[:,2] = 1 / np.sqrt(1 + s[:,1]**2) * ((x - ab[2,0]) * s[:,1] - ab[1,1])
         s[:,2] = s[:,2] / ab[2,1]
         
-    for j in range(3, n+1):
+    for j in range(3, nmax+1):
         s[:,j] = 1 / np.sqrt(1 + s[:,j-1]**2) * ((x - ab[j,0]) * s[:,j-1] - ab[j-1,1] * s[:,j-2] / np.sqrt(1 + s[:,j-2]**2))
         s[:,j] = s[:,j] / ab[j,1]
         
-    return s
+    return s[:,n.flatten()]
 
 
 def jacobi_matrix_driver(ab, N):
@@ -157,10 +159,38 @@ def gauss_quadrature_driver(ab, N):
     recurrence coefficients ab. (Requires ab.shape[0] >= N+1.)
     """
 
-    lamb,v = eigh(jacobi_matrix_driver(ab, N))
-    return lamb, ab[0,1]**2 * v[0,:]**2
+    from numpy.linalg import eigh
 
-def markov_stiltjies(u, n, a, b, supp):
+    if N > 0:
+        lamb,v = eigh(jacobi_matrix_driver(ab, N))
+        return lamb, ab[0,1]**2 * v[0,:]**2
+    else:
+        return np.zeros(0), np.zeros(0)
+
+def quadratic_modification(alphbet, z0):
+    """
+    The input is a single (N+1) x 2 array
+    
+    The output is a single (N) x 2 array
+    """
+    
+    ab = np.zeros([alphbet.shape[0] - 1, 2])
+    C = s_driver(z0, np.arange(alphbet.shape[0], dtype=int), alphbet)[0,:]
+
+    temp = alphbet[1:,1] * C[1:] * C[0:-1] / np.sqrt(1 + C[0:-1]**2)
+    temp[0] = alphbet[1,1] * C[1]
+    
+    acorrect = np.diff(temp)
+    ab[1:,0] = alphbet[2:,0] + acorrect
+    
+    temp = 1 + C[:]**2
+    bcorrect = temp[1:] / temp[0:-1]
+    bcorrect[0] = (1 + C[1]**2) / C[0]**2
+    ab[:,1] = alphbet[1:,1] * np.sqrt(bcorrect)
+    
+    return ab
+
+def markov_stiltjies(u, n, ab, supp):
     
     """ Uses the Markov-Stiltjies inequalities to provide a bounding interval for x, 
     the solution to F_n(x) = u
@@ -194,19 +224,17 @@ def markov_stiltjies(u, n, a, b, supp):
     
     assert type(n) is int
     
-    J = np.diag(b[1:n], k=1) + np.diag(a[1:n+1],k=0) + np.diag(b[1:n], k=-1)
-    x,v = np.linalg.eigh(J)
+    x,v = gauss_quadrature_driver(ab, n)
     
-    b[0] = 1
+    ab[0,1] = 1
     
     for j in range(n):
-        a,b = quad_mod(a, b, x[j])
-        b[0] = 1
+        ab = quadratic_modification(ab, x[j])
+        ab[0,1] = 1
     
-    N = a.size - 1
-    J = np.diag(b[1:N], k=1) + np.diag(a[1:N+1],k=0) + np.diag(b[1:N], k=-1)
-    y,v = np.linalg.eigh(J)
-    w = v[0,:]**2
+    N = ab.shape[0] - 1
+
+    y,w = gauss_quadrature_driver(ab, N)
     
     if supp[1] > y[-1]:
         X = np.insert(y,[0,y.size], [supp[0],supp[1]])
@@ -263,14 +291,17 @@ def idistinv_driver(u, n, primitive, a, b, supp):
         u = np.asarray(u)
     
     if isinstance(n, int):
-        intervals = markov_stiltjies(u, n, a, b, supp)    
+        ab = np.vstack([a, b]).T
+        #intervals = markov_stiltjies(u, n, a, b, supp)    
+        intervals = markov_stiltjies(u, n, ab, supp)    
     else:
         intervals = np.zeros((n.size, 2))
         nmax = max(n)
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
         for i in range(nmax+1):
             flags = ind == i+1
-            intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
+            #intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
+            intervals[flags,:] = markov_stiltjies(u[flags], i, ab, supp)
         
     x = np.zeros(u.size,)
     for j in range(u.size):
@@ -278,6 +309,34 @@ def idistinv_driver(u, n, primitive, a, b, supp):
         x[j] = optimize.bisect(fun, intervals[j,0], intervals[j,1])
         
     return x
+
+def linear_modification(alphbet, x0):
+    """
+    The input is a single (N+1) x 2 array
+    
+    The output is a single N x 2 array
+    
+    The appropriate sign of the modification (+/- (x-x0)) is inferred from the
+    sign of (alph(1) - x0). Since alph(1) is the zero of p_1, then it is in
+    \supp \mu
+    """
+    sgn = np.sign(alphbet[1,0] - x0)
+    
+    ns = np.arange(alphbet.shape[0], dtype=int)
+    r = np.abs(ratio_driver(x0, ns, 0, alphbet)[0,1:])
+    assert r.size == alphbet.shape[0] - 1
+
+    ab = np.zeros([alphbet.shape[0]-1, 2])
+    
+    acorrect = alphbet[1:-1,1] / r[:-1]
+    acorrect[1:] = np.diff(acorrect)
+    ab[1:,0] = alphbet[1:-1,0] + sgn * acorrect
+    
+    bcorrect = alphbet[1:,1] * r
+    bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
+    ab[:,1] = alphbet[:-1,1] * np.sqrt(bcorrect)
+    
+    return ab
 
 class OrthogonalPolynomialBasis1D:
     def __init__(self, recurrence=[]):
@@ -681,7 +740,7 @@ class OrthogonalPolynomialBasis1D:
         """
         The output is a x.size x (n+1) array.
         
-        s_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
+        s_n(x) = p_n(x) / sqrt(sum_{j=0}^{n-1} p_j^2(x)), n >= 0
         
         s_0(x) = p_0(x)
         

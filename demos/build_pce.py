@@ -37,7 +37,7 @@ print('This will query the model {0:d} times'.format(indices.indices().shape[0] 
 pce = PolynomialChaosExpansion(indices, dist)
 
 ## Define model
-N = 10 # Number of degrees of freedom of model
+N = int(1e2) # Number of degrees of freedom of model
 left = -1.
 right = 1.
 x = np.linspace(left, right, N)
