@@ -11,6 +11,9 @@ from opoly1d import OrthogonalPolynomialBasis1D, gauss_quadrature_driver, idisti
 from transformations import AffineTransform
 from quad_mod import quad_mod
 from lin_mod import lin_mod
+import pickle
+from pathlib import Path
+import os
 
 
 def jacobi_recurrence_values(N, alpha, beta):
@@ -127,6 +130,138 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
     return F
 
 
+
+
+def fidistinv_setup_helper1(ug, exps):
+    
+    if isinstance(ug, float) or isinstance(ug, int):
+        ug = np.asarray([ug])
+    else:
+        ug = np.asarray(ug)
+        
+    ug_mid = 1/2 * ( ug[:-1] + ug[1:] )
+    ug = np.sort( np.append(ug, ug_mid) )
+    
+    exponents = np.zeros( (2,ug.size-1) )
+    
+    exponents[0,::2] = 2/3
+    exponents[1,1::2] = 2/3
+    
+    exponents[0,0] = exps[0]
+    exponents[-1,-1] = exps[1]
+    
+    return ug, exponents
+
+def fidistinv_setup_helper2(ug, idistinv, exponents, M):
+    
+    vgrid = np.cos( np.linspace(np.pi, 0, M) )
+    
+#    V = JacobiPolynomials(-1/2, -1/2).eval(vgrid, np.arange(M))
+    ab = jacobi_recurrence_values(M, -1/2, -1/2)
+    V = eval_driver(vgrid, np.arange(M), 0, ab)
+    
+    iV = np.linalg.inv(V)
+    
+    ugrid = np.zeros( (M, ug.size - 1) )
+    xgrid = np.zeros( (M, ug.size - 1) )
+    xcoeffs = np.zeros( (M, ug.size - 1) )
+    
+    for q in range(ug.size - 1):
+        ugrid[:,q] = (vgrid + 1) / 2 * (ug[q+1] - ug[q]) + ug[q]
+        xgrid[:,q] = idistinv(ugrid[:,q])
+        
+        temp = xgrid[:,q]
+        if exponents[0,q] != 0:
+            temp = (temp - xgrid[0,q]) / (xgrid[-1,q] - xgrid[0,q])
+        else:
+            temp = (temp - xgrid[-1,q]) / (xgrid[-1,q] - xgrid[0,q])
+        
+        with np.errstate(divide='ignore', invalid='ignore'):
+            temp = temp * (1 + vgrid)**exponents[0,q] * (1 - vgrid)**exponents[1,q]
+            temp[~np.isfinite(temp)] = 0
+        
+        xcoeffs[:,q] = np.dot(iV, temp)
+        
+    data = np.zeros((M+6, ug.size - 1))
+    for q in range(ug.size - 1):
+        data[:,q] = np.hstack((ug[q], ug[q+1], xgrid[0,q], xgrid[-1,q], exponents[:,q], xcoeffs[:,q]))
+    
+    return data
+
+def fidistinv_driver(u, n, data):
+    
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
+    else:
+        u = np.asarray(u)
+        
+    if isinstance(n, float) or isinstance(n, int):
+        n = np.asarray([n])
+    else:
+        n = np.asarray(n)
+    
+    if u.size == 0:
+        return np.zeros(0)
+    
+    if n.size != 1:
+        assert u.size == n.size # Inputs u and n must be the same size, or n must be a scalar
+    
+    N = max(n)
+    assert len(data) >= N+1 # Input data does not cover range of n
+    
+    x = np.zeros(u.size)
+    if n.size == 1:
+        x = driver_helper(u, data[int(n)])
+    else:
+        for q in range(N+1):
+            nmask = (n == q)
+            x[nmask] = driver_helper(u[nmask], data[q])
+    
+    return x
+
+def driver_helper(u, data):
+    
+    tol = 1e-12
+    
+    M = data.shape[0] - 6
+    
+    ab = jacobi_recurrence_values(M, -1/2, -1/2)
+    
+    app = np.append(data[0,:], data[1,-1])
+    edges = np.insert(app, [0,app.size], [-np.inf,np.inf])
+    j = np.digitize(u, edges, right = False)
+    B = edges.size - 1
+    
+    x = np.zeros(u.size)
+    x[np.where(j==1)] = data[2,0] # Boundary bins
+    x[np.where(j==B)] = data[3,-1]
+    
+    for qb in range(2,B):
+        umask = (j==qb)
+        if not any(umask):
+            continue
+        
+        q = qb - 1
+        vgrid = ( u[umask] - data[0,q-1] ) / ( data[1,q-1] - data[0,q-1] ) * 2 - 1
+        V = eval_driver(vgrid, np.arange(M), 0, ab)
+        temp = np.dot(V, data[6:,q-1])
+        with np.errstate(divide='ignore', invalid='ignore'):
+            temp = temp / ( (1 + vgrid)**data[4,q-1] * (1 - vgrid)**data[5,q-1] )
+        
+        if data[4,q-1] != 0:
+            flags = abs(u[umask] - data[0,q-1]) < tol
+            temp[flags] = 0
+            temp = temp * (data[3,q-1] - data[2,q-1]) + data[2,q-1]
+        else:
+            flags = abs(u[umask] - data[1,q-1]) < tol
+            temp[flags] = 0
+            temp = temp * (data[3,q-1] - data[2,q-1]) + data[3,q-1]
+        
+        x[umask] = temp
+        
+    return x
+
+
 class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     def __init__(self, alpha=0., beta=0., domain=[-1.,1.]):
         OrthogonalPolynomialBasis1D.__init__(self)
@@ -159,7 +294,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             m = 2/( 1 + (self.alpha+1) / (self.beta+1) ) - 1
         return m
 
-    def idist(self, x, n, M=10):
+    def idist(self, x, n, M=50):
         """
         Computes the order-n induced distribution at the locations x using M=10
         quadrature nodes.
@@ -213,6 +348,71 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
                 x[flags] = idistinv_driver(u[flags], i, primitive, a, b, supp)
                 
         return x
+    
+    
+    
+    def fidistinv_jacobi_setup(self, n, data):
+        ns = np.arange(len(data), n+1)
+        
+        for q in range(ns.size):
+            
+            nn = ns[q]
+            
+            if nn == 0:
+                ug = np.array([0,1])
+            else:
+                xg,wg = self.gauss_quadrature(nn)
+                ug = self.idist(xg, nn)
+                ug = np.insert(ug, [0,ug.size], [0,1])
+                
+            exps = np.array([self.beta/(self.beta+1), self.alpha/(self.alpha+1)])
+            ug,exponents = fidistinv_setup_helper1(ug,exps)
+            
+            idistinv = lambda u: self.idistinv(u,nn)
+            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10))
+            
+        return data
+    
+    def fidistinv(self, u, n):
+        
+        dirName = 'data_set'
+        try:
+            os.makedirs(dirName)
+            print ('Directory ', dirName, 'Created')
+        except FileExistsError:
+            pass
+            #print ('Directory ', dirName, 'already exists')
+
+    
+        path = Path.cwd() / dirName
+        
+        filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
+        try:
+            with open(path / filename, 'rb') as f:
+                data = pickle.load(f)
+                #print ('Data loaded')
+        except Exception:
+            data = []
+            with open(path / filename, 'ab+') as f:
+                pickle.dump(data, f)
+        
+        if isinstance(n, float) or isinstance(n, int):
+            n = np.asarray([n])
+        else:
+            n = np.asarray(n)
+            
+        if len(data) < max(n[:]) + 1:
+            print('Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'.format(self.alpha, self.beta), end='', flush=True)
+            data = self.fidistinv_jacobi_setup(max(n[:]), data)
+            with open(path / filename, 'wb') as f:
+                pickle.dump(data, f)
+            print('Done', flush=True)
+        
+        x = fidistinv_driver(u, n, data)
+        
+        return x
+    
+    
     
     def eval_1d(self, x, n):
         """
@@ -294,21 +494,55 @@ def hermite_recurrence_values(N, mu):
     
     return ab
 
+def f_idist(x, n, alpha, rho):
+    """
+    for x <= 0
+    """
+
+    if isinstance(x, float) or isinstance(x, int):
+        x = np.asarray([x])
+    else:
+        x = np.asarray(x)
+
+    F = np.zeros(x.size)
+
+    if n%2 == 0:
+        F = 1/2 * hfreud_idistc_driver(x**2, int(n/2), alpha/2, (rho-1)/2, M)
+    else:
+        F = 1/2 * hfreud_idistc_driver(x**2, int((n-1)/2), alpha/2, (rho+1)/2, M)
+    
+    return F
+
 class HermitePolynomials(OrthogonalPolynomialBasis1D):
-    def __init__(self, mu = 0.):
+    def __init__(self, alpha = 2, rho = 0.):
         OrthogonalPolynomialBasis1D.__init__(self)
-        assert mu > -1.
-        self.mu = mu
+        assert rho > -1.
+        self.alpha = alpha
+        self.rho = rho
 
     def recurrence_driver(self, N):
         # Returns the first N+1 recurrence coefficient pairs for the Hermite
         # polynomial family.
 
-        ab = hermite_recurrence_values(N, self.mu)
+        ab = hermite_recurrence_values(N, self.rho/2)
         if self.probability_measure and N > 0:
             ab[0,1] = 1.
 
         return ab
+
+    def idist(self, x, n):
+
+        if isinstance(x, float) or isinstance(x, int):
+            x = np.asarray([x])
+        else:
+            x = np.asarray(x)
+
+        F = np.zeros(x.size)
+        F[np.where(x<0)] = f_idist(x[np.where(x<0)], n, self.alpha, self.rho, M=10)
+        F[np.where(x>=0)] = 1 - f_idist(-x[np.where(x>=0)], n, self.alpha, self.rho, M=10)
+
+        return F
+
 
 
 
@@ -492,6 +726,25 @@ def hf_idist_medapprox(n, alpha, rho):
 
     return x0
 
+def hf_idist(x, n, alpha, rho, M):
+
+    if isinstance(x, float) or isinstance(x, int):
+        x = np.asarray([x])
+    else:
+        x = np.asarray(x)
+
+    if alpha != 1:
+        x0 = hf_idist_medapprox(n, alpha, rho)
+    else:
+        x0 = 50
+
+    F = np.zeros(x.size,)
+    F[np.where(x<=x0)] = hfreud_idist_driver(x[np.where(x<=x0)], n, alpha, rho, M)
+    F[np.where(x>x0)] = 1 - hfreud_idistc_driver(x[np.where(x>x0)], n, alpha, rho, M)
+
+    return F
+
+
 class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
     def __init__(self, alpha = 1., rho = 0.):
         OrthogonalPolynomialBasis1D.__init__(self)
@@ -520,50 +773,9 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
 
         return hf_idist_medapprox(n, alpha, rho)
 
-#         a = self.rho + 2*n + 2*np.sqrt(n**2 + n*self.rho)
-#         a = a ** (1/self.alpha)
-#         a = a * np.exp(1/self.alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(self.alpha) \
-#                 - np.log(2) - sp.gammaln(self.alpha+1/2)))
-# 
-#         b = self.rho + 2*n - 2*np.sqrt(n**2 + n*self.rho)
-#         b = b ** (1/self.alpha)
-#         b = b * np.exp(1/self.alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(self.alpha) \
-#                 - np.log(2) - sp.gammaln(self.alpha+1/2)))
-# 
-#         x0 = 1/2 * (a + b)
-#         
-#         return x0
+    def idist(self, x, n):
 
-    def hf_idist(self, x, n, M=10): 
+        alpha = self.alpha
+        rho = self.rho
 
-        if isinstance(x, float) or isinstance(x, int):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
-
-        if self.alpha != 1:
-            x0 = self.idist_medapprox(n)
-        else:
-            x0 = 50
-
-        F = np.zeros(x.size,)
-
-        F[np.where(x<=x0)] = hfreud_idist_driver(x[np.where(x<=x0)],n,self.alpha,self.rho,M)
-        F[np.where(x>x0)] = 1 - hfreud_idistc_driver(x[np.where(x>x0)],n,self.alpha,self.rho,M)
-
-        return F
-
-    def f_idist(self, x, n, M=10):
-
-        if isinstance(x, float) or isinstance(x, int):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
-
-        F = np.zeros(x.size)
-        F[np.where(x>0)] = 1 - hfreud_idist_driver(-x[np.where(x>0)], n, self.alpha, self.rho, M)
-        F[np.where((x<=0) & (n%2==0))] = 1/2 * hfreud_idistc_driver(x[np.where(x<=0)]**2, n/2, self.alpha/2, (self.rho-1)/2, M)
-        F[np.where((x<=0) & (n%2==1))] = 1/2 * hfreud_idistc_driver(x[np.where(x<=0)]**2, (n-1)/2, self.alpha/2, (self.rho+1)/2, M)
-
-        return F
-
+        return hf_idist(x, n, alpha, rho, M=10)

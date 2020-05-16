@@ -8,6 +8,11 @@ Contains classes/methods for general univariate orthogonal polynomial families.
 
 import numpy as np
 from scipy import special as sp
+from numpy.linalg import eigh
+from quad_mod import quad_mod
+from scipy import optimize
+from scipy.special import gammaln
+
 
 def eval_driver(x, n, d, ab):
     # Evaluates univariate orthonormal polynomials given their
@@ -152,8 +157,6 @@ def gauss_quadrature_driver(ab, N):
     recurrence coefficients ab. (Requires ab.shape[0] >= N+1.)
     """
 
-    from numpy.linalg import eigh
-
     lamb,v = eigh(jacobi_matrix_driver(ab, N))
     return lamb, ab[0,1]**2 * v[0,:]**2
 
@@ -188,7 +191,6 @@ def markov_stiltjies(u, n, a, b, supp):
     a.size >> n
     
     """
-    from quad_mod import quad_mod
     
     assert type(n) is int
     
@@ -254,7 +256,6 @@ def idistinv_driver(u, n, primitive, a, b, supp):
     The ouptut x = F_n^{-1}(u)
     
     """
-    from scipy import optimize
     
     if isinstance(u, float) or isinstance(u, int):
         u = np.asarray([u])
@@ -426,9 +427,6 @@ class OrthogonalPolynomialBasis1D:
         ### outside the support interval. This causes imprecise quadrature 
         ### results for large-degree polynomials evaluated far outside 
         ### the support interval.
-
-
-        from numpy.linalg import eigh
 
         ab = self.recurrence(N+1)
         c = self.r_eval(anchor, N)
@@ -629,8 +627,6 @@ class OrthogonalPolynomialBasis1D:
             Output N x N matrix containing expansion coefficients
         """
 
-        from scipy.special import gammaln
-
         assert N >= 0
         assert d >= 0
 
@@ -767,67 +763,9 @@ class OrthogonalPolynomialBasis1D:
         assert k > 0
 
         p = self.eval(x, range(k))
-        return np.sqrt(float(k) / np.sum(p**2, axis=1))
-    
-    
-    
-    
-    def recurrence_quad_mod_jacobi(self, ab, N, z0):
-        """
-        Returns the first N+1 modified orthogonal polynomial recurrence pairs.
-        
-        requires two more recurrence pairs, i.e. ab.shape[0] >= N+3
-        """
-        if ab.shape[0] < N+3:
-            return 'Error, requires more recurrence pairs'
-        
-        AB = np.zeros((N+1,2))
-        
-        AB[0,0] = ab[2,1] * self.qpoly1d_eval(z0,3)[0,-1] * self.qpoly1d_eval(z0,2)[0,-1] \
-        / np.sqrt(1 + self.qpoly1d_eval(z0,2)[0,-1]**2) - \
-        ab[1,1] * self.qpoly1d_eval(z0,2)[0,-1] * self.qpoly1d_eval(z0,1)[0,-1] \
-        / np.sqrt(1 + self.qpoly1d_eval(z0,1)[0,-1]**2)
-        
-        AB[0,1] = (1 + self.qpoly1d_eval(z0,2)[0,-1]**2) / self.qpoly1d_eval(z0,1)[0,-1]**2
-        
-        for j in range(1,N+1):
-            AB[j,1] = (1+self.qpoly1d_eval(z0,j+2)[0,-1]**2) / (1+self.qpoly1d_eval(z0,j+1)[0,-1]**2)
-        
-        for j in range(1,N+1):
-            AB[j,0] = ab[j+2,1] * self.qpoly1d_eval(z0,j+3)[0,-1] * self.qpoly1d_eval(z0,j+2)[0,-1] \
-            / np.sqrt(1 + self.qpoly1d_eval(z0,j+2)[0,-1]**2) - \
-            ab[j+1,1] * self.qpoly1d_eval(z0,j+2)[0,-1] * self.qpoly1d_eval(z0,j+1)[0,-1] \
-            / np.sqrt(1 + self.qpoly1d_eval(z0,j+1)[0,-1]**2)
-        
-        AB[:,0] = ab[1:N+2,0] + AB[:,0]
-        AB[:,1] = np.sqrt(ab[1:N+2,1]**2 * AB[:,1])
-        return AB
-    
-    def recurrence_lin_mod_jacobi(self, ab, N, y0):
-        """
-        Returns the first N+1 modified orthogonal polynomial recurrence pairs.
-        
-        requires one more recurrence pairs, i.e. ab.shape[0] >= n+2
-        """
-        if ab.shape[0] < N+2:
-            return 'Error, requires more recurrence pairs'
-        
-        AB = np.zeros((N+1,2))
-        
-        AB[0,0] = ab[1,1] / self.r_eval(y0,2)
-        AB[0,1] = ab[1,1] * self.r_eval(y0,2)
-        
-        for j in range(1,N+1):
-            AB[j,1] = ab[j+1,1] * self.r_eval(y0,j+2) / (ab[j,1] * self.r_eval(y0,j+1))
-        
-        for j in range(1,N+1):
-            AB[j,0] = ab[j+1,1] / self.r_eval(y0,j+2) - ab[j,1] / self.r_eval(y0,j+1)
-            
-        AB[:,0] = ab[:N+1,0] + AB[:,0]
-        AB[:,1] = np.sqrt(ab[:N+1,1]**2 * AB[:,1])
-        return AB
+        return np.sqrt(float(k) / np.sum(p**2, axis=1))    
 
-    
+
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
