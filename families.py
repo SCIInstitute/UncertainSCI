@@ -7,7 +7,7 @@ Contains routines that specialize opoly1d things for classical orthogonal polyno
 
 import numpy as np
 from scipy import special as sp
-from opoly1d import OrthogonalPolynomialBasis1D, gauss_quadrature_driver, idistinv_driver
+from opoly1d import OrthogonalPolynomialBasis1D, eval_driver, idistinv_driver, gauss_quadrature_driver
 from transformations import AffineTransform
 import pickle
 from pathlib import Path
@@ -69,9 +69,6 @@ def jacobi_recurrence_values(N, alpha, beta):
 
 
 def jacobi_idist_driver(x, n, alpha, beta, M):
-
-    from opoly1d import gauss_quadrature_driver
-    #from quad_mod import quad_mod
     
     A = int(np.floor(np.abs(alpha)))
     Aa = alpha - A
@@ -159,7 +156,6 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M):
     
     vgrid = np.cos( np.linspace(np.pi, 0, M) )
     
-#    V = JacobiPolynomials(-1/2, -1/2).eval(vgrid, np.arange(M))
     ab = jacobi_recurrence_values(M, -1/2, -1/2)
     V = eval_driver(vgrid, np.arange(M), 0, ab)
     
