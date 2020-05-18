@@ -93,6 +93,42 @@ class IDistTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(np.linalg.norm(F1-F2,ord=np.inf), 0.)
 
+    def test_fidist_jacobi(self):
+        """Fast induced sampling routine for Jacobi polynomials."""
+
+        alpha = np.random.random()*11 - 1.
+        beta =  np.random.random()*11 - 1.
+
+        nmax = 4
+        M = 10
+        u = np.random.random(M)
+
+        J = JacobiPolynomials(alpha=alpha,beta=beta)
+
+        delta = 1e-3
+        for n in range(nmax)[::-1]:
+            x0 = J.idistinv(u, n)
+            x1 = J.fidistinv(u, n)
+
+            ind = np.where(np.abs(x0-x1) > delta)[:2][0]
+            if ind.size > 0:
+                errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, u={3:1.6f}'.format(alpha, beta, n, u[ind[0]])
+            else:
+                errstr = ''
+
+            self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
+
+        n = np.array(np.round(np.random.random(M)), dtype=int)
+        x0 = J.idistinv(u, n)
+        x1 = J.fidistinv(u, n)
+        ind = np.where(np.abs(x0-x1) > delta)[:2][0]
+        if ind.size > 0:
+            errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, u={3:1.6f}'.format(alpha, beta, n[ind[0]], u[ind[0]])
+        else:
+            errstr = ''
+
+        self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
+
 if __name__ == "__main__":
 
     unittest.main(verbosity=2)

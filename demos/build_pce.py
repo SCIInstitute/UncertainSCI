@@ -31,19 +31,31 @@ order = 5
 indices = TotalDegreeSet(dim=dimension, order=order)
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
+# Why +10? That's the default for PolynomialChaosExpansion.build_pce_wafp
 
 ## Initializes a pce object
 pce = PolynomialChaosExpansion(indices, dist)
 
 ## Define model
-N = 10 # Number of degrees of freedom of model
+N = int(1e2) # Number of degrees of freedom of model
 left = -1.
 right = 1.
 x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
 ## Compute PCE (runs model)
-lsq_residuals = pce.build_pce_wafp(model)
+lsq_residuals = pce.build(model)
+
+# The parameter samples and model evaluations are accessible:
+parameter_samples = pce.p
+model_evaluations = pce.output
+
+# And a second PCE could be built on the same parameter samples
+pce2 = PolynomialChaosExpansion(indices, dist)
+pce2.build(model, samples=parameter_samples)
+
+# pce and pce2 have the same coefficients:
+#np.linalg.norm( pce.coefficients - pce2.coefficients )
 
 ## Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
@@ -52,7 +64,10 @@ stdev = pce.stdev()
 # Power set of [0, 1, ..., dimension-1]
 variable_interactions = list(chain.from_iterable(combinations(range(dimension), r) for r in range(1, dimension+1)))
 
+# "Total sensitivity" is a non-partitive relative sensitivity measure per parameter.
 total_sensitivity = pce.total_sensitivity()
+
+# "Global sensitivity" is a partitive relative sensitivity measure per set of parameters.
 global_sensitivity = pce.global_sensitivity(variable_interactions)
 
 Q = 4 # Number of quantile bands to plot
