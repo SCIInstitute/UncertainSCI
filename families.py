@@ -381,7 +381,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         dirName = 'data_set'
         try:
             os.makedirs(dirName)
-            print ('Directory ', dirName, 'Created')
+            print ('Directory', dirName, 'created')
         except FileExistsError:
             pass
             #print ('Directory ', dirName, 'already exists')
@@ -391,12 +391,12 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         
         filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
-            with open(path / filename, 'rb') as f:
+            with open(str(path / filename), 'rb') as f:
                 data = pickle.load(f)
                 #print ('Data loaded')
         except Exception:
             data = []
-            with open(path / filename, 'ab+') as f:
+            with open(str(path / filename), 'ab+') as f:
                 pickle.dump(data, f)
         
         if isinstance(n, float) or isinstance(n, int):
@@ -407,7 +407,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         if len(data) < max(n[:]) + 1:
             print('Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'.format(self.alpha, self.beta), end='', flush=True)
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
-            with open(path / filename, 'wb') as f:
+            with open(str(path / filename), 'wb') as f:
                 pickle.dump(data, f)
             print('Done', flush=True)
         
