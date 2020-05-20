@@ -11,6 +11,7 @@ class PolynomialChaosExpansion():
 
         self.coefficients = None
         self.indices, self.distribution = indices, distribution
+        self.samples = None
 
     def set_indices(self, indices):
 
@@ -26,73 +27,101 @@ class PolynomialChaosExpansion():
         else:
             raise ValueError('Distribution must be a ProbabilityDistribution object')
 
-    def build_pce_wafp(self, model, samples=None, **sampler_options):
+    def check_distribution(self):
+        if self.distribution is None:
+            raise ValueError('First set distribution with set_distribution')
+
+    def check_indices(self):
+        if self.indices is None:
+            raise ValueError('First set indices with set_indices')
+
+    def generate_samples(self, sample_type='wafp', **sampler_options):
+        """
+        Generates samples for use in PCE construction.
+        """
+
+        self.check_distribution()
+        self.check_indices()
+
+        if sample_type.lower() == 'wafp':
+            p_standard = self.distribution.polys.wafp_sampling(self.indices.indices(), **sampler_options)
+
+            # Maps to domain
+            self.samples = self.distribution.transform_to_standard.mapinv( \
+                               self.distribution.transform_standard_dist_to_poly.mapinv(p_standard) )
+        else:
+            raise ValueError("Unsupported sample type '{0}' for input sample_type".format(sample_type))
+
+    def build_pce_wafp(self, model=None, model_output=None, samples=None, **sampler_options):
         """
         Computes PCE coefficients. Uses a WAFP grid to compute a least-squares
         collocation solution.
 
-        model should have the syntax:
+        If input "model" it given, it is a function pointer that should have the syntax:
 
         output = model(input_parmaeter_value),
 
         where input_parameter_value is a vector of size self.dim containing a
         parametric sample, and output is a 1D numpy array.
+
+        If input "model_output" is given, it is a numpy array with dimensions 
         """
 
-        if self.indices is None:
-            raise ValueError('First set indices with set_indices')
-        if self.distribution is None:
-            raise ValueError('First set distribution with set_distribution')
+        self.check_distribution()
+        self.check_indices()
 
         # Samples on standard domain
         if samples is None:
-            p_standard = self.distribution.polys.wafp_sampling(self.indices.indices(), **sampler_options)
 
-            # Maps to domain
-            p = self.distribution.transform_to_standard.mapinv( \
-                    self.distribution.transform_standard_dist_to_poly.mapinv(p_standard) )
-        else:
-            p = samples
-            if p.shape[1] != self.indices.indices().shape[1]:
-                raise ValueError('Input parameter samples p have wrong dimension')
-            p_standard = self.distribution.transform_standard_dist_to_poly.map( \
-                    self.distribution.transform_to_standard.map( p ) )
-
-        output = None
-
-        for ind in range(p.shape[0]):
-            if output is None:
-                output = model(p[ind,:])
-                M = output.size
-                output = np.concatenate( [ output.reshape([1, M]), np.zeros([p.shape[0]-1, M]) ], axis=0 )
+            if self.samples is None:
+                self.generate_samples('wafp', **sampler_options)
             else:
-                output[ind,:] = model(p[ind,:])
+                pass # User didn't specify samples now, but did previously
+
+        else:
+            if samples.shape[1] != self.indices.indices().shape[1]:
+                raise ValueError('Input parameter samples have wrong dimension')
+
+            self.samples = samples
+
+        p_standard = self.distribution.transform_standard_dist_to_poly.map( \
+                    self.distribution.transform_to_standard.map( self.samples ) )
+
+        if model_output is None:
+
+            for ind in range(self.samples.shape[0]):
+                if model_output is None:
+                    model_output = model(self.samples[ind,:])
+                    M = model_output.size
+                    model_output = np.concatenate( [ model_output.reshape([1, M]), np.zeros([self.samples.shape[0]-1, M]) ], axis=0 )
+                else:
+                    model_output[ind,:] = model(self.samples[ind,:])
 
         V = self.distribution.polys.eval(p_standard, self.indices.indices())
 
         # Precondition for stability
         norms = 1/np.sqrt(np.sum(V**2, axis=1))
         V = np.multiply(V.T, norms).T
-        output = np.multiply(output.T, norms).T
+        model_output = np.multiply(model_output.T, norms).T
 
         if version.parse(np.__version__) < version.parse('1.14.0'):
-            coeffs,residuals = np.linalg.lstsq(V, output, rcond=-1)[:2]
+            coeffs,residuals = np.linalg.lstsq(V, model_output, rcond=-1)[:2]
         else:
-            coeffs,residuals = np.linalg.lstsq(V, output, rcond=None)[:2]
+            coeffs,residuals = np.linalg.lstsq(V, model_output, rcond=None)[:2]
 
         self.coefficients = coeffs
-        self.p = p
-        self.output = np.multiply(output.T, 1/norms).T
+        self.p = samples # Should get rid of this.
+        self.model_output = np.multiply(model_output.T, 1/norms).T
 
         return residuals
 
-    def build(self, model, **options):
+    def build(self, model=None, model_output=None, **options):
         """
         Builds PCE from sampling and approximation settings.
         """
 
         # For now, we only have 1 method:
-        return self.build_pce_wafp(model, **options)
+        return self.build_pce_wafp(model=model, model_output=model_output, **options)
 
     def assert_pce_built(self):
         if self.coefficients is None:
