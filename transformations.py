@@ -40,7 +40,23 @@ class AffineTransform:
             raise NotImplementedError()
 
     def map(self, x):
-        return self.A.dot(x.T).T + self.b
+        if len(x.shape) < 2:
+            # either len(x) == dim or dim == 1
+            if len(x) == self.b.size:
+                return self.A.dot(x) + self.b
+            elif self.b.size == 1:
+                return self.A.todense()[0,0]*x + self.b
+
+        else:
+            return self.A.dot(x.T).T + self.b
 
     def mapinv(self, x):
-        return self.Ainv.dot(x.T).T + self.binv
+        if len(x.shape) < 2:
+            # either len(x) == dim or dim == 1
+            if len(x) == self.binv.size:
+                return self.Ainv.dot(x) + self.binv
+            elif self.b.size == 1:
+                return self.Ainv.todense()[0,0]*x + self.binv
+
+        else:
+            return self.Ainv.dot(x.T).T + self.binv

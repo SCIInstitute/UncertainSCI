@@ -5,9 +5,7 @@ def to_numpy_array(inp):
     Converts floats into numpy arrays.
     """
 
-    if type(inp) is float:
-        return np.array([inp])
-    elif type(inp) is np.ndarray:
-        return inp
+    if isinstance(inp, float) or isinstance(inp, int):
+        return np.asarray([inp])
     else:
-        raise TypeError('Unable to cast type "{0}" to numpy array'.format(type(inp)))
+        return np.asarray(inp)
