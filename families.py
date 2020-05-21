@@ -626,3 +626,12 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
                 x[flags] = discrete_chebyshev_idistinv_helper(u[flags], self.support, self.idist(self.support, i, nugget=True))
 
             return x
+
+    def fidistinv(self, u, n):
+        """
+        Fast routine for idistinv.
+        (In this case, the "slow" routine is already very fast, so this
+        is just an alias for idistinv.)
+        """
+
+        return self.idistinv(u, n)

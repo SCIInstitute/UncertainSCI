@@ -1,9 +1,14 @@
 import numpy as np
 
-from families import JacobiPolynomials
+from families import JacobiPolynomials, DiscreteChebyshevPolynomials
 from opolynd import TensorialPolynomials
 from indexing import total_degree_indices, hyperbolic_cross_indices
 from transformations import AffineTransform
+from utils.casting import to_numpy_array
+
+from numpy.random import default_rng
+
+rng = default_rng()
 
 class ProbabilityDistribution:
     def __init__(self):
@@ -37,9 +42,9 @@ class BetaDistribution(ProbabilityDistribution):
 
         # Low-level routines use Jacobi Polynomials, which operate on [-1,1]
         # instead of the standard Beta domain of [0,1]
-        self.jacobi_domain = np.ones([2, self.dim])
-        self.jacobi_domain[0,:] = -1.
-        self.transform_standard_dist_to_poly = AffineTransform(domain=self.standard_domain, image=self.jacobi_domain)
+        self.poly_domain = np.ones([2, self.dim])
+        self.poly_domain[0,:] = -1.
+        self.transform_standard_dist_to_poly = AffineTransform(domain=self.standard_domain, image=self.poly_domain)
 
         self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
 
@@ -238,22 +243,68 @@ class BetaDistribution(ProbabilityDistribution):
 
         return self.transform_to_standard.mapinv(p)
 
-if __name__ == "__main__":
+def DiscreteUniformDistribution(ProbabilityDistribution):
+    def __init__(self, n=None, domain=None, dim=None):
 
-    pass
-    #import pdb
+        if n is None:
+            raise ValueError('Input "n" is required.')
 
-    #d = 2
-    #k = 3
-    #set_type = 'td'
+        # Make sure dim is set, and that n is a list with len(n)==dim
+        if dim is not None:
+            if (len(n) > 1) and (len(n) != dim):
+                raise ValueError('Inconsistent settings for inputs "dim" and "n"')
+            elif len(n) == 1:
+                if isinstance(n, (list, tuple)):
+                    n = [n[0]]*dim
+                else:
+                    n = [n]*dim
 
-    #alpha = 1.
-    #beta = 1.
+            else: # len(n) == dim != 1
+                pass # Nothing to do
+        else:
+            if isinstance(n, (list, tuple)):
+                dim = len(n)
+            else:
+                n = [n]
+                dim = 1
 
-    #dist = BetaDistribution(alpha, beta, d)
-    #dist.set_indices(set_type, k)
+        # Ensure that user-specified domain makes sense
+        if domain is None:
+            domain = np.ones([2, dim])
+            domain[0,:] = 0
+        else:   # Domain should be a 2 x dim numpy array
+            if (domain.shape[0] != 2) or (domain.shape[1] != dim):
+                raise ValueError('Inputs "domain" and inferred dimension are inconsistent')
+            else:
+                pass # Nothing to do
 
-    #x = np.linspace(-1, 1, 100)
-    #mymodel = lambda p: np.sin((p[0] + p[1]**2) * np.pi * x)
+        # Assign stuff
+        self.dim, self.n, self.domain = dim, n, domain
 
-    #pce = dist.pce_approximation_wafp(mymodel)
+        # Compute transformations
+        # Standard domain is [0,1]^dim
+        self.standard_domain = np.ones([2, self.dim])
+        self.standard_domain[0,:] = 0.
+
+        # Low-level routines use Discrete Chebyshev Polynomials, which operate on [0,1]
+        self.poly_domain = np.ones([2, self.dim])
+        self.poly_domain[0,:] = 0.
+        self.transform_standard_dist_to_poly = AffineTransform(domain=self.standard_domain, image=self.poly_domain)
+
+        self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
+
+        Ps = []
+        for qd in range(self.dim):
+            Ps.append(DiscreteChebyshevPolynomials(M=n[qd]))
+        self.polys = TensorialPolynomials(polys1d=Ps)
+
+    def MC_samples(self, M=100):
+        """
+        Returns M Monte Carlo samples from the distribution.
+        """
+
+        p = np.zeros([M, self.dim])
+        for qd in range(self.dim):
+            p[:,qd] = rng.choice(self.polys[qd].standard_support, size=M)
+
+        return self.transform_to_standard.mapinv(p)
