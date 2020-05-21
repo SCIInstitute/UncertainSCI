@@ -5,16 +5,17 @@ Contains routines that specialize opoly1d things for classical orthogonal polyno
 - laguerre polys
 """
 
-import numpy as np
-from scipy import special as sp
-from opoly1d import OrthogonalPolynomialBasis1D, eval_driver, idistinv_driver
-from transformations import AffineTransform
+import os
 import pickle
 from pathlib import Path
-import os
 
+import numpy as np
+from scipy import special as sp
 
+from opoly1d import OrthogonalPolynomialBasis1D, eval_driver, idistinv_driver
 from opoly1d import linear_modification, quadratic_modification
+from transformations import AffineTransform
+from utils.casting import to_numpy_array
 
 def jacobi_recurrence_values(N, alpha, beta):
     
@@ -502,6 +503,68 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
         ab[:,1] = np.sqrt(ab[:,1])
 
         if self.probability_measure:
+            ab[0,1] = 1.
+
+        return ab
+
+def discrete_chebyshev_recurrence_values(N, M):
+    """
+    Returns the first N+1 recurrence coefficients pairs for the Discrete
+    Chebyshev measure, the N-point discrete uniform measure with equispaced
+    support on [0,1].
+    """
+
+    assert M > 0, N < M
+
+    if N < 1:
+        ab = np.ones((1,2))
+        ab[0,0] = 0.
+        ab[0,1] = 1.
+        return ab
+
+    ab = np.ones((N+1,2))
+    ab[0,0]  = 0
+    ab[1:,0] = 0.5
+
+    n = np.arange(1, N, dtype=float)
+    ab[:,1] = M/(2*(M-1)) * np.sqrt( (1 - (n/M)**2) / ( 4 - (1/n**2) ) )
+
+    return ab
+
+def discrete_chebyshev_idist_driver(x, n, M):
+    """
+    Note: "M" here is the measure support cardinality.
+    """
+
+    x_standard = self.transform_to_standard.map(to_numpy_array(x))
+    bins = np.digitize(x_standard, self.standard_support, right=False)
+
+    cumulative_weights = np.concatenate([np.array([0.]), np.cumsum(self.eval(self.standard_weights, n)**2))
+
+    return cumulative_weights[bins]
+
+class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
+    """
+    Class for polynomials orthonormal on [0,1] with respect to an M-point
+    discrete uniform measure with support equidistributed on the interval.
+    """
+    def __init__(self, M=2, domain=[0., 1.]):
+        OrthogonalPolynomialBasis1D.__init__(self)
+        assert M > 1
+        self.M = M
+
+        assert len(domain)==2
+        self.domain = np.array(domain).reshape([2,1])
+        self.standard_domain = np.array([-1,1]).reshape([2,1])
+        self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
+        self.standard_support = np.linspace(0, 1, N)
+        self.standard_weights = 1/N*np.ones(N)
+
+    def recurrence_driver(self, N):
+        # Returns the first N+1 recurrence coefficient pairs for the
+        # Discrete Chebyshev polynomial family.
+        ab = discrete_chebyshev_recurrence_values(N, self.M)
+        if self.probability_measure and N > 0:
             ab[0,1] = 1.
 
         return ab
