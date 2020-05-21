@@ -262,8 +262,8 @@ def driver_helper(u, data):
 
 
 class JacobiPolynomials(OrthogonalPolynomialBasis1D):
-    def __init__(self, alpha=0., beta=0., domain=[-1.,1.]):
-        OrthogonalPolynomialBasis1D.__init__(self)
+    def __init__(self, alpha=0., beta=0., domain=[-1.,1.],**options):
+        OrthogonalPolynomialBasis1D.__init__(self, **options)
         assert alpha > -1., beta > -1.
         self.alpha, self.beta = alpha, beta
 
@@ -529,8 +529,8 @@ def freud_idistinv(u, n, alpha, rho, M=25):
     return x
 
 class HermitePolynomials(OrthogonalPolynomialBasis1D):
-    def __init__(self, alpha = 2, rho = 0.):
-        OrthogonalPolynomialBasis1D.__init__(self)
+    def __init__(self, alpha = 2, rho = 0.,**options):
+        OrthogonalPolynomialBasis1D.__init__(self,**options)
         assert rho > -1.
         self.alpha = alpha
         self.rho = rho
@@ -808,8 +808,8 @@ def hfreud_idistinv(u, n, alpha, rho):
     return x
 
 class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
-    def __init__(self, alpha = 1., rho = 0.):
-        OrthogonalPolynomialBasis1D.__init__(self)
+    def __init__(self, alpha = 1., rho = 0.,**options):
+        OrthogonalPolynomialBasis1D.__init__(self,**options)
         assert alpha > 0
         assert rho > -1
         self.alpha = alpha

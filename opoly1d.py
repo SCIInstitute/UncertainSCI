@@ -336,8 +336,8 @@ def linear_modification(alphbet, x0):
     return ab
 
 class OrthogonalPolynomialBasis1D:
-    def __init__(self, recurrence=[]):
-        self.probability_measure=True
+    def __init__(self, recurrence=[],probability_measure=True):
+        self.probability_measure=probability_measure
         self.ab = np.zeros([0,2])
         pass
 
