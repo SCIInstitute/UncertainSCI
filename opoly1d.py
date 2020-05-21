@@ -241,8 +241,8 @@ def markov_stiltjies(u, n, ab, supp):
         W = np.insert(np.cumsum(w), 0, 0)
         
     else:
-        X = np.array([supp[0], y, y[-1]])
-        W = np.array([0, np.cumsum(w)])
+        X = np.insert (y, [0,y.size], [supp[0],y[-1]])
+        W = np.insert(np.cumsum(w), 0, 0)
         
     W = W / W[-1]
     
@@ -267,7 +267,7 @@ def markov_stiltjies(u, n, ab, supp):
     
     return intervals.T
 
-def idistinv_driver(u, n, primitive, a, b, supp):
+def idistinv_driver(u, n, primitive, ab, supp):
     
     """
     Uses bisection to compute the (approximate) inverse of the order-n induced
@@ -290,9 +290,7 @@ def idistinv_driver(u, n, primitive, a, b, supp):
     else:
         u = np.asarray(u)
     
-    if isinstance(n, int):
-        ab = np.vstack([a, b]).T
-        #intervals = markov_stiltjies(u, n, a, b, supp)    
+    if isinstance(n, int):   
         intervals = markov_stiltjies(u, n, ab, supp)    
     else:
         intervals = np.zeros((n.size, 2))
@@ -300,7 +298,6 @@ def idistinv_driver(u, n, primitive, a, b, supp):
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
         for i in range(nmax+1):
             flags = ind == i+1
-            #intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
             intervals[flags,:] = markov_stiltjies(u[flags], i, ab, supp)
         
     x = np.zeros(u.size,)

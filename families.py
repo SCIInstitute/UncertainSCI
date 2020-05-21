@@ -331,20 +331,19 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             n = int(n)
             primitive = lambda xx: self.idist(xx,n,M=M)
             
-            ab = self.recurrence(2*n + M+1); a = ab[:,0]; b = ab[:,1]
-            x = idistinv_driver(u, n, primitive, a, b, supp)
+            ab = self.recurrence_driver(2*n + M+1)
+            x = idistinv_driver(u, n, primitive, ab, supp)
             
         else:
             
             nmax = np.amax(n)
             ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
             
-            ab = self.recurrence(2*nmax + M+1); a = ab[:,0]; b = ab[:,1]
-            
+            ab = self.recurrence_driver(2*nmax + M+1)            
             for i in range(nmax+1):
                 flags = ind == i+1
                 primitive = lambda xx: self.idist(xx,i,M=M)
-                x[flags] = idistinv_driver(u[flags], i, primitive, a, b, supp)
+                x[flags] = idistinv_driver(u[flags], i, primitive, ab, supp)
                 
         return x
     
@@ -431,7 +430,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
 
         nmax = np.max(n)
         
-        ab = self.recurrence_driver(nmax+1) # ab explode when recurrence_driver(2), need debug
+        ab = self.recurrence_driver(nmax+1)
 
         assert ab.shape[0] > nmax
         assert np.min(n) > -1
@@ -482,8 +481,8 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
 
 
 def hermite_recurrence_values(N, mu):
-    if N < 1:
-        return np.ones((0,2))
+#     if N < 1:
+#         return np.ones((0,2))
 
     ab = np.zeros((N+1,2))
     ab[0,1] = sp.gamma(mu + 1/2)
@@ -493,7 +492,7 @@ def hermite_recurrence_values(N, mu):
     
     return ab
 
-def f_idist(x, n, alpha, rho, M=10):
+def freud_idist(x, n, alpha, rho, M=25):
     """
     for x <= 0
     """
@@ -505,12 +504,29 @@ def f_idist(x, n, alpha, rho, M=10):
 
     F = np.zeros(x.size)
 
-    if n%2 == 0:
+    if n % 2 == 0:
         F = 1/2 * hfreud_idistc_driver(x**2, int(n/2), alpha/2, (rho-1)/2, M)
     else:
         F = 1/2 * hfreud_idistc_driver(x**2, int((n-1)/2), alpha/2, (rho+1)/2, M)
     
     return F
+
+def freud_idistinv(u, n, alpha, rho, M=25):
+
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
+    else:
+        u = np.asarray(u)
+
+    if n % 2 == 0:
+        x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
+    else:
+        x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int((n-1)/2), alpha/2, (rho+1)/2) )
+
+    ind = np.where(u < 0.5)
+    x[ind] = -x[ind]
+
+    return x
 
 class HermitePolynomials(OrthogonalPolynomialBasis1D):
     def __init__(self, alpha = 2, rho = 0.):
@@ -529,16 +545,27 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
 
     def idist(self, x, n):
 
+        alpha = self.alpha
+        rho = self.rho
+
         if isinstance(x, float) or isinstance(x, int):
             x = np.asarray([x])
         else:
             x = np.asarray(x)
 
         F = np.zeros(x.size)
-        F[np.where(x<0)] = f_idist(x[np.where(x<0)], n, self.alpha, self.rho, M=10)
-        F[np.where(x>=0)] = 1 - f_idist(-x[np.where(x>=0)], n, self.alpha, self.rho, M=10)
+        F[np.where(x<0)] = freud_idist(x[np.where(x<0)], n, alpha, rho, M=10)
+        F[np.where(x>=0)] = 1 - freud_idist(-x[np.where(x>=0)], n, alpha, rho, M=10)
 
         return F
+
+    def idistinv(self, u, n):
+
+        alpha = self.alpha
+        rho = self.rho
+
+        return freud_idistinv(u, n, alpha, rho, M=25)
+
 
 
 
@@ -547,8 +574,8 @@ def laguerre_recurrence_values(N, alpha, rho):
     # Returns the first N+1 recurrence coefficient pairs for the Laguerre family.
     assert alpha == 1.
 
-    if N < 1:
-        return np.ones((0,2))
+#     if N < 1:
+#         return np.ones((0,2))
 
     ab = np.zeros((N+1,2))
 
@@ -687,23 +714,21 @@ def hfreud_idistc_driver(x, n, alpha, rho, M):
 
     return F
 
-def hf_idist_medapprox(n, alpha, rho):
+def hfreud_idist_medapprox(n, alpha, rho):
 
-    a = rho + 2*n + 2*np.sqrt(n**2 + n*rho)
+    a = rho + 2*n + 2*np.sqrt(n**2 + n*rho) # maxapprox
     a = a ** (1/alpha)
     a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) \
             - np.log(2) - sp.gammaln(alpha+1/2)))
     
-    b = rho + 2*n - 2*np.sqrt(n**2 + n*rho)
+    b = rho + 2*n - 2*np.sqrt(n**2 + n*rho) # minapprox
     b = b ** (1/alpha)
     b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) \
             - np.log(2) - sp.gammaln(alpha+1/2)))
 
-    x0 = 1/2 * (a + b)
+    return a,b
 
-    return x0
-
-def hf_idist(x, n, alpha, rho, M):
+def hfreud_idist(x, n, alpha, rho, M):
 
     if isinstance(x, float) or isinstance(x, int):
         x = np.asarray([x])
@@ -711,7 +736,7 @@ def hf_idist(x, n, alpha, rho, M):
         x = np.asarray(x)
 
     if alpha != 1:
-        x0 = hf_idist_medapprox(n, alpha, rho)
+        x0 = sum( hfreud_idist_medapprox(n, alpha, rho) ) / 2
     else:
         x0 = 50
 
@@ -721,6 +746,66 @@ def hf_idist(x, n, alpha, rho, M):
 
     return F
 
+def hfreud_tolerance(n, alpha, rho, tol):
+    assert tol > 0 and tol < 1
+    x = hfreud_idist_medapprox(n, alpha, rho)[0]
+    F = hfreud_idistc_driver(x, n, alpha, rho, M = 25)
+
+    while F > tol:
+        x += 1
+        F = hfreud_idistc_driver(x, n, alpha, rho, M = 25)
+
+    return x
+
+def hfreud_idistinv(u, n, alpha, rho):
+
+    eps = np.finfo(float).eps
+
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
+    else:
+        u = np.asarray(u)
+        
+    if isinstance(n, float) or isinstance(n, int):
+        n = np.asarray([n])
+    else:
+        n = np.asarray(n)
+
+    if n.size == 1:
+        n = int(n)
+        rhs = 1.2 * hfreud_idist_medapprox(n, alpha, rho)[0]
+
+        U = max(u)
+        if U == 1:
+            rhs = hfreud_tolerance(n, alpha, rho, eps/10)
+        else:
+            rhs = hfreud_tolerance(n, alpha, rho, 1-U)
+
+        supp = np.array([0, rhs])
+        ab = laguerre_recurrence_values(2*n + max(100,n), alpha, rho)
+        primitive = lambda xx: hfreud_idist(xx, n, alpha, rho, M=25)
+        x = idistinv_driver(u, n, primitive, ab, supp)
+    else:
+        nmax = np.amax(n)
+        ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
+        ab = laguerre_recurrence_values(2*nmax + M+1)
+            
+        for i in range(nmax+1):
+            rhs = 1.2 * hfreud_idist_medapprox(n, alpha, rho)[0]
+
+            U = max(u)
+            if U == 1:
+                rhs = hfreud_tolerance(n, alpha, rho, eps/10)
+            else:
+                rhs = hfreud_tolerance(n, alpha, rho, 1-U)
+
+            supp = [0, rhs]
+
+            flags = ind == i+1
+            primitive = lambda xx: hfreud_idist(xx, i, alpha, rho, M=25)
+            x[flags] = idistinv_driver(u[flags], i, primitive, ab, supp)
+
+    return x
 
 class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
     def __init__(self, alpha = 1., rho = 0.):
@@ -746,11 +831,19 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
         alpha = self.alpha
         rho = self.rho
 
-        return hf_idist_medapprox(n, alpha, rho)
+        return sum( hfreud_idist_medapprox(n, alpha, rho) ) / 2
 
-    def idist(self, x, n):
+    def idist(self, x, n, M=25):
 
         alpha = self.alpha
         rho = self.rho
 
-        return hf_idist(x, n, alpha, rho, M=10)
+        return hfreud_idist(x, n, alpha, rho, M)
+
+    def idistinv(self, u, n):
+
+        alpha = self.alpha
+        rho = self.rho
+
+        return hfreud_idistinv(u, n, alpha, rho)
+
