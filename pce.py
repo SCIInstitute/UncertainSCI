@@ -5,6 +5,7 @@ import numpy as np
 
 from indexing import MultiIndexSet
 from distributions import ProbabilityDistribution
+from utils.casting import to_numpy_array
 
 class PolynomialChaosExpansion():
     def __init__(self, indices=None, distribution=None):
@@ -163,6 +164,7 @@ class PolynomialChaosExpansion():
         """
 
         self.assert_pce_built()
+        q = to_numpy_array(q)
 
         # Maximum number of floats generated at any given time
         MF = max([int(1e6), M, self.distribution.dim])
