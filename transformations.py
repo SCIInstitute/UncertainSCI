@@ -36,8 +36,13 @@ class AffineTransform:
             self.Ainv = sprs.diags(1/a, 0)
             self.binv = self.Ainv.dot(-self.b)
 
+        elif (A is not None) and (b is not None):
+            # Assume A is a numpy array
+            self.A, self.b = A, b
+            self.Ainv = np.linalg.inv(A)
+            self.binv = self.Ainv.dot(-self.b)
         else:
-            raise NotImplementedError()
+            raise ValueError('Domain/image or A/b must be specified')
 
     def map(self, x):
         if len(x.shape) < 2:
@@ -45,7 +50,10 @@ class AffineTransform:
             if len(x) == self.b.size:
                 return self.A.dot(x) + self.b
             elif self.b.size == 1:
-                return self.A.todense()[0,0]*x + self.b
+                if isinstance(self.A, sprs.spmatrix):
+                    return self.A.todense()[0,0]*x + self.b
+                else:
+                    return self.A[0,0]*x + self.b
 
         else:
             return self.A.dot(x.T).T + self.b
@@ -56,7 +64,10 @@ class AffineTransform:
             if len(x) == self.binv.size:
                 return self.Ainv.dot(x) + self.binv
             elif self.b.size == 1:
-                return self.Ainv.todense()[0,0]*x + self.binv
+                if isinstance(self.A, sprs.spmatrix):
+                    return self.Ainv.todense()[0,0]*x + self.binv
+                else:
+                    return self.Ainv[0,0]*x + self.binv
 
         else:
             return self.Ainv.dot(x.T).T + self.binv

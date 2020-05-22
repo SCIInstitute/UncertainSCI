@@ -1,4 +1,7 @@
 import numpy as np
+import scipy as sp
+from numpy.random import default_rng
+from scipy import sparse as sprs
 
 from families import JacobiPolynomials, DiscreteChebyshevPolynomials
 from opolynd import TensorialPolynomials
@@ -6,7 +9,6 @@ from indexing import total_degree_indices, hyperbolic_cross_indices
 from transformations import AffineTransform
 from utils.casting import to_numpy_array
 
-from numpy.random import default_rng
 
 rng = default_rng()
 
@@ -243,7 +245,7 @@ class BetaDistribution(ProbabilityDistribution):
 
         return self.transform_to_standard.mapinv(p)
 
-def DiscreteUniformDistribution(ProbabilityDistribution):
+class DiscreteUniformDistribution(ProbabilityDistribution):
     def __init__(self, n=None, domain=None, dim=None):
 
         if n is None:
@@ -305,6 +307,65 @@ def DiscreteUniformDistribution(ProbabilityDistribution):
 
         p = np.zeros([M, self.dim])
         for qd in range(self.dim):
-            p[:,qd] = rng.choice(self.polys[qd].standard_support, size=M)
+            p[:,qd] = rng.choice(self.polys.polys1d[qd].standard_support, size=M)
 
         return self.transform_to_standard.mapinv(p)
+
+class TensorialDistribution(ProbabilityDistribution):
+    def __init__(self, distributions=None, dim=None):
+
+        if dim is not None:
+            if len(distributions) > 1:
+                raise ValueError("Input 'dim' cannot be set if 'distributions' contains more than one element")
+            else:
+                distributions = dim*distributions
+
+        self.distributions = distributions
+        self.dim = np.sum([dist.dim for dist in distributions])
+
+        self.standard_domain = np.concatenate( \
+                [dist.standard_domain.T for dist in distributions]
+                ).T
+
+        self.poly_domain = np.concatenate( \
+                [dist.poly_domain.T for dist in distributions]
+                ).T
+
+        # Construct transform_standard_dist_to_poly
+        Ts = [dist.transform_standard_dist_to_poly for dist in distributions]
+        As = [ t.A.toarray() if isinstance(t.A, sprs.spmatrix) else t.A for t in Ts ]
+        bs = [ t.b for t in Ts ]
+
+        self.transform_standard_dist_to_poly = AffineTransform( \
+                A=sp.linalg.block_diag( *As ), \
+                b=np.concatenate(bs)
+            )
+
+        # Construct transform_to_standard
+        Ts = [dist.transform_to_standard for dist in distributions]
+        As = [ t.A.toarray() if isinstance(t.A, sprs.spmatrix) else t.A for t in Ts ]
+        bs = [ t.b for t in Ts ]
+
+        self.transform_to_standard = AffineTransform( \
+                A=sp.linalg.block_diag( *As ), \
+                b=np.concatenate(bs)
+            )
+
+        self.polys = TensorialPolynomials( [poly for dist in distributions for poly in dist.polys.polys1d] )
+
+        self.indices = None
+
+    def MC_samples(self, M=100):
+        """
+        Returns M Monte Carlo samples from the distribution
+        """
+
+        p = np.zeros([M, self.dim])
+        counter = 0
+        for dist in self.distributions:
+            p[:,range(counter, counter+dist.dim)] = dist.MC_samples(M=M)
+            counter += dist.dim
+
+        # Each component distribution already applies
+        # transform_to_standard.mapinv.
+        return p
