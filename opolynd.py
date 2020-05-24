@@ -1,5 +1,5 @@
 import numpy as np
-
+import opoly1d
 from opoly1d import OrthogonalPolynomialBasis1D
 
 from utils.linalg import greedy_d_optimal
@@ -22,7 +22,7 @@ def opolynd_eval(x, lambdas, ab):
     p = np.ones([M, N])
 
     for qd in range(d):
-        p = p * opoly1d.opoly1d_eval(x[:,qd], lambdas[:,qd], ab)
+        p = p * opoly1d.eval_driver(x[:,qd], lambdas[:,qd], 0, ab)
 
     return p
 

@@ -492,7 +492,7 @@ def hermite_recurrence_values(N, mu):
     
     return ab
 
-def freud_idist(x, n, alpha, rho, M=25):
+def freud_idist(x, n, alpha, rho):
     """
     for x <= 0
     """
@@ -505,13 +505,13 @@ def freud_idist(x, n, alpha, rho, M=25):
     F = np.zeros(x.size)
 
     if n % 2 == 0:
-        F = 1/2 * hfreud_idistc_driver(x**2, int(n/2), alpha/2, (rho-1)/2, M)
+        F = 1/2 * hfreud_idistc(x**2, int(n/2), alpha/2, (rho-1)/2)
     else:
-        F = 1/2 * hfreud_idistc_driver(x**2, int((n-1)/2), alpha/2, (rho+1)/2, M)
+        F = 1/2 * hfreud_idistc(x**2, int((n-1)/2), alpha/2, (rho+1)/2)
     
     return F
 
-def freud_idistinv(u, n, alpha, rho, M=25):
+def freud_idistinv(u, n, alpha, rho):
 
     if isinstance(u, float) or isinstance(u, int):
         u = np.asarray([u])
@@ -554,8 +554,8 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
             x = np.asarray(x)
 
         F = np.zeros(x.size)
-        F[np.where(x<0)] = freud_idist(x[np.where(x<0)], n, alpha, rho, M=10)
-        F[np.where(x>=0)] = 1 - freud_idist(-x[np.where(x>=0)], n, alpha, rho, M=10)
+        F[np.where(x<=0)] = freud_idist(x[np.where(x<=0)], n, alpha, rho)
+        F[np.where(x>0)] = 1 - freud_idist(-x[np.where(x>0)], n, alpha, rho)
 
         return F
 
@@ -564,7 +564,7 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
         alpha = self.alpha
         rho = self.rho
 
-        return freud_idistinv(u, n, alpha, rho, M=25)
+        return freud_idistinv(u, n, alpha, rho)
 
 
 
@@ -588,7 +588,7 @@ def laguerre_recurrence_values(N, alpha, rho):
 
     return ab
 
-def hfreud_idist_driver(x, n, alpha, rho, M):
+def hfreud_idist_driver(x, n, alpha, rho, M=25):
     """
     Evaluates the integral, F = \int_{0}^x p_n^2(x) \dx{\mu(x)} for x <= x0
     """
@@ -654,7 +654,7 @@ def hfreud_idist_driver(x, n, alpha, rho, M):
 
     return F
 
-def hfreud_idistc_driver(x, n, alpha, rho, M):
+def hfreud_idistc_driver(x, n, alpha, rho, M=25):
     """
     Evaluates the integral, F = \int_{0}^x p_n^2(x) \dx{\mu(x)} for x >= x0
     """
@@ -728,7 +728,7 @@ def hfreud_idist_medapprox(n, alpha, rho):
 
     return a,b
 
-def hfreud_idist(x, n, alpha, rho, M):
+def hfreud_idist(x, n, alpha, rho):
 
     if isinstance(x, float) or isinstance(x, int):
         x = np.asarray([x])
@@ -741,19 +741,40 @@ def hfreud_idist(x, n, alpha, rho, M):
         x0 = 50
 
     F = np.zeros(x.size,)
-    F[np.where(x<=x0)] = hfreud_idist_driver(x[np.where(x<=x0)], n, alpha, rho, M)
-    F[np.where(x>x0)] = 1 - hfreud_idistc_driver(x[np.where(x>x0)], n, alpha, rho, M)
+    F[np.where(x<=x0)] = hfreud_idist_driver(x[np.where(x<=x0)], n, alpha, rho)
+    F[np.where(x>x0)] = 1 - hfreud_idistc_driver(x[np.where(x>x0)], n, alpha, rho)
 
     return F
+
+def hfreud_idistc(x, n, alpha, rho):
+
+    return 1 - hfreud_idist(x, n, alpha, rho)
+
+#     if isinstance(x, float) or isinstance(x, int):
+#         x = np.asarray([x])
+#     else:
+#         x = np.asarray(x)
+# 
+#     if alpha != 1:
+#         x0 = sum( hfreud_idist_medapprox(n, alpha, rho) ) / 2
+#     else:
+#         x0 = 50
+# 
+#     F = np.zeros(x.size,)
+#     F[np.where(x<=x0)] = 1 - hfreud_idist_driver(x[np.where(x<=x0)], n, alpha, rho)
+#     F[np.where(x>x0)] = hfreud_idistc_driver(x[np.where(x>x0)], n, alpha, rho)
+# 
+#     return F
+
 
 def hfreud_tolerance(n, alpha, rho, tol):
     assert tol > 0 and tol < 1
     x = hfreud_idist_medapprox(n, alpha, rho)[0]
-    F = hfreud_idistc_driver(x, n, alpha, rho, M = 25)
+    F = hfreud_idistc_driver(x, n, alpha, rho)
 
     while F > tol:
         x += 1
-        F = hfreud_idistc_driver(x, n, alpha, rho, M = 25)
+        F = hfreud_idistc_driver(x, n, alpha, rho)
 
     return x
 
@@ -783,7 +804,7 @@ def hfreud_idistinv(u, n, alpha, rho):
 
         supp = np.array([0, rhs])
         ab = laguerre_recurrence_values(2*n + max(100,n), alpha, rho)
-        primitive = lambda xx: hfreud_idist(xx, n, alpha, rho, M=25)
+        primitive = lambda xx: hfreud_idist(xx, n, alpha, rho)
         x = idistinv_driver(u, n, primitive, ab, supp)
     else:
         nmax = np.amax(n)
@@ -802,7 +823,7 @@ def hfreud_idistinv(u, n, alpha, rho):
             supp = [0, rhs]
 
             flags = ind == i+1
-            primitive = lambda xx: hfreud_idist(xx, i, alpha, rho, M=25)
+            primitive = lambda xx: hfreud_idist(xx, i, alpha, rho)
             x[flags] = idistinv_driver(u[flags], i, primitive, ab, supp)
 
     return x
@@ -833,12 +854,12 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
 
         return sum( hfreud_idist_medapprox(n, alpha, rho) ) / 2
 
-    def idist(self, x, n, M=25):
+    def idist(self, x, n):
 
         alpha = self.alpha
         rho = self.rho
 
-        return hfreud_idist(x, n, alpha, rho, M)
+        return hfreud_idist(x, n, alpha, rho)
 
     def idistinv(self, u, n):
 
