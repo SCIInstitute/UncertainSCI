@@ -21,7 +21,7 @@ class IDistTestCase(unittest.TestCase):
 
         n = int(np.ceil(10*np.random.rand(1))[0])
         M = 25
-        x1 = (n+1)/2 * (2*np.random.rand(M)-1)
+        x1 = np.sqrt(2*n) * (2*np.random.rand(M)-1)
         u = H.idist(x1, n)
 
         # see if idistinv givens x back
@@ -39,10 +39,3 @@ class IDistTestCase(unittest.TestCase):
 if __name__ == "__main__":
 
     unittest.main(verbosity=2)
-    # The domain [-5,5] mainly contributes to the distribution function.
-    # This is why I did x1 = (n+1)/2 * (2*np.random.rand(M)-1).
-
-    # Error occurs when x is close to 0.
-    # The reason is that the CDF behaves like flat near 0,
-    # the inverse process is sensitives
-    

@@ -800,7 +800,10 @@ def hfreud_idistinv(u, n, alpha, rho):
         if U == 1:
             rhs = hfreud_tolerance(n, alpha, rho, eps/10)
         else:
-            rhs = hfreud_tolerance(n, alpha, rho, 1-U)
+            if np.abs(U) < 100*eps:
+                rhs = hfreud_tolerance(n, alpha, rho, 1 - 10*eps)
+            else:
+                rhs = hfreud_tolerance(n, alpha, rho, 1-U)
 
         supp = np.array([0, rhs])
         ab = laguerre_recurrence_values(2*n + max(100,n), alpha, rho)
