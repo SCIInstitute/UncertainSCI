@@ -115,7 +115,14 @@ class TensorialPolynomials:
 
 
         if self.isotropic:
-            if fast_sampler:
+
+            fidistinv = getattr(self.polys1d, "fidistinv", None)
+            if callable(fidistinv):
+                has_fidistinv = True
+            else:
+                has_fidistinv = False
+
+            if fast_sampler and has_fidistinv:
                 idistinv = self.polys1d.fidistinv
             else:
                 idistinv = self.polys1d.idistinv
@@ -126,7 +133,14 @@ class TensorialPolynomials:
         else:
             x = np.zeros([M, d])
             for qd in range(self.dim):
-                if fast_sampler:
+
+                fidistinv = getattr(self.polys1d[qd], "fidistinv", None)
+                if callable(fidistinv):
+                    has_fidistinv = True
+                else:
+                    has_fidistinv = False
+
+                if fast_sampler and has_fidistinv:
                     idistinv = self.polys1d[qd].fidistinv
                 else:
                     idistinv = self.polys1d[qd].idistinv
