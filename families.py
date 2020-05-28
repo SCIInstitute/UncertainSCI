@@ -29,6 +29,7 @@ def jacobi_recurrence_values(N, alpha, beta):
                       sp.gammaln(alpha + 1.) + sp.gammaln(beta + 1.) -
                       sp.gammaln(alpha + beta + 2.)
                     )
+        ab = np.sqrt(ab)
         return ab
 
     ab = np.ones((N+1,2)) * np.array([beta**2.- alpha**2., 1.])
