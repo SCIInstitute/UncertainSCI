@@ -1,6 +1,6 @@
 #UncertainSCI
 > Short blurb about what your product does.
-A python based toolkit to harness modern techniques to estimate statistical uncertainty in biomedical simulations by integrating these techniques with well-estabilsied biomedical simulation software.
+A Python-based toolkit that harnesses modern techniques to estimate statistical uncertainty in biomedical simulations by integrating these techniques with well-established biomedical simulation software.
 
 [![NPM Version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
@@ -48,4 +48,3 @@ Describe how to install all development dependencies and how to run an automated
 
 
 Distributed under the XYZ license. See ``LICENSE`` for more information.
-
