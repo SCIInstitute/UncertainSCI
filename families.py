@@ -9,12 +9,13 @@ import numpy as np
 from scipy import special as sp
 from opoly1d import OrthogonalPolynomialBasis1D, eval_driver, idistinv_driver, gauss_quadrature_driver
 from transformations import AffineTransform
+
+import os
 import pickle
 from pathlib import Path
-import os
-
 
 from opoly1d import linear_modification, quadratic_modification
+from utils.casting import to_numpy_array
 
 def jacobi_recurrence_values(N, alpha, beta):
     
@@ -377,7 +378,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         dirName = 'data_set'
         try:
             os.makedirs(dirName)
-            print ('Directory ', dirName, 'Created')
+            print ('Directory', dirName, 'created')
         except FileExistsError:
             pass
             #print ('Directory ', dirName, 'already exists')
@@ -387,12 +388,12 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         
         filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
-            with open(path / filename, 'rb') as f:
+            with open(str(path / filename), 'rb') as f:
                 data = pickle.load(f)
                 #print ('Data loaded')
         except Exception:
             data = []
-            with open(path / filename, 'ab+') as f:
+            with open(str(path / filename), 'ab+') as f:
                 pickle.dump(data, f)
         
         if isinstance(n, float) or isinstance(n, int):
@@ -403,7 +404,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         if len(data) < max(n[:]) + 1:
             print('Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'.format(self.alpha, self.beta), end='', flush=True)
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
-            with open(path / filename, 'wb') as f:
+            with open(str(path / filename), 'wb') as f:
                 pickle.dump(data, f)
             print('Done', flush=True)
         
@@ -871,4 +872,134 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
         rho = self.rho
 
         return hfreud_idistinv(u, n, alpha, rho)
+
+
+def discrete_chebyshev_recurrence_values(N, M):
+    """
+    Returns the first N+1 recurrence coefficients pairs for the Discrete
+    Chebyshev measure, the N-point discrete uniform measure with equispaced
+    support on [0,1].
+    """
+
+    assert M > 0, N < M
+
+    if N < 1:
+        ab = np.ones((1,2))
+        ab[0,0] = 0.
+        ab[0,1] = 1.
+        return ab
+
+    ab = np.ones((N+1,2))
+    ab[0,0]  = 0
+    ab[1:,0] = 0.5
+
+    n = np.arange(1, N+1, dtype=float)
+    ab[1:,1] = M/(2*(M-1)) * np.sqrt( (1 - (n/M)**2) / ( 4 - (1/n**2) ) )
+
+    return ab
+
+def discrete_chebyshev_idistinv_helper(u, support, idist_evals):
+    """
+    Performs the binning and subscripting for the idistinv routine.
+    """
+
+
+    M = len(idist_evals)
+    bin_edges = np.concatenate([np.array([0.]), idist_evals])
+    bins = np.digitize(u, bin_edges, right=True)
+
+    bins -= 1
+    bins[bins<0] = 0  # These points should correspond to u=0
+    bins[bins>=M] = M-1  # These points should correspond to u=1
+
+    return support[bins]
+
+class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
+    """
+    Class for polynomials orthonormal on [0,1] with respect to an M-point
+    discrete uniform measure with support equidistributed on the interval.
+    """
+    def __init__(self, M=2, domain=[0., 1.]):
+        OrthogonalPolynomialBasis1D.__init__(self)
+        assert M > 1
+        self.M = M
+
+        assert len(domain)==2
+        self.domain = np.array(domain).reshape([2,1])
+        self.standard_domain = np.array([0,1]).reshape([2,1])
+        self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
+        self.standard_support = np.linspace(0, 1, M)
+        self.support = self.transform_to_standard.mapinv(self.standard_support)
+        self.standard_weights = 1/M*np.ones(M)
+
+    def recurrence_driver(self, N):
+        # Returns the first N+1 recurrence coefficient pairs for the
+        # Discrete Chebyshev polynomial family.
+        assert(N < self.M)
+        ab = discrete_chebyshev_recurrence_values(N, self.M)
+        if self.probability_measure and N > 0:
+            ab[0,1] = 1.
+
+        return ab
+
+    def eval(self, x, n, **options):
+
+        return super().eval( self.transform_to_standard.map(x), n, **options)
+
+    def idist(self, x, n, nugget=False):
+        """
+        Evalutes the order-n induced distribution at the locations x.
+
+        Optionally, add a nugget to ensure correct computation on the
+        support points.
+        """
+
+        assert n >= 0
+
+        x_standard = self.transform_to_standard.map(to_numpy_array(x))
+        if nugget:
+            x_standard += 1e-3*(np.max(x) - np.min(x))
+
+        bins = np.digitize(x_standard, self.standard_support, right=False)
+
+        cumulative_weights = np.concatenate([np.array([0.]), np.cumsum(self.eval(self.support, n)**2)])/self.M
+
+        return cumulative_weights[bins]
+
+    def idistinv(self, u, n):
+        """
+        Computes the inverse order-n induced distribution at the locations
+        u.
+        """
+
+        u = to_numpy_array(u)
+        assert np.all(u >= 0), "Input u must contain numbers between 0 and 1"
+        assert np.all(u <= 1), "Input u must contain numbers between 0 and 1"
+
+        n = to_numpy_array(n)
+
+        x = np.zeros(u.size)
+
+        if n.size == 1:
+
+            return discrete_chebyshev_idistinv_helper(u, self.support, self.idist(self.support, n[0], nugget=True))
+
+        else:
+            nmax = np.amax(n)
+            ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
+
+            for i in range(nmax+1):
+                flags = ind == i+1
+                x[flags] = discrete_chebyshev_idistinv_helper(u[flags], self.support, self.idist(self.support, i, nugget=True))
+
+            return x
+
+    def fidistinv(self, u, n):
+        """
+        Fast routine for idistinv.
+        (In this case, the "slow" routine is already very fast, so this
+        is just an alias for idistinv.)
+        """
+
+        return self.idistinv(u, n)
 
