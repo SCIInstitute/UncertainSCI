@@ -412,7 +412,7 @@ class OrthogonalPolynomialBasis1D:
             return np.zeros(0)
 
         nmax = np.max(n)
-        ab = self.recurrence(nmax+1)
+        ab = self.recurrence(nmax)
 
         assert nmax < ab.shape[0]
         assert np.min(n) > -1

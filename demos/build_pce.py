@@ -43,14 +43,35 @@ right = 1.
 x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
-## Compute PCE (runs model)
+## Three equivalent ways to run the PCE model:
+
+# 1
+# Generate samples and query model in one call:
+pce = PolynomialChaosExpansion(indices, dist)
 lsq_residuals = pce.build(model)
 
-# The parameter samples and model evaluations are accessible:
-parameter_samples = pce.p
-model_evaluations = pce.output
+# 2 
+# Generate samples first, then query model:
+pce = PolynomialChaosExpansion(indices, dist)
+pce.generate_samples()              # After this, pce.samples contains experimental design
+lsq_residuals = pce.build(model)
 
-# And a second PCE could be built on the same parameter samples
+# 3
+# Generate samples first, then manually query model, then give model output to pce.
+pce = PolynomialChaosExpansion(indices, dist)
+pce.generate_samples()
+model_output = np.zeros([pce.samples.shape[0], N])
+for ind in range(pce.samples.shape[0]):
+    model_output[ind,:] = model(pce.samples[ind,:])
+pce.build(model_output=model_output)
+
+## All 3 options above are the same thing, just pick one.
+
+# The parameter samples and model evaluations are accessible:
+parameter_samples = pce.samples
+model_evaluations = pce.model_output
+
+# And you could build a second PCE on the same parameter samples
 pce2 = PolynomialChaosExpansion(indices, dist)
 pce2.build(model, samples=parameter_samples)
 

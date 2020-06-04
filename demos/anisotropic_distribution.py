@@ -44,7 +44,7 @@ q_lower = np.arange(dq, 0.5-1e-7, dq)[::-1]
 q_upper = np.arange(0.5 + dq, 1.0-1e-7, dq)
 
 # Meh, this triple calling is wasteful
-median = pce.quantile(0.5, M=int(1e3))
+median = pce.quantile(0.5, M=int(1e3))[0,:]
 quantiles_lower = pce.quantile(q_lower, M=int(1e3))
 quantiles_upper = pce.quantile(q_upper, M=int(1e3))
 
