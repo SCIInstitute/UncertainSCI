@@ -1,6 +1,6 @@
 import numpy as np
 
-from families import JacobiPolynomials
+from families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
 from opolynd import TensorialPolynomials
 from indexing import total_degree_indices, hyperbolic_cross_indices
 from transformations import AffineTransform
@@ -10,12 +10,11 @@ class ProbabilityDistribution:
         pass
 
 class NormalDistribution(ProbabilityDistribution):
-    def __init__(self, mean=None, stdev=None, cov=None, dim=None):
+    def __init__(self, mean=None, cov=None, dim=None):
 
-        mean,stdev = _convert_meanstdev_to_iterable(mean, stdev)
-        cov = _convert_cov_to_iterable(cov)
+        mean,cov = self._convert_meancov_to_iterable(mean, cov)
         
-        self._detect_dimension(mean, stdev, cov, dim)
+        self._detect_dimension(mean, cov, dim)
 
         assert self.dim > 0, "Dimension must be positive"
         
@@ -44,7 +43,7 @@ class NormalDistribution(ProbabilityDistribution):
 
         L = np.linalg.cholesky(self.cov)
         A = np.linalg.inv(L)
-        b = A.dot(self.mean)
+        b = -A.dot(self.mean)
         self.transform_to_standard = AffineTransform(A=A, b=b)
 
         ## Construct 1D polynomial families
@@ -56,132 +55,123 @@ class NormalDistribution(ProbabilityDistribution):
         self.indices = None
 
 
-    def _convert_meanstdev_to_iterable(self, mean, stdev, cov):
+    def _convert_meancov_to_iterable(self, mean, cov):
         """
-        Converts user-input (mean, stdev) to iterables. Ensures that the length
+        Converts user-input (mean, cov) to iterables. Ensures that the length
         of the iterables matches on output.
 
         If mean is None, sets it to 0.
-        If stdev is None, sets it to 1.
-        If cov is None, sets it to identity
+        If cov is None, sets it to identity matrix
         """
 
-        # Tons of type/value checking for mean/stdev vs dim
+        # Tons of type/value checking for mean/cov vs dim
         meaniter = isinstance(mean, (list, tuple))
-        stdeviter = isinstance(stdev, (list, tuple))
-        coviter = isinstance(cov, (np.ndarray))
 
-        if meaniter and stdeviter and coviter:
-            if len(mean) > 1 and len(stdev) > 1 and cov.shape[0] > 1:
-                assert np.all(cov - cov.T == 0) "Covariance must be symmetric"
-                try:
-                    np.linalg.cholesky(cov)
-                except ValueError:
-                    print ('Covariance must be positive definite')
+        if cov is None:
+            if meaniter:
+                cov = np.eye(len(mean))
+            elif mean is None:
+                mean = [0.]
+                cov = np.eye(1)
+            else: # mean is a scalar
+                mean = [mean,]
+                cov = np.eye(1)
 
-                assert len(mean) == len(stdev), "Mean and stdev parameter inputs must be of the same size"
-                assert len(mean) == cov.shape[0] "Mean and cov parameter inputs must be of the same size"
-                for qd in range(len(mean)):
-                    assert stdev[qd]**2 = np.diag(cov,0)[qd] "The entries on the diagonal of covariance are variances"
+        else:
+            assert isinstance(cov, np.ndarray), 'Covariance must be an array'
+            assert np.all(cov - cov.T == 0), 'Covariance must be symmetric'
 
-            elif len(mean) == 1 and len(stdev) == 1:
-                pass
+            if meaniter:
+                if len(mean) > 1 and cov.shape[0] > 1:
+                    assert len(mean) == cov.shape[0], "Mean and cov parameter inputs must be of the same size"
+                    try:
+                        np.linalg.cholesky(cov)
+                    except ValueError:
+                        print ('Covariance must be positive definite')
 
-            elif len(mean) == 1 and len(stdev) > 1:
-                mean = [mean[0] for i in range(len(stdev))]
+                elif len(mean) == 1 and cov.shape[0] == 1:
+                    pass
+
+                elif len(mean) == 1 and cov.shape[0] > 1:
+                    mean = [mean[0] for i in range(cov.shape[0])]
             
-            elif len(stdev) == 1 and len(mean) > 1:
-                stdev = [stdev[0] for i in range(len(mean))]
+                elif cov.shape[0] == 1 and len(mean) > 1:
+                    cov = np.eye(len(mean)) * cov[0]
 
-        elif meaniter: # mean is iterable, stdev is not
-            if stdev is None:
-                stdev = 1.
-            stdev = [stdev for i in range(len(alpha))]
+            elif mean is None:
+                mean = [0. for i in range(cov.shape[0])]
 
-        elif stdeviter: # stdev is iterable, mean is not
-            if mean is None:
-                mean = 0.
-            mean = [mean for i in range(len(beta))]
+            else: # mean is a scalar
+                mean = [mean for i in range(cov.shape[0])]
 
-        elif mean is None and stdev is None:
-            mean, stdev = [0.,], [1.,]
-
-        else:  # mean, stdev should both be scalars
-            mean, stdev = [mean,], [stdev,]
-
-        return mean, stdev, cov
+        return mean, cov
 
 
-    def _detect_dimension(self, mean, stdev, cov, dim):
+    def _detect_dimension(self, mean, cov, dim):
         """
         Parses user-given inputs to determine the dimension of the distribution.
 
-        Mean, stdev and cov are iterables.
+        Mean and cov are iterables.
 
-        Sets self.dim, self.mean, self.stdev, self.cov
+        Sets self.dim, self.mean, self.cov
         """
         # Situations:
-        # 1. User specifies mean, stdev lists and cov array (disallow contradictory
+        # 1. User specifies mean list and cov ndarray (disallow contradictory
         #    dimension specification)
         # 2. User specifies dim scalar (disallow contradictory mean, stdev and
         #    cov specification)
         # 3. dim = 1
 
-        if len(alpha) > 1 or len(beta) > 1 or cov.shape[0] > 1: # Case 1:
-            if len(alpha) != len(beta):
-                raise ValueError('Input parameters mean and stdev must be the same dimension')
+        if len(mean) > 1 or cov.shape[0] > 1: # Case 1:
+            if len(mean) != cov.shape[0]:
+                raise ValueError('Input parameters mean and cov must be the same dimension')
 
-            if (dim is not None) and (dim != 1) and (dim != len(alpha)):
-                raise ValueError('Mean, stdev parameter lists must have size consistent with input dim')
+            if (dim is not None) and (dim != 1) and (dim != len(mean)):
+                raise ValueError('Mean parameter list must have size consistent with input dim')
 
             if (dim is not None) and (dim != 1) and (dim != cov.shape[0]):
                 raise ValueError('Cov parameter array must have size consistance with input dim')
 
             self.dim = len(mean)
             self.mean = mean
-            self.stdev = stdev
             self.cov = cov
 
         elif dim is not None and dim > 1: # Case 2
             self.dim = dim
             self.mean = [mean[0] for i in range(self.dim)]
-            self.stdev = [stdev[0] for i in range(self.dim)]
-            self.cov = np.ones((self.dim, self.dim)) * self.stdev**2
+            self.cov = np.eye(self.dim) * cov[0]
 
-        else: # dim = 1
+        else: # Case 3
             self.dim = 1
             self.mean = mean
-            self.stdev = stdev
-            self.cov = np.eye(1) * self.stdev**2
+            self.cov = cov
 
 
     def MC_samples(self, M=100):
         """
         Returns M Monte Carlo samples from the distribution.
         """
-        p = np.random.normal(self.mu, self.stdev, [M,self.dim])
+        p = np.random.normal(0., 1., [M,self.dim])
 
         return self.transform_to_standard.mapinv(p)
 
 
 class ExponentialDistribution(ProbabilityDistribution):
 
-    def __init__(self, lbd=None, mean=None, stdev=None, dim=None):
+    def __init__(self, flag=True, lbd=None, loc=None, mean=None, stdev=None, dim=None):
 
-        # Convert mean/stdev inputs to rho
+        # Convert mean/stdev inputs to lbd
         if mean is not None and stdev is not None:
             if lbd is not None:
                 raise ValueError('Cannot simultaneously specify lbd parameter and mean/stdev parameters')
 
-            lbd = self._convert_meanstdev_to_lbd(mean, stdev)
+            lbd = self._convert_meanloc_to_lbd(mean, loc)
         
-        lbd = self._convert_lbd_to_iterable(lbd)
+        lbd,loc = self._convert_lbdloc_to_iterable(lbd,loc)
 
-        # Set self.lbd, self.dim
-        self._detect_dimension(lbd, dim)
+        # Set self.lbd, self.loc and self.dim
+        self._detect_dimension(lbd, loc, dim)
 
-        for qd in range(self.dim):
-            assert self.lbd[qd] > 0, "Parameter vector lbd must have strictly positive components"
         assert self.dim > 0, "Dimension must be positive"
 
         # Construct affine map transformations
@@ -191,11 +181,22 @@ class ExponentialDistribution(ProbabilityDistribution):
         A = np.eye(self.dim)
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
-        
-        # Users say exp^{-lbd x}, need x ---> x/lbd
-        A = np.eye(self.dim) * (1/self.lbd)
-        b = np.zeros(self.dim)
-        self.transform_to_standard = AffineTransform(A=A, b=b)
+
+        if flag:
+            # Users say exp^{-lbd(x-loc)} on [loc, np.inf), loc >= 0
+            for i in range(len(self.lbd)):
+                assert self.lbd[i] > 0 and self.loc[i] >= 0
+            A = np.diag([1./self.lbd[i] for i in range(len(self.lbd))])
+            b = np.array([self.loc[i]/self.lbd[i] for i in range(len(self.lbd))])
+            self.transform_to_standard = AffineTransform(A=A, b=b)
+
+        else:
+            # Users say exp^{-lbd(x-loc)} on (-np.inf, loc], loc < 0
+            for i in range(len(lbd)):
+                assert self.lbd[i] < 0 and self.loc[i] < 0
+            A = np.diag([1./self.lbd[i] for i in range(len(self.lbd))])
+            b = np.array([self.loc[i]/self.lbd[i] for i in range(len(self.lbd))])
+            self.transform_to_standard = AffineTransform(A=A, b=b)
         
         ## Construct 1D polynomial families
         Ls = []
@@ -205,13 +206,13 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         self.indices = None
 
-    def _detect_dimension(self, lbd, dim):
+    def _detect_dimension(self, lbd, loc, dim):
         """
         Parses user-given inputs to determine the dimension of the distribution.
 
-        lbd is an iterable.
+        lbd and loc are iterables.
 
-        Sets self.lbd and self.dim
+        Sets self.lbd, self.loc and self.dim
         """
 
         # Situations: 
@@ -221,103 +222,113 @@ class ExponentialDistribution(ProbabilityDistribution):
         # 3. User specifies dim as a scalar, then lbd = np.ones(dim)
         # 4. User specifies nothing, then dim = 1, lbd = 1
 
-        if lbd is not None and dim is not None:
-            if len(lbd) != dim:
-                raise ValueError('Input parameters lbd and dim must be the same dimension')
-            self.lbd = lbd
-            self.dim = dim
+        if len(lbd) > 1 or len(loc) > 1:
+            if len(lbd) != len(loc):
+                raise ValueError('Input parameters lbd and loc must be the same dimension')
 
-        elif lbd is not None: # dim is None
-            dim = len(lbd)
-            self.lbd = lbd
-            self.dim = dim
+            if (dim is not None) and (dim != 1) and (dim != len(lbd)):
+                raise ValueError('Lbd, loc parameter lists must have size consistent with input dim')
 
-        elif dim is not None: # lbd is None, set lbd = 1
-            lbd = np.ones(dim)
+            self.dim = len(lbd)
             self.lbd = lbd
-            self.dim = dim
+            self.loc = loc
 
-        else: # dim is None and lbd is None, dimension is one, lbd = 1
+        elif dim is not None and dim > 1:
+            self.dim = dim
+            self.lbd = [lbd[0] for i in range(self.dim)]
+            self.loc = [loc[0] for i in range(self.dim)]
+
+        else: # The dimension is 1
             self.dim = 1
-            self.lbd = 1
+            self.lbd = lbd
+            self.loc = loc
 
-
-    def _convert_meanstdev_to_lbd(self, mean, stdev):
+    def _convert_meanloc_to_lbd(self, mean, loc):
         """
-        Converts user-given mean and stdev to an iterable lbd.
+        Converts user-given mean and loc to an iterable lbd.
         """
 
         meaniter = isinstance(mean, (list, tuple))
-        stdviter = isinstance(stdev, (list, tuple))
+        lociter = isinstance(loc, (list, tuple))
         lbd = []
 
         # If they're both iterables:
-        if meaniter and stdviter:
-
-            # If one has length 1 and the other has length > 1:
-            if (len(mean) == 1) and (len(stdev) > 1):
-                mean = [mean for i in range(len(stdev))]
-            elif (len(stdev) == 1) and (len(mean) > 1):
-                stdev = [stdev for i in range(len(mean))]
+        if meaniter and lociter:
+            assert len(mean) == len(loc)
 
             for ind in range(len(mean)):
-                lb = self.meanstdev_to_lbd(mean[ind], stdev[ind])
+                lb = self.meanloc_to_lbd(mean[ind], loc[ind])
                 lbd.append(lb)
 
-        # If mean is an iterable but stdev is not
+        # If mean is an iterable but loc is not
         elif meaniter:
+            loc = [loc for i in range(len(mean))]
             for ind in range(len(mean)):
-                lb = self.meanstdev_to_lbd(mean[ind], stdev)
+                lb = self.meanloc_to_lbd(mean[ind], loc[ind])
                 lbd.append(lb)
 
-        # If stdev is an iterable but mean is not
+        # If loc is an iterable but mean is not
         elif stdviter:
+            mean = [mean for i in range(len(loc))]
             for ind in range(len(stdev)):
-                lb = self.meanstdev_to_lbd(mean, stdev[ind])
+                lb = self.meanloc_to_lbd(mean[ind], loc[ind])
                 lbd.append(lb)
 
         # If they're both scalars, let the following lbd checker cf vs dim
         else:
-            lbd = self.meanstdev_to_lbd(mean, stdev)
+            lbd = self.meanloc_to_lbd(mean, loc)
 
         return lbd
 
 
-    def _convert_lbd_to_iterable(self, lbd):
+    def _convert_lbdloc_to_iterable(self, lbd, loc):
         """
-        Converts user-input lbd to iterables. Ensures that the length
+        Converts user-input lbd and loc to iterables. Ensures that the length
         of the iterables matches on output.
 
-        If lbd is None, sets to 1.
+        If lbd is None, sets it to 1.
+        If loc is None, sets it to 0.
         """
 
-        # Tons of type/value checking for alpha/beta vs dim
+        # Tons of type/value checking for lbd/loc vs dim
         lbditer = isinstance(lbd, (list, tuple))
+        lociter = isinstance(loc, (list, tuple))
 
-        if lbditer:
-            lbd = lbd
-        
-        elif lbd is None:
-            lbd = [1,]
-        
-        else: # lbd is a scalar
-            lbd = [lbd,]
+        if lbditer and lociter:
+            if len(lbd) > 1 and len(loc) > 1:
+                assert len(lbd) == len(loc), "Lbd and loc parameter inputs must be of the same size"
+            elif len(lbd) == 1 and len(loc) == 1:
+                pass
+            elif len(lbd) == 1:
+                lbd = [lbd[0] for i in range(len(loc))]
+            elif len(loc) == 1:
+                loc = [loc[0] for i in range(len(lbd))]
 
-        return lbd
+        elif lbditer: # lbd is iterable, loc is not
+            if loc is None:
+                loc = 0.
+            loc = [loc for i in range(len(lbd))]
 
-    def meanstdev_to_lbd(self, mu, stdev):
+        elif lociter: # beta is iterable, alpha is not
+            if lbd is None:
+                lbd = 1.
+            lbd = [lbd for i in range(len(loc))]
+
+        elif lbd is None and loc is None:
+            lbd, loc = [1.,], [0.,]
+
+        else:  # alpha, beta should both be scalars
+            lbd, loc = [lbd,], [loc,]
+
+        return lbd, loc
+
+    def meanloc_to_lbd(self, mu, loc):
         """
-        Returns lbd given an input mean (mu) and standard deviation (stdev)
+        Returns lbd given an input mean (mu) and location (loc)
         for a Exponential distribution
         """
 
-        if mu <= 0: # mu = 1 / lbd, lbd > 0
-            raise ValueError('Mean of a standard Exponential distribution must be positive.')
-
-        if stdev != mu # stdev^2 = var = 1 / lbd^2, mu = stdev
-            raise ValueError('Standard deviation of a Exponential distribution must equal the mean')
-
-        return 1 / mu
+        return 1 / (mu - loc)
 
     def MC_samples(self, M=100):
         """
@@ -326,7 +337,7 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         p = np.zeros([M, self.dim])
         for qd in range(self.dim):
-            p[:,qd] = np.random.exponential(1 / self.lbd[qd], M)
+            p[:,qd] = np.random.exponential(1, M)
 
         return self.transform_to_standard.mapinv(p)
 

@@ -37,7 +37,10 @@ class AffineTransform:
             self.binv = self.Ainv.dot(-self.b)
 
         else:
-            raise NotImplementedError()
+            self.A = A
+            self.b = b
+            self.Ainv = np.diag(1 / np.diag(self.A))
+            self.binv = self.Ainv.dot(-self.b)
 
     def map(self, x):
         return self.A.dot(x.T).T + self.b
