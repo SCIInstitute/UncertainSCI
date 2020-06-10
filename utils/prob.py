@@ -1,13 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Apr  6 18:37:33 2020
-
-@author: ZexinLiu
-"""
-
 import numpy as np
-from eval_F_jacobi import eval_F_jacobi
 
 def discrete_sampling(N, probs, states):
     """ samples iid from a discrete probability measure
@@ -39,11 +30,16 @@ def discrete_sampling(N, probs, states):
     return x
 
 if __name__ == "__main__":
+
+    from families import JacobiPolynomials
+
     alph = -0.8
     bet = np.sqrt(101)
     states = np.linspace(-1,1,10)
     n = 4
-    probs = eval_F_jacobi(states,n,alph,bet,M=10)
+    J = JacobiPolynomials(alpha=alph,beta=bet)
+
+    probs = J.idist(states,n,M=10)
     
     N = 5
     print (discrete_sampling(N, probs, states))

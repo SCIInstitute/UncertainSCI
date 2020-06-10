@@ -1,7 +1,8 @@
 import numpy as np
-import scipy as sp
 
 from opoly1d import OrthogonalPolynomialBasis1D
+
+from utils.linalg import greedy_d_optimal
 
 def opolynd_eval(x, lambdas, ab):
     # Evaluates tensorial orthonormal polynomials associated with the
@@ -31,6 +32,7 @@ class TensorialPolynomials:
         if polys1d is None:
             raise TypeError('A one-dimemsional polynomial family is required.')
 
+        # Isotropic tensorization of 1D family
         elif isinstance(polys1d, OrthogonalPolynomialBasis1D):
             self.polys1d = polys1d
             self.isotropic = True
@@ -39,8 +41,19 @@ class TensorialPolynomials:
             else:
                 self.dim = dim
 
-        else: # For list of 1d families
-            raise NotImplementedError('TODO')
+        # Anistropic tensorization of 1D family
+        elif isinstance(polys1d, list) or isinstance(polys1d, tuple):
+            if dim is not None:
+                raise ValueError('If polys1d is a list/tuple, the scalar dim cannot be set.')
+            for item in polys1d:
+                if not isinstance(item, OrthogonalPolynomialBasis1D):
+                    raise ValueError('Elements of polys1d must be OrthogonalPolynomialBasis1D objects')
+            self.polys1d = list(polys1d)
+            self.isotropic = False
+            self.dim = len(self.polys1d)
+
+        else: 
+            raise TypeError('Unrecognized type for input polys1d')
 
     def eval(self, x, lambdas):
         """
@@ -64,11 +77,12 @@ class TensorialPolynomials:
             for qd in range(self.dim):
                 p = p * self.polys1d.eval(x[:,qd], lambdas[:,qd])
         else:
-            raise NotImplementedError('TODO')
+            for qd in range(self.dim):
+                p = p * self.polys1d[qd].eval(x[:,qd], lambdas[:,qd])
     
         return p
 
-    def idist_mixture_sampling(self, M, Lambdas):
+    def idist_mixture_sampling(self, M, Lambdas, fast_sampler=True):
         """
         Performs tensorial inverse transform sampling from an additive mixture of
         tensorial induced distributions, generating M samples
@@ -98,14 +112,30 @@ class TensorialPolynomials:
         ks[np.where(ks > K)] = K
         Lambdas = Lambdas[ks-1, :]
 
-        #univ_inv = lambda uu, nn: self.polys1d.idistinv(uu, nn)
-        #from idistinv_jacobi import idistinv_jacobi
-        #from families import idistinv_jacobi_driver as idistinv_jacobi
-        #univ_inv = lambda uu,nn: idistinv_jacobi(uu, nn, self.polys1d.alpha, self.polys1d.beta)
-        univ_inv = lambda uu,nn: self.polys1d.idistinv(uu, nn)
-        return univ_inv(np.random.random([M,d]), Lambdas)
 
-    def wafp_sampling(self, indices, oversampling=10, sampler='idist', K=None):
+
+        if self.isotropic:
+            if fast_sampler:
+                idistinv = self.polys1d.fidistinv
+            else:
+                idistinv = self.polys1d.idistinv
+
+            univ_inv = lambda uu,nn: idistinv(uu, nn)
+            return univ_inv(np.random.random([M,d]), Lambdas)
+
+        else:
+            x = np.zeros([M, d])
+            for qd in range(self.dim):
+                if fast_sampler:
+                    idistinv = self.polys1d[qd].fidistinv
+                else:
+                    idistinv = self.polys1d[qd].idistinv
+
+                univ_inv = lambda uu,nn: idistinv(uu, nn)
+                x[:,qd] = univ_inv(np.random.random(M), Lambdas[:,qd])
+            return x
+
+    def wafp_sampling(self, indices, oversampling=10, sampler='idist', K=None, fast_sampler=True):
         """
         Computes (indices.shape[0] + oversampling) points using the WAFP
         strategy. This requires forming K random samples; the input sampler
@@ -120,16 +150,18 @@ class TensorialPolynomials:
             K = max(K, M)
 
         if sampler == 'idist':
-            x = self.idist_mixture_sampling(K, indices)
+            x = self.idist_mixture_sampling(K, indices, fast_sampler=fast_sampler)
+        else:
+            raise ValueError('Unrecognized string "{0:s}" for input "sampler"'.format(sampler))
 
         V = self.eval(x, indices)
 
         # Precondition rows to have unit norm
         V = np.multiply(V.T, 1/np.sqrt(np.sum(V**2, axis=1))).T
 
-        _,P = sp.linalg.qr(V.T, pivoting=True, mode='r')
+        P = greedy_d_optimal(V, M)
 
-        return x[P[:M],:]
+        return x[P,:]
 
 if __name__ == "__main__":
 

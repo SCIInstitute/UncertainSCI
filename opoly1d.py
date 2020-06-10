@@ -8,6 +8,142 @@ Contains classes/methods for general univariate orthogonal polynomial families.
 
 import numpy as np
 from scipy import special as sp
+from numpy.linalg import eigh
+from scipy import optimize
+from scipy.special import gammaln
+
+
+def eval_driver(x, n, d, ab):
+    # Evaluates univariate orthonormal polynomials given their
+    # three-term recurrence coefficients ab (a, b).
+    #
+    # Evaluates the d'th derivative. (Default = 0)
+    #
+    # Returns a numel(x) x numel(n) x numel(d) array.
+
+    nmax = np.max(n)
+
+    p = np.zeros( x.shape + (nmax+1,) )
+    xf = x.flatten()
+
+    p[:,0] = 1/ab[0,1]
+
+    if nmax > 0:
+        p[:,1] = 1/ab[1,1] * ( (xf - ab[1,0])*p[:,0] )
+
+    for j in range(2, nmax+1):
+        p[:,j] = 1/ab[j,1] * ( (xf - ab[j,0])*p[:,j-1] - ab[j-1,1]*p[:,j-2] )
+
+    if type(d) == int:
+        if d == 0:
+            return p[:,n.flatten()]
+        else:
+            d = [d]
+
+    preturn = np.zeros([p.shape[0], n.size, len(d)])
+
+    # Parse the list d to find which indices contain which
+    # derivative orders
+
+    indlocations = [i for i,val in enumerate(d) if val==0]
+    for i in indlocations:
+        preturn[:,:,i] = p[:,n.flatten()]
+
+    for qd in range(1, max(d)+1):
+
+        pd = np.zeros(p.shape)
+
+        for qn in range(qd,nmax+1):
+            if qn == qd:
+                # The following is an over/underflow-resistant way to
+                # compute ( qd! * kappa_{qd} ), where qd is the
+                # derivative order and kappa_{qd} is the leading-order
+                # coefficient of the degree-qd orthogonal polynomial.
+                # The explicit formula for the lading coefficient of the
+                # degree-qd orthonormal polynomial is prod(1/b[j]) for
+                # j=0...qd.
+                pd[:,qn] = np.exp( sp.gammaln(qd+1) - np.sum( np.log( ab[:(qd+1),1] ) ) )
+            else:
+                pd[:,qn] = 1/ab[qn,1] * ( ( xf - ab[qn,0] ) * pd[:,qn-1] - ab[qn-1,1] * pd[:,qn-2] + qd*p[:,qn-1] )
+
+        # Assign pd to proper locations
+        indlocations = [i for i,val in enumerate(d) if val==qd]
+        for i in indlocations:
+            preturn[:,:,i] = pd[:,n.flatten()]
+
+        p = pd
+
+    if len(d) == 1:
+        return preturn.squeeze(axis=2)
+    else:
+        return preturn
+
+def ratio_driver(x, n, d, ab):
+    """
+    Evalutes ratios of orthonormal polynomials. These are given by
+
+      r_n(x) = p_n(x) / p_{n-1}(x),  n >= 1
+
+    The output is a x.size x n.size array.
+    """
+    nmax = np.max(n)
+
+    r = np.zeros( [x.size , nmax+1] )
+    xf = x.flatten()
+
+    r[:,0] = 1/ab[0,1]
+    if nmax > 0:
+        r[:,1] = 1/ab[1,1] * ( x - ab[1,0] )
+
+    for j in range(2, nmax+1):
+        r[:,j] = 1/ab[j,1] * ( (xf - ab[j,0]) - ab[j-1,1]/r[:,j-1] )
+
+    r = r[:,n.flatten()]
+
+    if type(d) == int:
+        if d == 0:
+            return r
+        else:
+            raise NotImplementedError()
+    else:
+        raise NotImplementedError()
+
+def s_driver(x, n, ab):
+    """
+    The output is a x.size x (n+1) array.
+    
+    s_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
+    
+    s_0(x) = p_0(x)
+    
+    s_1(x) = 1 / b_1 * (x - a_1)
+    
+    s_2(x) = 1 / (b_2 * sqrt(1+s_1^2)) * ((x - a_2)*s_1 - b_1)
+    
+    Need {a_k, b_k} k up to n
+    """
+    
+    
+    xf = x.flatten()
+    nmax = np.max(n)
+
+    s = np.zeros( (xf.size , nmax+1) )
+
+    s[:,0] = 1 / ab[0,1]
+    
+    if nmax > 0:
+        s[:,1] = 1 / ab[1,1] * (x - ab[1,0])
+    
+    if nmax > 1:
+        s[:,2] = 1 / np.sqrt(1 + s[:,1]**2) * ((x - ab[2,0]) * s[:,1] - ab[1,1])
+        s[:,2] = s[:,2] / ab[2,1]
+        
+    for j in range(3, nmax+1):
+        s[:,j] = 1 / np.sqrt(1 + s[:,j-1]**2) * ((x - ab[j,0]) * s[:,j-1] - ab[j-1,1] * s[:,j-2] / np.sqrt(1 + s[:,j-2]**2))
+        s[:,j] = s[:,j] / ab[j,1]
+        
+    return s[:,n.flatten()]
+
 
 def jacobi_matrix_driver(ab, N):
     """
@@ -25,10 +161,36 @@ def gauss_quadrature_driver(ab, N):
 
     from numpy.linalg import eigh
 
-    lamb,v = eigh(jacobi_matrix_driver(ab, N))
-    return lamb, ab[0,1]**2 * v[0,:]**2
+    if N > 0:
+        lamb,v = eigh(jacobi_matrix_driver(ab, N))
+        return lamb, ab[0,1]**2 * v[0,:]**2
+    else:
+        return np.zeros(0), np.zeros(0)
 
-def markov_stiltjies(u, n, a, b, supp):
+def quadratic_modification(alphbet, z0):
+    """
+    The input is a single (N+1) x 2 array
+    
+    The output is a single (N) x 2 array
+    """
+    
+    ab = np.zeros([alphbet.shape[0] - 1, 2])
+    C = s_driver(z0, np.arange(alphbet.shape[0], dtype=int), alphbet)[0,:]
+
+    temp = alphbet[1:,1] * C[1:] * C[0:-1] / np.sqrt(1 + C[0:-1]**2)
+    temp[0] = alphbet[1,1] * C[1]
+    
+    acorrect = np.diff(temp)
+    ab[1:,0] = alphbet[2:,0] + acorrect
+    
+    temp = 1 + C[:]**2
+    bcorrect = temp[1:] / temp[0:-1]
+    bcorrect[0] = (1 + C[1]**2) / C[0]**2
+    ab[:,1] = alphbet[1:,1] * np.sqrt(bcorrect)
+    
+    return ab
+
+def markov_stiltjies(u, n, ab, supp):
     
     """ Uses the Markov-Stiltjies inequalities to provide a bounding interval for x, 
     the solution to F_n(x) = u
@@ -59,22 +221,20 @@ def markov_stiltjies(u, n, a, b, supp):
     a.size >> n
     
     """
-    from quad_mod import quad_mod
-
-
-    J = np.diag(b[1:n], k=1) + np.diag(a[1:n+1],k=0) + np.diag(b[1:n], k=-1)
-    x,v = np.linalg.eigh(J)
     
-    b[0] = 1
+    assert type(n) is int
+    
+    x,v = gauss_quadrature_driver(ab, n)
+    
+    ab[0,1] = 1
     
     for j in range(n):
-        a,b = quad_mod(a, b, x[j])
-        b[0] = 1
+        ab = quadratic_modification(ab, x[j])
+        ab[0,1] = 1
     
-    N = a.size - 1
-    J = np.diag(b[1:N], k=1) + np.diag(a[1:N+1],k=0) + np.diag(b[1:N], k=-1)
-    y,v = np.linalg.eigh(J)
-    w = v[0,:]**2
+    N = ab.shape[0] - 1
+
+    y,w = gauss_quadrature_driver(ab, N)
     
     if supp[1] > y[-1]:
         X = np.insert(y,[0,y.size], [supp[0],supp[1]])
@@ -89,6 +249,12 @@ def markov_stiltjies(u, n, a, b, supp):
     W[np.where(W > 1)] = 1 # Just in case for machine eps issues
     W[-1] = 1
     
+    
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
+    else:
+        u = np.asarray(u)
+            
     j = np.digitize(u, W, right = False) # bins[i-1] <= x < bins[i], left bin end is open
     jleft = j - 1
     jright = j + 1
@@ -118,34 +284,59 @@ def idistinv_driver(u, n, primitive, a, b, supp):
     The ouptut x = F_n^{-1}(u)
     
     """
-    from scipy import optimize
     
-    if isinstance(n, float) or isinstance(n, int):
-        n = np.asarray([n])
+    if isinstance(u, float) or isinstance(u, int):
+        u = np.asarray([u])
     else:
-        n = np.asarray(n)
+        u = np.asarray(u)
     
-    if n.size == 1:
-        n = int(n)
-        intervals = markov_stiltjies(u, n, a, b, supp)
-        
+    if isinstance(n, int):
+        ab = np.vstack([a, b]).T
+        #intervals = markov_stiltjies(u, n, a, b, supp)    
+        intervals = markov_stiltjies(u, n, ab, supp)    
     else:
-        """
-        maybe need n.size = u.size
-        """
         intervals = np.zeros((n.size, 2))
         nmax = max(n)
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
         for i in range(nmax+1):
             flags = ind == i+1
-            intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
-    
+            #intervals[flags,:] = markov_stiltjies(u[flags], i, a, b, supp)
+            intervals[flags,:] = markov_stiltjies(u[flags], i, ab, supp)
+        
     x = np.zeros(u.size,)
     for j in range(u.size):
         fun = lambda xx: primitive(xx) - u[j]
         x[j] = optimize.bisect(fun, intervals[j,0], intervals[j,1])
         
     return x
+
+def linear_modification(alphbet, x0):
+    """
+    The input is a single (N+1) x 2 array
+    
+    The output is a single N x 2 array
+    
+    The appropriate sign of the modification (+/- (x-x0)) is inferred from the
+    sign of (alph(1) - x0). Since alph(1) is the zero of p_1, then it is in
+    \supp \mu
+    """
+    sgn = np.sign(alphbet[1,0] - x0)
+    
+    ns = np.arange(alphbet.shape[0], dtype=int)
+    r = np.abs(ratio_driver(x0, ns, 0, alphbet)[0,1:])
+    assert r.size == alphbet.shape[0] - 1
+
+    ab = np.zeros([alphbet.shape[0]-1, 2])
+    
+    acorrect = alphbet[1:-1,1] / r[:-1]
+    acorrect[1:] = np.diff(acorrect)
+    ab[1:,0] = alphbet[1:-1,0] + sgn * acorrect
+    
+    bcorrect = alphbet[1:,1] * r
+    bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
+    ab[:,1] = alphbet[:-1,1] * np.sqrt(bcorrect)
+    
+    return ab
 
 class OrthogonalPolynomialBasis1D:
     def __init__(self, recurrence=[]):
@@ -221,66 +412,13 @@ class OrthogonalPolynomialBasis1D:
             return np.zeros(0)
 
         nmax = np.max(n)
-        ab = self.recurrence(nmax+1)
+        ab = self.recurrence(nmax)
 
         assert nmax < ab.shape[0]
         assert np.min(n) > -1
         assert np.all(d >= 0)
 
-        p = np.zeros( x.shape + (nmax+1,) )
-        xf = x.flatten()
-
-        p[:,0] = 1/ab[0,1]
-
-        if nmax > 0:
-            p[:,1] = 1/ab[1,1] * ( (xf - ab[1,0])*p[:,0] )
-
-        for j in range(2, nmax+1):
-            p[:,j] = 1/ab[j,1] * ( (xf - ab[j,0])*p[:,j-1] - ab[j-1,1]*p[:,j-2] )
-
-        if type(d) == int:
-            if d == 0:
-                return p[:,n.flatten()]
-            else:
-                d = [d]
-
-        preturn = np.zeros([p.shape[0], n.size, len(d)])
-
-        # Parse the list d to find which indices contain which
-        # derivative orders
-
-        indlocations = [i for i,val in enumerate(d) if val==0]
-        for i in indlocations:
-            preturn[:,:,i] = p[:,n.flatten()]
-
-        for qd in range(1, max(d)+1):
-
-            pd = np.zeros(p.shape)
-
-            for qn in range(qd,nmax+1):
-                if qn == qd:
-                    # The following is an over/underflow-resistant way to
-                    # compute ( qd! * kappa_{qd} ), where qd is the
-                    # derivative order and kappa_{qd} is the leading-order
-                    # coefficient of the degree-qd orthogonal polynomial.
-                    # The explicit formula for the lading coefficient of the
-                    # degree-qd orthonormal polynomial is prod(1/b[j]) for
-                    # j=0...qd.
-                    pd[:,qn] = np.exp( sp.gammaln(qd+1) - np.sum( np.log( ab[:(qd+1),1] ) ) )
-                else:
-                    pd[:,qn] = 1/ab[qn,1] * ( ( xf - ab[qn,0] ) * pd[:,qn-1] - ab[qn-1,1] * pd[:,qn-2] + qd*p[:,qn-1] )
-
-            # Assign pd to proper locations
-            indlocations = [i for i,val in enumerate(d) if val==qd]
-            for i in indlocations:
-                preturn[:,:,i] = pd[:,n.flatten()]
-
-            p = pd
-
-        if len(d) == 1:
-            return preturn.squeeze(axis=2)
-        else:
-            return preturn
+        return eval_driver(x, n, d, ab)
 
     def jacobi_matrix_driver(ab, N):
         """
@@ -338,12 +476,6 @@ class OrthogonalPolynomialBasis1D:
 
         return gauss_quadrature_driver(self.recurrence(N+1), N)
 
-        #from numpy.linalg import eigh
-
-        #lamb,v = eigh(self.jacobi_matrix(N))
-
-        #return lamb, v[0,:]**2 #* self.recurrence(N)[0,1]**2
-
     def gauss_radau_quadrature(self, N, anchor=0.):
         """
         Computes the N-point Gauss quadrature rule associated to the
@@ -354,9 +486,6 @@ class OrthogonalPolynomialBasis1D:
         ### outside the support interval. This causes imprecise quadrature 
         ### results for large-degree polynomials evaluated far outside 
         ### the support interval.
-
-
-        from numpy.linalg import eigh
 
         ab = self.recurrence(N+1)
         c = self.r_eval(anchor, N)
@@ -557,8 +686,6 @@ class OrthogonalPolynomialBasis1D:
             Output N x N matrix containing expansion coefficients
         """
 
-        from scipy.special import gammaln
-
         assert N >= 0
         assert d >= 0
 
@@ -607,23 +734,34 @@ class OrthogonalPolynomialBasis1D:
         assert np.min(n) > -1
         assert np.all(d >= 0) and np.all(d < 1)
 
-        r = np.zeros( x.shape + (nmax+1,) )
-        xf = x.flatten()
+        return ratio_driver(x, n, d, ab)
 
-        r[:,0] = 1/ab[0,1]
-        if nmax > 0:
-            r[:,1] = 1/ab[1,1] * ( x - ab[1,0] )
+    def s_eval(self, x, n):
+        """
+        The output is a x.size x (n+1) array.
+        
+        s_n(x) = p_n(x) / sqrt(sum_{j=0}^{n-1} p_j^2(x)), n >= 0
+        
+        s_0(x) = p_0(x)
+        
+        s_1(x) = 1 / b_1 * (x - a_1)
+        
+        s_2(x) = 1 / (b_2 * sqrt(1+s_1^2)) * ((x - a_2)*s_1 - b_1)
+        
+        Need {a_k, b_k} k up to n
+        """
 
-        for j in range(2, nmax+1):
-            r[:,j] = 1/ab[j,1] * ( (xf - ab[j,0]) - ab[j-1,1]/r[:,j-1] )
+        assert n < a.size
+        assert n < b.size
+        
+        if isinstance(x, float) or isinstance(x, int):
+            x = np.asarray([x])
+        else:
+            x = np.asarray(x)
 
-        r = r[:,n.flatten()]
+        ab = self.recurrence(n+1)
 
-        if type(d) == int:
-            if d == 0:
-                return r
-            else:
-                d = [d]
+        return s_driver(x, n, ab)
 
     def qpoly1d_eval(self, x, n, d=0):
         """
@@ -656,8 +794,10 @@ class OrthogonalPolynomialBasis1D:
                 return q
             else:
                 d = [d]
+                raise NotImplementedError()
 
-        assert False
+        raise NotImplementedError()
+
         qreturn = np.zeros([q.shape[0], q.shape[1], len(d)])
         for (qi,qval) in enumerate(d):
             if qval == 0:
@@ -682,67 +822,9 @@ class OrthogonalPolynomialBasis1D:
         assert k > 0
 
         p = self.eval(x, range(k))
-        return np.sqrt(float(k) / np.sum(p**2, axis=1))
-    
-    
-    
-    
-    def recurrence_quad_mod_jacobi(self, ab, N, z0):
-        """
-        Returns the first N+1 modified orthogonal polynomial recurrence pairs.
-        
-        requires two more recurrence pairs, i.e. ab.shape[0] >= N+3
-        """
-        if ab.shape[0] < N+3:
-            return 'Error, requires more recurrence pairs'
-        
-        AB = np.zeros((N+1,2))
-        
-        AB[0,0] = ab[2,1] * self.qpoly1d_eval(z0,3)[0,-1] * self.qpoly1d_eval(z0,2)[0,-1] \
-        / np.sqrt(1 + self.qpoly1d_eval(z0,2)[0,-1]**2) - \
-        ab[1,1] * self.qpoly1d_eval(z0,2)[0,-1] * self.qpoly1d_eval(z0,1)[0,-1] \
-        / np.sqrt(1 + self.qpoly1d_eval(z0,1)[0,-1]**2)
-        
-        AB[0,1] = (1 + self.qpoly1d_eval(z0,2)[0,-1]**2) / self.qpoly1d_eval(z0,1)[0,-1]**2
-        
-        for j in range(1,N+1):
-            AB[j,1] = (1+self.qpoly1d_eval(z0,j+2)[0,-1]**2) / (1+self.qpoly1d_eval(z0,j+1)[0,-1]**2)
-        
-        for j in range(1,N+1):
-            AB[j,0] = ab[j+2,1] * self.qpoly1d_eval(z0,j+3)[0,-1] * self.qpoly1d_eval(z0,j+2)[0,-1] \
-            / np.sqrt(1 + self.qpoly1d_eval(z0,j+2)[0,-1]**2) - \
-            ab[j+1,1] * self.qpoly1d_eval(z0,j+2)[0,-1] * self.qpoly1d_eval(z0,j+1)[0,-1] \
-            / np.sqrt(1 + self.qpoly1d_eval(z0,j+1)[0,-1]**2)
-        
-        AB[:,0] = ab[1:N+2,0] + AB[:,0]
-        AB[:,1] = np.sqrt(ab[1:N+2,1]**2 * AB[:,1])
-        return AB
-    
-    def recurrence_lin_mod_jacobi(self, ab, N, y0):
-        """
-        Returns the first N+1 modified orthogonal polynomial recurrence pairs.
-        
-        requires one more recurrence pairs, i.e. ab.shape[0] >= n+2
-        """
-        if ab.shape[0] < N+2:
-            return 'Error, requires more recurrence pairs'
-        
-        AB = np.zeros((N+1,2))
-        
-        AB[0,0] = ab[1,1] / self.r_eval(y0,2)
-        AB[0,1] = ab[1,1] * self.r_eval(y0,2)
-        
-        for j in range(1,N+1):
-            AB[j,1] = ab[j+1,1] * self.r_eval(y0,j+2) / (ab[j,1] * self.r_eval(y0,j+1))
-        
-        for j in range(1,N+1):
-            AB[j,0] = ab[j+1,1] / self.r_eval(y0,j+2) - ab[j,1] / self.r_eval(y0,j+1)
-            
-        AB[:,0] = ab[:N+1,0] + AB[:,0]
-        AB[:,1] = np.sqrt(ab[:N+1,1]**2 * AB[:,1])
-        return AB
+        return np.sqrt(float(k) / np.sum(p**2, axis=1))    
 
-    
+
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt

@@ -9,10 +9,16 @@ class JacobiTestCase(unittest.TestCase):
     Performs basic tests for univariate Jacobi polynomials
     """
 
+    def setUp(self):
+        self.longMessage=True
+
+    #def test_eval(self):
+    #    """
+    #    Evaluation of orthogonal polynomials.
+    #    """
+
     def test_ratio(self):
-        """
-        Evaluation of orthogonal polynomial ratios.
-        """
+        """ Evaluation of orthogonal polynomial ratios.  """
 
         alpha = -1. + 10*np.random.rand(1)[0]
         beta =  -1. + 10*np.random.rand(1)[0]
@@ -30,7 +36,15 @@ class JacobiTestCase(unittest.TestCase):
 
         r = J.r_eval(x, range(N+1))
 
-        self.assertAlmostEqual(np.linalg.norm(r-rdirect,ord=np.inf), 0.)
+        delta = 1e-6
+        errs = np.abs(r-rdirect)
+        i,j = np.where(errs > delta)[:2]
+        if i.size > 0:
+            errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, x={3:1.6f}'.format(alpha, beta, j[0], x[i[0]])
+        else:
+            errstr = ''
+
+        self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta, msg=errstr)
 
     def test_gq(self):
         """Gaussian quadrature integration accuracy"""
@@ -78,6 +92,42 @@ class IDistTestCase(unittest.TestCase):
             F2[xind] = np.dot(w,J.eval(yquad, n)**2) * (xval+1)/2
 
         self.assertAlmostEqual(np.linalg.norm(F1-F2,ord=np.inf), 0.)
+
+    def test_fidist_jacobi(self):
+        """Fast induced sampling routine for Jacobi polynomials."""
+
+        alpha = np.random.random()*11 - 1.
+        beta =  np.random.random()*11 - 1.
+
+        nmax = 4
+        M = 10
+        u = np.random.random(M)
+
+        J = JacobiPolynomials(alpha=alpha,beta=beta)
+
+        delta = 1e-3
+        for n in range(nmax)[::-1]:
+            x0 = J.idistinv(u, n)
+            x1 = J.fidistinv(u, n)
+
+            ind = np.where(np.abs(x0-x1) > delta)[:2][0]
+            if ind.size > 0:
+                errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, u={3:1.6f}'.format(alpha, beta, n, u[ind[0]])
+            else:
+                errstr = ''
+
+            self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
+
+        n = np.array(np.round(np.random.random(M)), dtype=int)
+        x0 = J.idistinv(u, n)
+        x1 = J.fidistinv(u, n)
+        ind = np.where(np.abs(x0-x1) > delta)[:2][0]
+        if ind.size > 0:
+            errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, u={3:1.6f}'.format(alpha, beta, n[ind[0]], u[ind[0]])
+        else:
+            errstr = ''
+
+        self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
 
 if __name__ == "__main__":
 
