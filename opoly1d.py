@@ -763,7 +763,6 @@ class OrthogonalPolynomialBasis1D:
 
         assert nmax < ab.shape[0]
         assert np.min(n) > -1
-        assert np.all(d >= 0) and np.all(d < 1)
 
         return s_driver(x, n, ab)
 

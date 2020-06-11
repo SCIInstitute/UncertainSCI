@@ -4,28 +4,6 @@ from opoly1d import OrthogonalPolynomialBasis1D
 
 from utils.linalg import greedy_d_optimal
 
-def opolynd_eval(x, lambdas, ab):
-    # Evaluates tensorial orthonormal polynomials associated with the
-    # univariate recurrence coefficients ab.
-
-    try:
-        M, d = x.shape
-    except Exception:
-        d = x.size
-        M = 1
-        x = np.reshape(x, (M, d))
-
-    N, d2 = lambdas.shape
-
-    assert d==d2, "Dimension 1 of x and lambdas must be equal"
-
-    p = np.ones([M, N])
-
-    for qd in range(d):
-        p = p * opoly1d.opoly1d_eval(x[:,qd], lambdas[:,qd], ab)
-
-    return p
-
 class TensorialPolynomials:
     def __init__(self, polys1d = None, dim = None):
 
