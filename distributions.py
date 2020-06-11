@@ -32,7 +32,7 @@ class NormalDistribution(ProbabilityDistribution):
         # instead of standard normal weight function exp(-x**2/2)
         # I.e. x ----> sqrt(2) * x
 
-        A = np.eye(self.dim) * np.sqrt(2)
+        A = np.eye(self.dim) * (1/np.sqrt(2))
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
@@ -192,18 +192,18 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         if flag:
             # Users say exp^{-lbd(x-loc)} on [loc, np.inf), loc >= 0
-            for i in range(len(self.lbd)):
+            for i in range(self.dim):
                 assert self.lbd[i] > 0 and self.loc[i] >= 0
-            A = np.diag([1./self.lbd[i] for i in range(len(self.lbd))])
-            b = np.array([self.loc[i]/self.lbd[i] for i in range(len(self.lbd))])
+            A = np.diag([self.lbd[i] for i in range(self.dim)])
+            b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
         else:
             # Users say exp^{-lbd(x-loc)} on (-np.inf, loc], loc < 0
-            for i in range(len(lbd)):
+            for i in range(self.dim):
                 assert self.lbd[i] < 0 and self.loc[i] < 0
-            A = np.diag([1./self.lbd[i] for i in range(len(self.lbd))])
-            b = np.array([self.loc[i]/self.lbd[i] for i in range(len(self.lbd))])
+            A = np.diag([self.lbd[i] for i in range(self.dim)])
+            b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
             self.transform_to_standard = AffineTransform(A=A, b=b)
         
         ## Construct 1D polynomial families

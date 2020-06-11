@@ -38,16 +38,14 @@ class DistTestCase(unittest.TestCase):
 
 
 
-        # Test for MC_samples, need debugging ...
-        lbd = n * np.random.rand(2,)
-        loc = n * np.random.rand(2,)
-        E = ExponentialDistribution(lbd=[lbd[0],lbd[1]], loc=[loc[0],loc[1]])
-        x = E.MC_samples(M=int(1e6))
+        # Test for MC_samples
+        lbd = -n * np.random.rand(2,)
+        loc = -n * np.random.rand(2,)
+        E = ExponentialDistribution(flag=False, lbd=[lbd[0],lbd[1]], loc=[loc[0],loc[1]])
+        x = E.MC_samples(M=int(1e7))
 
         F1 = np.mean(x, axis=0)
-        print (F1)
         F2 = 1 / lbd + loc
-        print (F2)
 #         F1 = np.var(x, axis=0)
 #         F2 = 1 / lbd**2
 
@@ -137,7 +135,7 @@ class DistTestCase(unittest.TestCase):
         mean = np.random.rand(2,)
         var = np.random.rand(2,)
         N = NormalDistribution(mean = [mean[0],mean[1]], cov = np.array([[var[0],0],[0,var[1]]]))
-        x = N.MC_samples(M=int(1e5))
+        x = N.MC_samples(M=int(1e6))
 
         F1 = np.mean(x, axis=0)
         F2 = mean
