@@ -165,38 +165,4 @@ class TensorialPolynomials:
 
 if __name__ == "__main__":
 
-    import matplotlib.pyplot as plt
-    from matplotlib import cm
-    from mpl_toolkits.mplot3d import Axes3D
-    from families import JacobiPolynomials
-    import opoly1d, indexing
-
-    import pdb
-
-    d = 4
-    k = 3
-
-    J = JacobiPolynomials()
-    P = TensorialPolynomials(J, d)
-    #ab = opoly1d.jacobi_recurrence(k+1, alpha=0, beta=0)
-
-    lambdas = indexing.total_degree_indices(d, k)
-
-    if d == 2:
-        N = 50
-        x = np.linspace(-1, 1, N)
-        X,Y = np.meshgrid(x,x)
-
-        XX = np.concatenate((X.reshape(X.size,1), Y.reshape(Y.size,1)), axis=1)
-
-
-        p = P.eval(XX, lambdas)
-
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.plot_surface(X, Y, p[:,j].reshape(N,N), cmap=cm.coolwarm, linewidth=0,antialiased=True)
-        plt.show()
-
-    x2 = P.idist_mixture_sampling(10, lambdas)
-
-    x3 = P.wafp_sampling(lambdas)
+    pass

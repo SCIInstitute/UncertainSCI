@@ -751,15 +751,19 @@ class OrthogonalPolynomialBasis1D:
         Need {a_k, b_k} k up to n
         """
 
-        assert n < a.size
-        assert n < b.size
+        n = np.asarray(n)
         
         if isinstance(x, float) or isinstance(x, int):
             x = np.asarray([x])
         else:
             x = np.asarray(x)
 
-        ab = self.recurrence(n+1)
+        nmax = np.max(n)
+        ab = self.recurrence(nmax+1)
+
+        assert nmax < ab.shape[0]
+        assert np.min(n) > -1
+        assert np.all(d >= 0) and np.all(d < 1)
 
         return s_driver(x, n, ab)
 
