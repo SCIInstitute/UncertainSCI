@@ -150,8 +150,8 @@ class PolynomialChaosExpansion():
         """
 
         self.assert_pce_built()
-        p_std = self.distribution.transform_to_standard.map( \
-                    self.distribution.transform_standard_dist_to_poly.map(p) )
+        p_std = self.distribution.transform_standard_dist_to_poly.map( \
+                    self.distribution.transform_to_standard.map(p) )
 
         if components is None:
             return np.dot( self.distribution.polys.eval( p_std, self.indices.indices() ), self.coefficients)
