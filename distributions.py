@@ -1,6 +1,5 @@
 import numpy as np
 import scipy as sp
-from numpy.random import default_rng
 from scipy import sparse as sprs
 
 from families import JacobiPolynomials, DiscreteChebyshevPolynomials
@@ -8,9 +7,15 @@ from opolynd import TensorialPolynomials
 from indexing import total_degree_indices, hyperbolic_cross_indices
 from transformations import AffineTransform
 from utils.casting import to_numpy_array
+from utils.version import version_lessthan
 
+# numpy >= 1.17: default_rng is preferred
+if version_lessthan(np, '1.17'):
+    from numpy.random import choice
+else:
+    from numpy.random import default_rng
+    choice = default_rng().choice
 
-rng = default_rng()
 
 class ProbabilityDistribution:
     def __init__(self):
@@ -307,7 +312,7 @@ class DiscreteUniformDistribution(ProbabilityDistribution):
 
         p = np.zeros([M, self.dim])
         for qd in range(self.dim):
-            p[:,qd] = rng.choice(self.polys.polys1d[qd].standard_support, size=M)
+            p[:,qd] = choice(self.polys.polys1d[qd].standard_support, size=M)
 
         return self.transform_to_standard.mapinv(p)
 

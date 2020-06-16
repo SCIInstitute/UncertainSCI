@@ -1,4 +1,3 @@
-from packaging import version 
 from math import floor
 
 import numpy as np
@@ -6,6 +5,7 @@ import numpy as np
 from indexing import MultiIndexSet
 from distributions import ProbabilityDistribution
 from utils.casting import to_numpy_array
+from utils.version import version_lessthan
 
 class PolynomialChaosExpansion():
     def __init__(self, indices=None, distribution=None):
@@ -105,7 +105,7 @@ class PolynomialChaosExpansion():
         V = np.multiply(V.T, norms).T
         model_output = np.multiply(model_output.T, norms).T
 
-        if version.parse(np.__version__) < version.parse('1.14.0'):
+        if version_lessthan(np, '1.14.0'):
             coeffs,residuals = np.linalg.lstsq(V, model_output, rcond=-1)[:2]
         else:
             coeffs,residuals = np.linalg.lstsq(V, model_output, rcond=None)[:2]
