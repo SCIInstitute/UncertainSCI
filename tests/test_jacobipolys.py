@@ -105,7 +105,7 @@ class IDistTestCase(unittest.TestCase):
 
         J = JacobiPolynomials(alpha=alpha,beta=beta)
 
-        delta = 1e-3
+        delta = 5e-3
         for n in range(nmax)[::-1]:
             x0 = J.idistinv(u, n)
             x1 = J.fidistinv(u, n)
