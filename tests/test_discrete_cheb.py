@@ -31,7 +31,7 @@ class DiscreteChebTestCase(unittest.TestCase):
     def test_idist(self):
         """Induced distribution evaluations."""
 
-        M = int(np.ceil(30*np.random.random()))
+        M = 1 + int(np.ceil(30*np.random.random()))
         domain = np.sort(np.random.randn(2))
         P = DiscreteChebyshevPolynomials(M=M, domain=domain)
         n = int((M-1)*np.random.random())
@@ -48,7 +48,7 @@ class DiscreteChebTestCase(unittest.TestCase):
     def test_idistinv(self):
         """Inverse induced distribution evaluations."""
 
-        M = int(np.ceil(30*np.random.random()))
+        M = 1 + int(np.ceil(30*np.random.random()))
         domain = np.sort(np.random.randn(2))
         P = DiscreteChebyshevPolynomials(M=M, domain=domain)
         n = int((M-1)*np.random.random())
