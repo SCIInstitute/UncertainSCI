@@ -57,11 +57,13 @@ class NormalDistribution(ProbabilityDistribution):
         ## Construct 1D polynomial families
         Hs = []
         for qd in range(self.dim):
-            Hs.append(HermitePolynomials())
+            Hs.append(HermitePolynomials()) # modify for different mean,cov paras?
         self.polys = TensorialPolynomials(polys1d=Hs)
 
         self.indices = None
 
+
+       
 
     def _convert_meancov_to_iterable(self, mean, cov):
         """
@@ -164,6 +166,7 @@ class NormalDistribution(ProbabilityDistribution):
         return self.transform_to_standard.mapinv(p)
 
 
+
 class ExponentialDistribution(ProbabilityDistribution):
 
     def __init__(self, flag=True, lbd=None, loc=None, mean=None, stdev=None, dim=None):
@@ -190,21 +193,33 @@ class ExponentialDistribution(ProbabilityDistribution):
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
-        if flag:
-            # Users say exp^{-lbd(x-loc)} on [loc, np.inf), loc >= 0
-            for i in range(self.dim):
-                assert self.lbd[i] > 0 and self.loc[i] >= 0
+        if all(i > 0 for i in lbd):
+            # User say exp^{-lbd(x-loc)} on [loc, inf), lbd > 0
             A = np.diag([self.lbd[i] for i in range(self.dim)])
             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
-        else:
-            # Users say exp^{-lbd(x-loc)} on (-np.inf, loc], loc < 0
-            for i in range(self.dim):
-                assert self.lbd[i] < 0 and self.loc[i] < 0
+        if all(i < 0 for i in lbd):
+            # User say exp^{lbd -(x-loc)} on (-inf, loc), lbd < 0
             A = np.diag([self.lbd[i] for i in range(self.dim)])
             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
             self.transform_to_standard = AffineTransform(A=A, b=b)
+
+#         if flag:
+#             # Users say exp^{-lbd(x-loc)} on [loc, np.inf), loc >= 0
+#             for i in range(self.dim):
+#                 assert self.lbd[i] > 0 and self.loc[i] >= 0
+#             A = np.diag([self.lbd[i] for i in range(self.dim)])
+#             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
+#             self.transform_to_standard = AffineTransform(A=A, b=b)
+# 
+#         else:
+#             # Users say exp^{-lbd(x-loc)} on (-np.inf, loc], loc < 0
+#             for i in range(self.dim):
+#                 assert self.lbd[i] < 0 and self.loc[i] < 0
+#             A = np.diag([self.lbd[i] for i in range(self.dim)])
+#             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
+#             self.transform_to_standard = AffineTransform(A=A, b=b)
         
         ## Construct 1D polynomial families
         Ls = []
@@ -276,9 +291,9 @@ class ExponentialDistribution(ProbabilityDistribution):
                 lbd.append(lb)
 
         # If loc is an iterable but mean is not
-        elif stdviter:
+        elif lociter:
             mean = [mean for i in range(len(loc))]
-            for ind in range(len(stdev)):
+            for ind in range(len(loc)):
                 lb = self.meanloc_to_lbd(mean[ind], loc[ind])
                 lbd.append(lb)
 

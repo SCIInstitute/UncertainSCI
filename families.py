@@ -520,11 +520,31 @@ def freud_idistinv(u, n, alpha, rho):
     else:
         u = np.asarray(u)
 
-    if n % 2 == 0:
-        x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
+    if isinstance(n, float) or isinstance(n, int):
+        n = np.asarray([n])
     else:
-        x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int((n-1)/2), alpha/2, (rho+1)/2) )
+        n = np.asarray(n)
 
+    x = np.zeros(u.shape)
+
+    if n.size == 1:
+        n = n[0]
+        if n % 2 == 0:
+            x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
+        else:
+            x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int((n-1)/2), alpha/2, (rho+1)/2) )
+    else:
+        assert n.size == u.size
+        evenflags = np.where(n % 2 == 0)
+        oddflags = np.where(n % 2 != 0)
+        x[evenflags] = np.sqrt( hfreud_idistinv(np.abs(2*u[evenflags]-1), (n[evenflags]/2).astype(int), alpha/2, (rho-1)/2) )
+        x[oddflags] = np.sqrt( hfreud_idistinv(np.abs(2*u[oddflags]-1), ((n-1)/2).astype(int), alpha/2, (rho+1)/2) )
+
+#     if n % 2 == 0:
+#         x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
+#     else:
+#         x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int((n-1)/2), alpha/2, (rho+1)/2) )
+        
     ind = np.where(u < 0.5)
     x[ind] = -x[ind]
 
@@ -795,7 +815,7 @@ def hfreud_idistinv(u, n, alpha, rho):
         n = np.asarray(n)
 
     if n.size == 1:
-        n = int(n)
+        n = n[0]
         rhs = 1.2 * hfreud_idist_medapprox(n, alpha, rho)[0]
 
         U = max(u)
@@ -814,22 +834,26 @@ def hfreud_idistinv(u, n, alpha, rho):
     else:
         nmax = np.amax(n)
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
-        ab = laguerre_recurrence_values(2*nmax + M+1)
-            
-        for i in range(nmax+1):
-            rhs = 1.2 * hfreud_idist_medapprox(n, alpha, rho)[0]
+        ab = laguerre_recurrence_values(2*nmax + max(100,nmax), alpha, rho)
+        
+        print (n.shape, u.shape)
+        assert n.size == u.size
+
+        x = np.zeros(n.shape)    
+        for qq in range(nmax+1):
+            rhs = 1.2 * hfreud_idist_medapprox(qq, alpha, rho)[0]
 
             U = max(u)
             if U == 1:
-                rhs = hfreud_tolerance(n, alpha, rho, eps/10)
+                rhs = hfreud_tolerance(qq, alpha, rho, eps/10)
             else:
-                rhs = hfreud_tolerance(n, alpha, rho, 1-U)
+                rhs = hfreud_tolerance(qq, alpha, rho, 1-U)
 
             supp = [0, rhs]
 
-            flags = ind == i+1
-            primitive = lambda xx: hfreud_idist(xx, i, alpha, rho)
-            x[flags] = idistinv_driver(u[flags], i, primitive, ab, supp)
+            flags = ind == qq+1
+            primitive = lambda xx: hfreud_idist(xx, qq, alpha, rho)
+            x[flags] = idistinv_driver(u[flags], qq, primitive, ab, supp)
 
     return x
 
