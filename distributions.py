@@ -49,10 +49,17 @@ class NormalDistribution(ProbabilityDistribution):
         #       cov^{-1/2} = inv(L)
         #       A = inv(L) and b = A * mu
 
-        L = np.linalg.cholesky(self.cov)
-        A = np.linalg.inv(L)
-        b = -A.dot(self.mean)
-        self.transform_to_standard = AffineTransform(A=A, b=b)
+        if self.dim == 1:
+            sigma = np.sqrt(self.cov)
+            A = np.eye(self.dim) * (1/sigma)
+            b = np.ones(self.dim) * (-self.mean/sigma)
+            self.transform_to_standard = AffineTransform(A=A, b=b)
+
+        else:
+            L = np.linalg.cholesky(self.cov)
+            A = np.linalg.inv(L)
+            b = -A.dot(self.mean)
+            self.transform_to_standard = AffineTransform(A=A, b=b)
 
         ## Construct 1D polynomial families
         Hs = []
@@ -153,8 +160,8 @@ class NormalDistribution(ProbabilityDistribution):
 
         else: # Case 3
             self.dim = 1
-            self.mean = mean
-            self.cov = cov
+            self.mean = mean[0]
+            self.cov = cov[0]
 
 
     def MC_samples(self, M=100):

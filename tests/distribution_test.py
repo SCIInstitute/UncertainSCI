@@ -65,7 +65,7 @@ class DistTestCase(unittest.TestCase):
         """Test for Normal distribution."""
         
         # cov is None and meaniter
-        n = np.random.randint(1,10)
+        n = np.random.randint(2,10)
         mean = [0.] * n
         cov = None
         N = NormalDistribution(mean = mean, cov = cov)
@@ -80,7 +80,7 @@ class DistTestCase(unittest.TestCase):
         cov = None
         N = NormalDistribution(mean = mean, cov = cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, [0.], delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean, 0., delta=delta, msg=errstr)
         self.assertAlmostEqual(N.cov.all(), np.eye(1).all(), delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, 1, delta=delta, msg=errstr)
         
@@ -89,7 +89,7 @@ class DistTestCase(unittest.TestCase):
         cov = None
         N = NormalDistribution(mean = mean, cov = cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, [0.], delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean, 0., delta=delta, msg=errstr)
         self.assertAlmostEqual(N.cov.all(), np.eye(1).all(), delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, 1, delta=delta, msg=errstr)
 
@@ -137,12 +137,12 @@ class DistTestCase(unittest.TestCase):
         N = NormalDistribution(mean = [mean[0],mean[1]], cov = np.array([[var[0],0],[0,var[1]]]))
         x = N.MC_samples(M=int(1e6))
 
-        F1 = np.mean(x, axis=0)
-        F2 = mean
-#         F1 = np.var(x, axis=0)
-#         F2 = var
+#         F1 = np.mean(x, axis=0)
+#         F2 = mean
+        F1 = np.var(x, axis=0)
+        F2 = var
 
-        delta = 1e-2
+        delta = 1e-3
         ind = np.where(np.abs(F1-F2) > delta)[:2][0]
         if ind.size > 0:
             errstr = 'Failed'
