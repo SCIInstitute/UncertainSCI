@@ -22,6 +22,8 @@ from indexing import TotalDegreeSet, HyperbolicCrossSet
 
 from distributions import NormalDistribution
 
+import pdb
+
 
 # dimension = 1
 # mean = 1.
@@ -38,8 +40,8 @@ debug the error
 
 it's the problem of this alpha and beta, not n = 0
 """
-# alpha, beta = 1.526, -0.950
-alpha, beta = 1., 2.
+alpha, beta = 1.526, -0.950
+#alpha, beta = 1., 2.
 
 n = 0 # check MATLAB -- correct
 u = 0.465679
@@ -47,16 +49,39 @@ J = JacobiPolynomials(alpha=alpha,beta=beta)
 correct_x = J.idistinv(u, n)
 x = J.fidistinv(u, n)
 
+#uu = np.linspace(0,1,100)
+#for i in range(5):
+#    xx = J.fidistinv(uu, i)
+#    plt.plot(uu, xx, label='n = {}'.format(i))
+#plt.xlabel('u')
+#plt.ylabel('x')
+#plt.legend()
+#plt.show()
+
+
+#################
+
+betas = [-0.950, -0.930, -0.900]
 uu = np.linspace(0,1,100)
-for i in range(5):
-    xx = J.fidistinv(uu, i)
-    plt.plot(uu, xx, label='n = {}'.format(i))
-plt.xlabel('u')
-plt.ylabel('x')
+n = 1
+
+for beta in betas:
+    J = JacobiPolynomials(alpha=alpha,beta=beta)
+    fx = J.fidistinv(uu, n)
+    x = J.idistinv(uu, n)
+
+    plt.subplot(121)
+    plt.plot(uu, fx, label = 'beta = {0:1.3f}'.format(beta))
+
+    plt.subplot(122)
+    plt.plot(uu, x, label = 'beta = {0:1.3f}'.format(beta))
+
+plt.subplot(121)
+plt.ylim([-1, 1])
+plt.legend()
+plt.subplot(122)
 plt.legend()
 plt.show()
-
-
 
 
 """
