@@ -130,3 +130,6 @@ dmypy.json
 
 # Swap files
 .*.sw[o,p]
+
+# Sphinx builds
+docs/_build/
