@@ -18,7 +18,7 @@ google_analytics_id: ''
 navigation: 1
 
 # URL to source code, used in _includes/footer.html
-codeurl: 'https://github.com/SCIInstitute/SCIRun'
+codeurl: 'https://github.com/SCIInstitute/UncertainSCI'
 
 # Default categories (in order) to appear in the navigation
 sections: [
