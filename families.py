@@ -17,6 +17,9 @@ from pathlib import Path
 from opoly1d import linear_modification, quadratic_modification
 from utils.casting import to_numpy_array
 
+import pdb
+from scipy.stats import beta as bbeta
+
 def jacobi_recurrence_values(N, alpha, beta):
     
     """
@@ -154,7 +157,7 @@ def fidistinv_setup_helper1(ug, exps):
     
     return ug, exponents
 
-def fidistinv_setup_helper2(ug, idistinv, exponents, M):
+def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
     
     vgrid = np.cos( np.linspace(np.pi, 0, M) )
     
@@ -169,7 +172,12 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M):
     
     for q in range(ug.size - 1):
         ugrid[:,q] = (vgrid + 1) / 2 * (ug[q+1] - ug[q]) + ug[q]
-        xgrid[:,q] = idistinv(ugrid[:,q])
+
+        if ug.size == 3:
+            # pdb.set_trace()
+            xgrid[:,q] = 2 * bbeta.ppf(ugrid[:,q], beta+1, alpha+1) - 1
+        else:
+            xgrid[:,q] = idistinv(ugrid[:,q])
         
         temp = xgrid[:,q]
         if exponents[0,q] != 0:
@@ -369,7 +377,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             ug,exponents = fidistinv_setup_helper1(ug,exps)
             
             idistinv = lambda u: self.idistinv(u,nn)
-            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10))
+            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10, self.alpha, self.beta))
             
         return data
     
@@ -538,7 +546,7 @@ def freud_idistinv(u, n, alpha, rho):
         evenflags = np.where(n % 2 == 0)
         oddflags = np.where(n % 2 != 0)
         x[evenflags] = np.sqrt( hfreud_idistinv(np.abs(2*u[evenflags]-1), (n[evenflags]/2).astype(int), alpha/2, (rho-1)/2) )
-        x[oddflags] = np.sqrt( hfreud_idistinv(np.abs(2*u[oddflags]-1), ((n-1)/2).astype(int), alpha/2, (rho+1)/2) )
+        x[oddflags] = np.sqrt( hfreud_idistinv(np.abs(2*u[oddflags]-1), ((n[oddflags]-1)/2).astype(int), alpha/2, (rho+1)/2) )
 
 #     if n % 2 == 0:
 #         x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
@@ -727,7 +735,7 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
             ab[0,1] = 1
         
         u,w = gauss_quadrature_driver(ab, M)
-
+        pdb.set_trace()
         I = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
 
         logfactor = logfactor + (-x[ind]**alpha) + sp.gammaln(1/alpha) - sp.gammaln((rho+1)/alpha)
