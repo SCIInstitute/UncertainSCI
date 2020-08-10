@@ -8,6 +8,17 @@ from utils.casting import to_numpy_array
 from utils.version import version_lessthan
 
 class PolynomialChaosExpansion():
+    """Base polynomial chaos expansion class.
+
+    Provides interface to construct and manipulate polynomial chaos expansions.
+
+    Attributes:
+        coefficients: A numpy array of polynomial chaos expansion coefficients.
+        indices: A MultiIndexSet instance specifying the polynomial approximation space.
+        distribution: A ProbabilityDistribution instance indicating the distribution of the random variable.
+        samples: The experimental or sample design in stochastic space.
+
+    """
     def __init__(self, indices=None, distribution=None):
 
         self.coefficients = None
@@ -15,13 +26,26 @@ class PolynomialChaosExpansion():
         self.samples = None
 
     def set_indices(self, indices):
+        """Sets multi-index set for polynomial approximation.
 
+        Args:
+            indices: A MultiIndexSet instance specifying the polynomial approximation space.
+        Returns:
+            None:
+        """
         if isinstance(indices, MultiIndexSet):
             self.indices = indices
         else:
             raise ValueError('Indices must be a MultiIndexSet object')
 
     def set_distribution(self, distribution):
+        """Sets type of probability distribution of random variable.
+
+        Args:
+            distribution: A ProbabilityDistribution instance specifying the distribution of the random variable.
+        Returns:
+            None:
+        """
 
         if isinstance(distribution, ProbabilityDistribution):
             self.distribution = distribution
@@ -37,8 +61,10 @@ class PolynomialChaosExpansion():
             raise ValueError('First set indices with set_indices')
 
     def generate_samples(self, sample_type='wafp', **sampler_options):
-        """
-        Generates samples for use in PCE construction.
+        """Generates sample/experimental design for use in PCE construction.
+
+        Args:
+            sample_type: A string indicating the type of random sampling to use. Currently only 'wafp' is supported.
         """
 
         self.check_distribution()
@@ -54,18 +80,27 @@ class PolynomialChaosExpansion():
             raise ValueError("Unsupported sample type '{0}' for input sample_type".format(sample_type))
 
     def build_pce_wafp(self, model=None, model_output=None, samples=None, **sampler_options):
-        """
-        Computes PCE coefficients. Uses a WAFP grid to compute a least-squares
-        collocation solution.
+        """Computes PCE coefficients. 
 
-        If input "model" it given, it is a function pointer that should have the syntax:
+        Uses a weighted approximate Fekete point design to compute a
+        least-squares collocation solution.
 
-        output = model(input_parmaeter_value),
-
-        where input_parameter_value is a vector of size self.dim containing a
-        parametric sample, and output is a 1D numpy array.
-
-        If input "model_output" is given, it is a numpy array with dimensions 
+        Args:
+            model: A pointer to a function with the syntax xi ---> model(xi),
+              which returns a vector corresponding to the model evaluated at
+              the stochastic parameter value xi. The input xi to the model
+              function should be a vector of size self.dim, and the output
+              should be a 1D numpy array. If model_output is None, this is
+              required. If model_output is given, this is ignored.
+            model_output: A numpy.ndarray corresponding to the output of the
+              model at the sample locations specified by self.samples. This is
+              required if the input model is None.
+            samples: A numpy.ndarray containing a specific sample design. This
+              array should satisfy self.dim == samples.shape[1].
+        Returns:
+            numpy.ndarray: A vector containing a weighted sum-of-squares residual
+              for the PCE construction. The size of this vector equals the size
+              of the output from the model function.
         """
 
         self.check_distribution()
@@ -117,8 +152,20 @@ class PolynomialChaosExpansion():
         return residuals
 
     def build(self, model=None, model_output=None, **options):
-        """
-        Builds PCE from sampling and approximation settings.
+        """Builds PCE from sampling and approximation settings.
+
+        Args:
+            model: A pointer to a function with the syntax xi ---> model(xi),
+              which returns a vector corresponding to the model evaluated at
+              the stochastic parameter value xi. The input xi to the model
+              function should be a vector of size self.dim, and the output
+              should be a 1D numpy array. If model_output is None, this is
+              required. If model_output is given, this is ignored.
+            model_output: A numpy.ndarray corresponding to the output of the
+              model at the sample locations specified by self.samples. This is
+              required if the input model is None.
+        Returns:
+            None:
         """
 
         # For now, we only have 1 method:
@@ -129,8 +176,11 @@ class PolynomialChaosExpansion():
             raise ValueError('First build the PCE with pce.build()')
 
     def mean(self):
-        """
-        Returns PCE mean.
+        """Returns PCE mean.
+
+        Returns:
+            numpy.ndarray: A vector containing the PCE mean, of size equal to the size
+              of the vector of the model output.
         """
 
         self.assert_pce_built()
@@ -139,14 +189,30 @@ class PolynomialChaosExpansion():
     def stdev(self):
         """
         Returns PCE standard deviation
+
+        Returns:
+            numpy.ndarray: A vector containing the PCE standard deviation, of size
+              equal to the size of the vector of the model output.
         """
 
         self.assert_pce_built()
         return np.sqrt(np.sum(self.coefficients[1:,:]**2, axis=0))
 
     def pce_eval(self, p, components=None):
-        """
-        Evaluations the PCE at the parameter locations p.
+        """Evaluates the PCE at particular parameter locations.
+
+        Args:
+            p: An array (satisfying p.shape[1]==self.dim) containing a set of
+              parameter points at which to evaluate the PCE prediction.
+            components: An array of non-negative integers specifying which
+              indices in the model output to compute. Other indices are
+              ignored. If given as None (default), then all components are
+              computed.
+        Returns:
+            numpy.ndarray: An array containing evaluations (predictions) from the PCE
+            emulator. If the input components is None, this array is of size (
+            self.p.shape[0] x self.coefficients.shape[1] ). Otherwise, the
+            second dimension is of size components.size.
         """
 
         self.assert_pce_built()

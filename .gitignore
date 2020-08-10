@@ -134,3 +134,7 @@ dmypy.json
 # docs site
 _site
 .sass-cache
+
+# Sphinx builds
+docs/_build/
+
