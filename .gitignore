@@ -131,5 +131,10 @@ dmypy.json
 # Swap files
 .*.sw[o,p]
 
+# docs site
+_site
+.sass-cache
+
 # Sphinx builds
 docs/_build/
+
