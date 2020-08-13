@@ -138,3 +138,6 @@ _site
 # Sphinx builds
 docs/_build/
 
+.DS_Store
+
+data_set/*
