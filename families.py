@@ -174,12 +174,12 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
         ugrid[:,q] = (vgrid + 1) / 2 * (ug[q+1] - ug[q]) + ug[q]
 
         if ug.size == 3:
-            # pdb.set_trace()
             xgrid[:,q] = 2 * bbeta.ppf(ugrid[:,q], beta+1, alpha+1) - 1
         else:
             xgrid[:,q] = idistinv(ugrid[:,q])
         
         temp = xgrid[:,q]
+        
         if exponents[0,q] != 0:
             temp = (temp - xgrid[0,q]) / (xgrid[-1,q] - xgrid[0,q])
         else:
@@ -194,7 +194,7 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
     data = np.zeros((M+6, ug.size - 1))
     for q in range(ug.size - 1):
         data[:,q] = np.hstack((ug[q], ug[q+1], xgrid[0,q], xgrid[-1,q], exponents[:,q], xcoeffs[:,q]))
-    
+    pdb.set_trace()
     return data
 
 def fidistinv_driver(u, n, data):
