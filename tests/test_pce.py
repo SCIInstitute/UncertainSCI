@@ -44,7 +44,7 @@ class PCETestCase(unittest.TestCase):
         delta = 1e-10
         self.assertAlmostEqual(reserror, 0, delta=delta, msg=msg)
 
-        MQ = int(2e6)
+        MQ = int(4e6)
 
         q = np.linspace(0.1, 0.9, 9)
         quant= pce.quantile(q, M=MQ)[:,0]
@@ -54,7 +54,7 @@ class PCETestCase(unittest.TestCase):
         quant2 = quant2*(domain[1]-domain[0]) + domain[0]
 
         qerr = np.linalg.norm(quant-quant2)
-        delta = 1e-2
+        delta = 2e-2
         self.assertAlmostEqual(qerr, 0, delta=delta, msg=msg)
 
 if __name__ == "__main__":
