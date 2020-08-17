@@ -160,6 +160,11 @@ def fidistinv_setup_helper1(ug, exps):
 def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
     
     vgrid = np.cos( np.linspace(np.pi, 0, M) )
+    # Or
+    #vgrid = np.cos( np.linspace(np.pi, 0, M+1)[:-1] + M/(2*np.pi) )
+    # Or
+    #vgrid = np.cos( np.linspace(np.pi, 0, M+2) )
+    #vgrid = vgrid[1:-1]
     
     ab = jacobi_recurrence_values(M, -1/2, -1/2)
     V = eval_driver(vgrid, np.arange(M), 0, ab)
@@ -180,6 +185,8 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
         
         temp = xgrid[:,q]
         
+        # temp = temp(ugrid)
+        # for ugrid near 0, then temp behaves like a certain rational function (1-ugrid)**???
         if exponents[0,q] != 0:
             temp = (temp - xgrid[0,q]) / (xgrid[-1,q] - xgrid[0,q])
         else:
@@ -373,11 +380,37 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
                 ug = self.idist(xg, nn)
                 ug = np.insert(ug, [0,ug.size], [0,1])
                 
+            # F_n^{-1}(u) near u = 0 (also u = 1)
+            # F_n(x) = \int_{-1}^x p_n^2(s) w(s) ds
+            # u near 0 =====> x near -1 
+            # near -1: F_n(x) = D(alpha,beta) \int_{-1}^{-1+eps} p_n^2(s) w(s) ds 
+            #
+            #        D(alpha,beta)^{-1} = 2^(alpha+beta+1) B(beta+1, alpha+1)
+            # 
+            #          p_n^2(s) \sim C_n = p_n^2(-1) near s = -1 (C_n is computable)
+            #
+            # near -1: F_n(x) \approx D \int_{-1}^{-1+eps} C_n (1-s)^alpha (1+s)^beta ds 
+            #                 \approx D \int_{-1}^{-1+eps} C_n 2^alpha (1+s)^beta ds 
+            #                 = 2^alpha D C_n \int_{-1}^{-1+eps} (1+s)^beta ds 
+            #                 = 2^alpha D C_n \int_{0}^{eps} r^beta dr 
+            #                 = 2^alpha D C_n / (beta+1) eps^(beta+1)  (beta + 1 > 0)
+            #
+            # near -1: F_n(x) \approx 2^alpha D C_n  (1+x)^(beta+1)
+            # near u = 0: u \approx 2^alpha D C_n  (1+x)^(beta+1)
+            # near u = 0: (u / (2^alpha * D C_n))^(1/(beta+1)) - 1 = x
+            #
+            # idistinv_helper: encode computation x = (u / (2^alpha * D * C_n))^(1/(beta+1)) - 1 (near x = -1)
+            #                                     x = u^(1/(beta+1)) / E_n   - 1
+            #                                           E_n = (1 / (2^alpha * D * C_n))^(1/(beta+1))
+            #                                      E_n (probably) should be computed with logs:
+            #                                       E_n = exp( -1/(beta+1) * (alpha*log(2) + log(D) + log(C_n) ) )
+            #                                           For D: there is a logbeta function
+
             exps = np.array([self.beta/(self.beta+1), self.alpha/(self.alpha+1)])
             ug,exponents = fidistinv_setup_helper1(ug,exps)
             
             idistinv = lambda u: self.idistinv(u,nn)
-            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10, self.alpha, self.beta))
+            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10, self.alpha, self.beta)) #, E_n?
             
         return data
     
