@@ -22,6 +22,8 @@ class ProbabilityDistribution:
         pass
 
 class BetaDistribution(ProbabilityDistribution):
+    """This is a Beta distribution.
+    """
     def __init__(self, alpha=None, beta=None, mean=None, stdev=None, dim=None, domain=None):
 
         # Convert mean/stdev inputs to alpha/beta

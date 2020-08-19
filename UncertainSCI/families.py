@@ -18,7 +18,6 @@ from transformations import AffineTransform
 from utils.casting import to_numpy_array
 
 def jacobi_recurrence_values(N, alpha, beta):
-    
     """
     Returns the first N+1 recurrence coefficient pairs for the (alpha, beta)
     Jacobi family
@@ -267,6 +266,9 @@ def driver_helper(u, data):
 
 
 class JacobiPolynomials(OrthogonalPolynomialBasis1D):
+    """
+    Jacobi Polynomial family.
+    """
     def __init__(self, alpha=0., beta=0., domain=[-1.,1.]):
         OrthogonalPolynomialBasis1D.__init__(self)
         assert alpha > -1., beta > -1.

@@ -1,11 +1,12 @@
 import numpy as np
 from scipy.linalg import qr
 
+
 def greedy_d_optimal(A, p):
-    """
+    r"""
     Chooses p rows in A via a greedy D-optimal design. Performs the iterative
     optimization,
-        
+
         if |R| < A.shape[1]:
             max_r det( A[S,:] * A[S,:].T ),   S = r \cup R,
         else:
@@ -27,29 +28,31 @@ def greedy_d_optimal(A, p):
     N = A.shape[1]
     if p > N:
 
-        W = A[P[:N],:]
+        W = A[P[:N], :]
         G = np.dot(W.T, W)
-        Ginvwm = np.linalg.solve(G, A[P[N:],:].T)
+        Ginvwm = np.linalg.solve(G, A[P[N:], :].T)
 
         for m in range(N, p):
             # The remaining choices:
-            detnorms = np.sum( A[P[m:],:].T * Ginvwm[:,(m-N):], axis=0)
+            detnorms = np.sum(A[P[m:], :].T * Ginvwm[:, (m-N):], axis=0)
 
             # Det maximization
             Pind = np.argmax(detnorms)
 
             # Update inv(G)*wm via sherman-morrison
-            Ginvwm[:,(m-N):] -= np.outer( Ginvwm[:,m-N+Pind], np.dot(A[P[m+Pind],:].T, Ginvwm[:,(m-N):])/(1 + detnorms[Pind]) )
+            Ginvwm[:, (m-N):] -= np.outer(Ginvwm[:, m-N+Pind],
+                                          np.dot(A[P[m+Pind], :].T,
+                                          Ginvwm[:, (m-N):])/(1+detnorms[Pind])
+                                          )
 
             # Pivoting
             P[[m, Pind+m]] = P[[Pind+m, m]]
-            Ginvwm[:,[m-N, m-N+Pind]] = Ginvwm[:,[m-N+Pind,m-N]]
+            Ginvwm[:, [m-N, m-N+Pind]] = Ginvwm[:, [m-N+Pind, m-N]]
 
     return P[:p]
 
-if __name__ == "__main__":
 
-    import pdb
+if __name__ == "__main__":
 
     A = np.random.randn(100, 50)/np.sqrt(50)
     p = 75
