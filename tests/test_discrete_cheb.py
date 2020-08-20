@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from families import DiscreteChebyshevPolynomials
+from UncertainSCI.families import DiscreteChebyshevPolynomials
 
 class DiscreteChebTestCase(unittest.TestCase):
     """

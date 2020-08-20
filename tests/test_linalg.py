@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy.linalg import qr
 
-from utils.linalg import greedy_d_optimal
+from UncertainSCI.utils.linalg import greedy_d_optimal
 
 class LinalgTestCase(unittest.TestCase):
     """

@@ -20,7 +20,7 @@ class FastjacobiinvTestCase(unittest.TestCase):
         correct_x = J.idistinv(u, n)
         x = J.fidistinv(u, n)
 
-        delta = 1e-3
+        delta = 1e-2
         errs = np.abs(x - correct_x)
         
         errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, u={2:1.6f}, n = {3:d}'.format(alpha, beta, u, n)

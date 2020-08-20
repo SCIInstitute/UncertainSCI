@@ -5,10 +5,10 @@ import pdb
 import numpy as np
 from matplotlib import pyplot as plt
 
-from distributions import BetaDistribution
-from model_examples import sine_modulation
-from indexing import TotalDegreeSet, HyperbolicCrossSet
-from pce import PolynomialChaosExpansion
+from UncertainSCI.distributions import BetaDistribution
+from UncertainSCI.model_examples import sine_modulation
+from UncertainSCI.indexing import TotalDegreeSet, HyperbolicCrossSet
+from UncertainSCI.pce import PolynomialChaosExpansion
 
 # Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
 alpha = [1., 2., 3.]

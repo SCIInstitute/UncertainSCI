@@ -4,10 +4,10 @@ from itertools import chain, combinations
 import numpy as np
 from matplotlib import pyplot as plt
 
-from distributions import BetaDistribution, NormalDistribution
-from model_examples import sine_modulation, laplace_ode, genz_oscillatory
-from indexing import TotalDegreeSet, HyperbolicCrossSet
-from pce import PolynomialChaosExpansion
+from UncertainSCI.distributions import BetaDistribution, NormalDistribution
+from UncertainSCI.model_examples import sine_modulation, laplace_ode, genz_oscillatory
+from UncertainSCI.indexing import TotalDegreeSet, HyperbolicCrossSet
+from UncertainSCI.pce import PolynomialChaosExpansion
 ## Distribution setup
 
 # Number of parameters

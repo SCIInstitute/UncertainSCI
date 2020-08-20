@@ -292,7 +292,7 @@ def idistinv_driver(u, n, primitive, ab, supp):
     
     if isinstance(n, np.int64):
         intervals = markov_stiltjies(u, int(n), ab, supp)
-    if isinstance(n, int):
+    elif isinstance(n, int):
         intervals = markov_stiltjies(u, n, ab, supp)
     else:
         intervals = np.zeros((n.size, 2))

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from transformations import AffineTransform
+from UncertainSCI.transformations import AffineTransform
 
 class AffineMapTestCase(unittest.TestCase):
     """

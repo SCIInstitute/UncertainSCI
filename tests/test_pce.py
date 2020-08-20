@@ -2,10 +2,10 @@ import unittest
 
 import numpy as np
 
-from distributions import BetaDistribution
-from indexing import TotalDegreeSet
+from UncertainSCI.distributions import BetaDistribution
+from UncertainSCI.indexing import TotalDegreeSet
 
-from pce import PolynomialChaosExpansion
+from UncertainSCI.pce import PolynomialChaosExpansion
 
 class PCETestCase(unittest.TestCase):
     """

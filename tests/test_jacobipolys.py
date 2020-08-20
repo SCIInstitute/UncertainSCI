@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from families import JacobiPolynomials
+from UncertainSCI.families import JacobiPolynomials
 
 class JacobiTestCase(unittest.TestCase):
     """

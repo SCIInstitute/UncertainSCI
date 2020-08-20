@@ -408,7 +408,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             #                                      E_n (probably) should be computed with logs:
             #                                       E_n = exp( -1/(beta+1) * (alpha*log(2) + log(D) + log(C_n) ) )
             #                                           For D: there is a logbeta function
-
+            # temp(vgrid) ~ (1 + ugrid)^(beta + 1)
             exps = np.array([1/(self.beta+1), 1/(self.alpha+1)])
             ug,exponents = fidistinv_setup_helper1(ug,exps)
             
