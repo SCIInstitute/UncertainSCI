@@ -168,24 +168,53 @@ if __name__ == "__main__":
 
     import pdb
     from matplotlib import pyplot as plt
+    import scipy as sp
 
     dim = 5
 
     left = -1.
     right = 1.
-    N = 100000
+    N = 1000
     model = laplace_ode(left=left, right=right, N=N)
-
-    p = np.random.rand(5)*2 - 1
-    u = model(p)
     x = laplace_grid_x(left, right, N)
-    a = laplace_ode_diffusion(x, p)
 
-    plt.subplot(121)
-    plt.plot(x,a)
-    plt.title('Diffusion coefficient')
+    K = 4
+    p = K*[None]
+    u = K*[None]
+    a = K*[None]
 
-    plt.subplot(122)
-    plt.plot(x,u)
-    plt.title('Solution u')
+    for k in range(K):
+        p[k] = np.random.rand(dim)*2 - 1
+        a[k] = laplace_ode_diffusion(x, p[k])
+        u[k] = model(p[k])
 
+    for k in range(K):
+
+        row = np.floor(k/2) + 1
+        col = k % (K/2) + 1
+
+        index = col + (row-1)*K/2
+
+        plt.subplot(2, K, k+1)
+        plt.plot(x,a[k], 'r')
+        plt.title('Diffusion coefficient')
+        plt.ylim([1, 3.0])
+
+        plt.subplot(2, K, k+1+K)
+        plt.plot(x,u[k])
+        plt.title('Solution u')
+        plt.ylim([0, 1.5])
+
+    M = 1000
+    U = np.zeros([u[0].size, M])
+    for m in range(M):
+        U[m,:] = model(np.random.rand(dim)*2 - 1)
+
+    _,svs,_ = np.linalg.svd(U)
+    _,r,_ = sp.linalg.qr(U, pivoting=True)
+
+    plt.figure()
+    plt.semilogy(svs[:100], 'r')
+    plt.semilogy(np.abs(np.diag(r)[:100]), 'b')
+    plt.legend(["Singular values", "Orthogonalization residuals"])
+    plt.show()
