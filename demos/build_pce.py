@@ -24,7 +24,7 @@ dist = BetaDistribution(alpha=alpha, beta=alpha, dim=dimension)
 # Or can define distribution through mean + stdev on [0,1]
 mu = [1/2., 1/2., 3/4.]
 sigma = [np.sqrt(1/12.), 1/5., 0.3]
-dist = BetaDistribution(mean=mu, stdev=sigma)
+#dist = BetaDistribution(mean=mu, stdev=sigma)
 
 ## Indices setup
 order = 5
