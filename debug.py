@@ -34,16 +34,14 @@ debug the error
 # correct_x = J.idistinv(u, n)
 # x = J.fidistinv(u, n)
 
-alpha, beta = -0.984, 2.801
+alpha, beta = 7.389, 2.072
 n = 0
 J = JacobiPolynomials(alpha=alpha,beta=beta)
 
-# u = 0.08588
+u = 0.985911
 # correct_x = J.idistinv(u, n)
 # x = J.fidistinv(u, n)
 
-uu = np.linspace(0,1,100)
-u = uu[55]
 x = J.fidistinv(u,n)
 correct_x = J.idistinv(u,n)
 

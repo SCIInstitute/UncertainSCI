@@ -15,12 +15,12 @@ class FastjacobiinvTestCase(unittest.TestCase):
         beta =  -1. + 10*np.random.rand(1)[0]
         J = JacobiPolynomials(alpha=alpha,beta=beta)
         
-        n = 0
+        n = np.random.randint(5)
         u = np.random.rand(1)[0]
         correct_x = J.idistinv(u, n)
         x = J.fidistinv(u, n)
 
-        delta = 1e-4
+        delta = 1e-3
         errs = np.abs(x - correct_x)
         
         errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, u={2:1.6f}'.format(alpha, beta, u)

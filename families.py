@@ -159,13 +159,13 @@ def fidistinv_setup_helper1(ug, exps):
 
 def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
     
-    vgrid = np.cos( np.linspace(np.pi, 0, M) )
+    # vgrid = np.cos( np.linspace(np.pi, 0, M) )
     # Or
     #vgrid = np.cos( np.linspace(np.pi, 0, M+1)[:-1] + M/(2*np.pi) )
     # Or
-    #vgrid = np.cos( np.linspace(np.pi, 0, M+2) )
-    #vgrid = vgrid[1:-1]
-    
+    vgrid = np.cos( np.linspace(np.pi, 0, M+2) )
+    vgrid = vgrid[1:-1]
+
     ab = jacobi_recurrence_values(M, -1/2, -1/2)
     V = eval_driver(vgrid, np.arange(M), 0, ab)
     
@@ -201,7 +201,7 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
     data = np.zeros((M+6, ug.size - 1))
     for q in range(ug.size - 1):
         data[:,q] = np.hstack((ug[q], ug[q+1], xgrid[0,q], xgrid[-1,q], exponents[:,q], xcoeffs[:,q]))
-    pdb.set_trace()
+    # pdb.set_trace()
     return data
 
 def fidistinv_driver(u, n, data):
@@ -406,7 +406,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             #                                       E_n = exp( -1/(beta+1) * (alpha*log(2) + log(D) + log(C_n) ) )
             #                                           For D: there is a logbeta function
 
-            exps = np.array([self.beta/(self.beta+1), self.alpha/(self.alpha+1)])
+            exps = np.array([1/(self.beta+1), 1/(self.alpha+1)])
             ug,exponents = fidistinv_setup_helper1(ug,exps)
             
             idistinv = lambda u: self.idistinv(u,nn)
