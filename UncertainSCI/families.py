@@ -420,24 +420,29 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     def fidistinv(self, u, n):
         
         dirName = 'data_set'
-        try:
-            os.makedirs(dirName)
-            print ('Directory', dirName, 'created')
-        except FileExistsError:
-            pass
-            #print ('Directory ', dirName, 'already exists')
+        """
+        Note users should modify parent directory as path that can be passed to UncertainSCI
+        """
+        parent_dir = '/Users/zexinliu/repos/UncertainSCI'
+        path = os.path.join(parent_dir, dirName)
+        Path(path).mkdir(parents=True, exist_ok=True)
 
-    
-        path = Path.cwd() / dirName
+        # try:
+            # os.makedirs(dirName)
+            # print ('Directory', dirName, 'created')
+        # except FileExistsError:
+            # pass
+            # print ('Directory ', dirName, 'already exists')
+        # path = Path.cwd() / dirName
         
         filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
-            with open(str(path / filename), 'rb') as f:
+            with open(os.path.join(path,filename), 'rb') as f:
                 data = pickle.load(f)
                 #print ('Data loaded')
         except Exception:
             data = []
-            with open(str(path / filename), 'ab+') as f:
+            with open(os.path.join(path,filename), 'ab+') as f:
                 pickle.dump(data, f)
         
         if isinstance(n, float) or isinstance(n, int):
@@ -448,7 +453,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         if len(data) < max(n[:]) + 1:
             print('Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'.format(self.alpha, self.beta), end='', flush=True)
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
-            with open(str(path / filename), 'wb') as f:
+            with open(os.path.join(path,filename), 'wb') as f:
                 pickle.dump(data, f)
             print('Done', flush=True)
         
