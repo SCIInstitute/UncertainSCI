@@ -2,13 +2,13 @@ import numpy as np
 import scipy as sp
 from scipy import sparse as sprs
 
-from families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
-from families import DiscreteChebyshevPolynomials
-from opolynd import TensorialPolynomials
-from indexing import total_degree_indices, hyperbolic_cross_indices
-from transformations import AffineTransform
-from utils.casting import to_numpy_array
-from utils.version import version_lessthan
+from UncertainSCI.families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
+from UncertainSCI.families import DiscreteChebyshevPolynomials
+from UncertainSCI.opolynd import TensorialPolynomials
+from UncertainSCI.indexing import total_degree_indices, hyperbolic_cross_indices
+from UncertainSCI.transformations import AffineTransform
+from UncertainSCI.utils.casting import to_numpy_array
+from UncertainSCI.utils.version import version_lessthan
 
 # numpy >= 1.17: default_rng is preferred
 if version_lessthan(np, '1.17'):

@@ -4,21 +4,22 @@ Contains routines that specialize opoly1d things for classical orthogonal polyno
 - hermite poly
 - laguerre polys
 """
-
 import numpy as np
-from scipy import special as sp
-from opoly1d import OrthogonalPolynomialBasis1D, eval_driver, idistinv_driver, gauss_quadrature_driver
-from transformations import AffineTransform
+
+from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
+from UncertainSCI.opoly1d import eval_driver, idistinv_driver, gauss_quadrature_driver
+from UncertainSCI.opoly1d import linear_modification, quadratic_modification
+from UncertainSCI.transformations import AffineTransform
+from UncertainSCI.utils.casting import to_numpy_array
 
 import os
 import pickle
 from pathlib import Path
 
-from opoly1d import linear_modification, quadratic_modification
-from utils.casting import to_numpy_array
+from scipy import special as sp
+from scipy.stats import beta as bbeta
 
 import pdb
-from scipy.stats import beta as bbeta
 
 def jacobi_recurrence_values(N, alpha, beta):
     """
@@ -770,7 +771,6 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
             ab[0,1] = 1
         
         u,w = gauss_quadrature_driver(ab, M)
-        pdb.set_trace()
         I = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
 
         logfactor = logfactor + (-x[ind]**alpha) + sp.gammaln(1/alpha) - sp.gammaln((rho+1)/alpha)

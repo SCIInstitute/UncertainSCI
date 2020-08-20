@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from families import JacobiPolynomials
+from UncertainSCI.families import JacobiPolynomials
 
 class FastjacobiinvTestCase(unittest.TestCase):
     """
@@ -23,7 +23,7 @@ class FastjacobiinvTestCase(unittest.TestCase):
         delta = 1e-3
         errs = np.abs(x - correct_x)
         
-        errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, u={2:1.6f}'.format(alpha, beta, u)
+        errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, u={2:1.6f}, n = {3:d}'.format(alpha, beta, u, n)
 
         self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta, msg=errstr)
 

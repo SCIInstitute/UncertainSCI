@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from distributions import NormalDistribution, ExponentialDistribution
+from UncertainSCI.distributions import NormalDistribution, ExponentialDistribution
 
 class DistTestCase(unittest.TestCase):
     """

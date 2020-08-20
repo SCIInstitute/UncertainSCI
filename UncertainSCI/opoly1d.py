@@ -290,8 +290,10 @@ def idistinv_driver(u, n, primitive, ab, supp):
     else:
         u = np.asarray(u)
     
-    if isinstance(n, int):   
-        intervals = markov_stiltjies(u, n, ab, supp)    
+    if isinstance(n, np.int64):
+        intervals = markov_stiltjies(u, int(n), ab, supp)
+    if isinstance(n, int):
+        intervals = markov_stiltjies(u, n, ab, supp)
     else:
         intervals = np.zeros((n.size, 2))
         nmax = max(n)

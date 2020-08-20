@@ -4,7 +4,7 @@ import numpy as np
 from scipy import special as sp
 from scipy.special import comb
 
-from utils.prob import discrete_sampling
+from UncertainSCI.utils.prob import discrete_sampling
 
 def hyperbolic_cross_indices(d, k):
     """

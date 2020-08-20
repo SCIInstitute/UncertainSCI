@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy import special as sp
 
-from families import HermitePolynomials, JacobiPolynomials
+from UncertainSCI.families import HermitePolynomials, JacobiPolynomials
 
 from matplotlib import pyplot as plt
 

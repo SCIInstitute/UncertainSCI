@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy import special as sp
 
-from families import LaguerrePolynomials, JacobiPolynomials
+from UncertainSCI.families import LaguerrePolynomials, JacobiPolynomials
 
 class IDistTestCase(unittest.TestCase):
     """

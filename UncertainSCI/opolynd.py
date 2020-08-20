@@ -1,8 +1,8 @@
 import numpy as np
-import opoly1d
-from opoly1d import OrthogonalPolynomialBasis1D
+import UncertainSCI.opoly1d
+from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
 
-from utils.linalg import greedy_d_optimal
+from UncertainSCI.utils.linalg import greedy_d_optimal
 
 def opolynd_eval(x, lambdas, ab):
     # Evaluates tensorial orthonormal polynomials associated with the
