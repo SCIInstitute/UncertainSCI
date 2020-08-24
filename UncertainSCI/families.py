@@ -18,6 +18,7 @@ from pathlib import Path
 
 from scipy import special as sp
 from scipy.stats import beta as bbeta
+from scipy.stats import gamma
 
 import pdb
 
@@ -201,7 +202,7 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
     data = np.zeros((M+6, ug.size - 1))
     for q in range(ug.size - 1):
         data[:,q] = np.hstack((ug[q], ug[q+1], xgrid[0,q], xgrid[-1,q], exponents[:,q], xcoeffs[:,q]))
-    # pdb.set_trace()
+    
     return data
 
 def fidistinv_driver(u, n, data):
@@ -786,15 +787,22 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
 
 def hfreud_idist_medapprox(n, alpha, rho):
 
-    a = rho + 2*n + 2*np.sqrt(n**2 + n*rho) # maxapprox
-    a = a ** (1/alpha)
-    a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) \
-            - np.log(2) - sp.gammaln(alpha+1/2)))
-    
-    b = rho + 2*n - 2*np.sqrt(n**2 + n*rho) # minapprox
-    b = b ** (1/alpha)
-    b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) \
-            - np.log(2) - sp.gammaln(alpha+1/2)))
+    if n > 0:
+        a = rho + 2*n + 2*np.sqrt(n**2 + n*rho) # maxapprox
+        a = a ** (1/alpha)
+        a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) \
+                - np.log(2) - sp.gammaln(alpha+1/2)))
+        
+        b = rho + 2*n - 2*np.sqrt(n**2 + n*rho) # minapprox
+        b = b ** (1/alpha)
+        b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) \
+                - np.log(2) - sp.gammaln(alpha+1/2)))
+    else:
+        a = gamma.ppf(1-1e-3 , (rho+1)/alpha)
+        a = a**(1/alpha)
+
+        b = gamma.ppf(1e-3, (rho+1)/alpha)
+        b = a**(1/alpha)
 
     return a,b
 

@@ -4,7 +4,7 @@ from itertools import chain, combinations
 import numpy as np
 from matplotlib import pyplot as plt
 
-from UncertainSCI.distributions import NormalDistribution
+from UncertainSCI.distributions import ExponentialDistribution
 from UncertainSCI.model_examples import sine_modulation, laplace_ode, genz_oscillatory
 from UncertainSCI.indexing import TotalDegreeSet, HyperbolicCrossSet
 from UncertainSCI.pce import PolynomialChaosExpansion
@@ -14,9 +14,9 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 dimension = 1
 
 # Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
-mean = 1.
-cov = np.ones(1)
-dist = NormalDistribution(mean=mean, cov=cov, dim=dimension)
+lbd = [1.]
+loc = 0.
+dist = ExponentialDistribution(lbd = lbd, loc = loc)
 
 ## Indices setup
 order = 5
