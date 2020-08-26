@@ -14,13 +14,15 @@ from UncertainSCI.utils.casting import to_numpy_array
 
 import os
 import pickle
-from pathlib import Path
+from pathlib import Path, PurePath
+import UncertainSCI as uSCI
 
 from scipy import special as sp
 from scipy.stats import beta as bbeta
 from scipy.stats import gamma
 
 import pdb
+
 
 def jacobi_recurrence_values(N, alpha, beta):
     """
@@ -421,26 +423,21 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     def fidistinv(self, u, n):
         
         dirName = 'data_set'
-        """
-        Note users should modify parent directory as path that can be passed to UncertainSCI
-        """
-        parent_dir = '/Users/zexinliu/repos/UncertainSCI'
+        parent_dir = os.path.dirname(os.path.dirname(uSCI.__file__))
         path = os.path.join(parent_dir, dirName)
-        Path(path).mkdir(parents=True, exist_ok=True)
+        # Path(path).mkdir(parents=True, exist_ok=True)
 
-        # try:
-            # os.makedirs(dirName)
-            # print ('Directory', dirName, 'created')
-        # except FileExistsError:
-            # pass
-            # print ('Directory ', dirName, 'already exists')
-        # path = Path.cwd() / dirName
+        try:
+            os.makedirs(path)
+            print ('Directory', dirName, 'created')
+        except FileExistsError:
+            pass
+            print ('Directory ', dirName, 'already exists')
         
         filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
             with open(os.path.join(path,filename), 'rb') as f:
                 data = pickle.load(f)
-                #print ('Data loaded')
         except Exception:
             data = []
             with open(os.path.join(path,filename), 'ab+') as f:
