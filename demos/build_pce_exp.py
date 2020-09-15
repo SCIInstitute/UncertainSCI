@@ -13,13 +13,13 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 # Number of parameters
 dimension = 1
 
-# Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
-lbd = [1.]
-loc = 0.
+# Specifies exponential distribution
+lbd = 3*np.ones(dimension)
+loc = np.zeros(dimension)
 dist = ExponentialDistribution(lbd = lbd, loc = loc)
 
 ## Indices setup
-order = 5
+order = 10
 indices = TotalDegreeSet(dim=dimension, order=order)
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))

@@ -432,7 +432,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             print ('Directory', dirName, 'created')
         except FileExistsError:
             pass
-            print ('Directory ', dirName, 'already exists')
+            #print ('Directory ', dirName, 'already exists')
         
         filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
@@ -889,7 +889,6 @@ def hfreud_idistinv(u, n, alpha, rho):
         ind = np.digitize(n, np.arange(-0.5,0.5+nmax+1e-8), right = False)
         ab = laguerre_recurrence_values(2*nmax + max(100,nmax), alpha, rho)
         
-        print (n.shape, u.shape)
         assert n.size == u.size
 
         x = np.zeros(n.shape)    

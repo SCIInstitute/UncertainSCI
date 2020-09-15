@@ -11,15 +11,21 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 ## Distribution setup
 
 # Number of parameters
-dimension = 1
+dimension = 2
 
-# Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
-mean = 1.
-cov = np.ones(1)
+# Specifies normal distribution
+mean = np.ones(dimension)
+cov = np.random.randn(dimension, dimension)
+cov = np.matmul(cov.T, cov)/(4*dimension) # Some random covariance matrix
+
+# Normalize so that parameters with larger index have smaller importance
+D = np.diag(1/np.sqrt(np.diag(cov)) * 1/(np.arange(1, dimension+1)**2))
+cov = D @ cov @ D
+
 dist = NormalDistribution(mean=mean, cov=cov, dim=dimension)
 
 ## Indices setup
-order = 5
+order = 10
 indices = TotalDegreeSet(dim=dimension, order=order)
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
@@ -40,7 +46,7 @@ model = sine_modulation(N=N)
 # 1
 # Generate samples and query model in one call:
 pce = PolynomialChaosExpansion(indices, dist)
-lsq_residuals = pce.build(model)
+lsq_residuals = pce.build(model, oversampling=10)
 
 
 # The parameter samples and model evaluations are accessible:

@@ -38,6 +38,10 @@ class AffineTransform:
 
         elif (A is not None) and (b is not None):
             # Assume A is a numpy array
+            assert (A.ndim == 1) or (A.shape[0] == A.shape[1]), ValueError("Input matrix A must be square")
+            assert b.ndim == 1, ValueError("Input b must be a vector")
+            assert b.size == A.shape[0], ValueError("Input vector b must have same dimension as A")
+
             self.A, self.b = A, b
             self.Ainv = np.linalg.inv(A)
             self.binv = self.Ainv.dot(-self.b)

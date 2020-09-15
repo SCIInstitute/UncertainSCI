@@ -87,7 +87,7 @@ class NormalDistribution(ProbabilityDistribution):
         """
 
         # Tons of type/value checking for mean/cov vs dim
-        meaniter = isinstance(mean, (list, tuple))
+        meaniter = isinstance(mean, (list, tuple, np.ndarray))
 
         if cov is None:
             if meaniter:
@@ -101,7 +101,7 @@ class NormalDistribution(ProbabilityDistribution):
 
         else:
             assert isinstance(cov, np.ndarray), 'Covariance must be an array'
-            assert np.all(cov - cov.T == 0), 'Covariance must be symmetric'
+            #assert np.all(cov - cov.T == 0), 'Covariance must be symmetric'
 
             if meaniter:
                 if len(mean) > 1 and cov.shape[0] > 1:
@@ -109,7 +109,7 @@ class NormalDistribution(ProbabilityDistribution):
                     try:
                         np.linalg.cholesky(cov)
                     except ValueError:
-                        print ('Covariance must be positive definite')
+                        print ('Covariance must be symmetric, positive definite')
 
                 elif len(mean) == 1 and cov.shape[0] == 1:
                     pass
@@ -205,13 +205,13 @@ class ExponentialDistribution(ProbabilityDistribution):
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
-        if all(i > 0 for i in lbd):
+        if np.all([i > 0 for i in lbd]):
             # User say exp^{-lbd(x-loc)} on [loc, inf), lbd > 0
             A = np.diag([self.lbd[i] for i in range(self.dim)])
             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
-        if all(i < 0 for i in lbd):
+        if np.all([i < 0 for i in lbd]):
             # User say exp^{lbd -(x-loc)} on (-inf, loc), lbd < 0
             A = np.diag([self.lbd[i] for i in range(self.dim)])
             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
@@ -283,8 +283,8 @@ class ExponentialDistribution(ProbabilityDistribution):
         Converts user-given mean and loc to an iterable lbd.
         """
 
-        meaniter = isinstance(mean, (list, tuple))
-        lociter = isinstance(loc, (list, tuple))
+        meaniter = isinstance(mean, (list, tuple, np.ndarray))
+        lociter = isinstance(loc, (list, tuple, np.ndarray))
         lbd = []
 
         # If they're both iterables:
@@ -326,8 +326,8 @@ class ExponentialDistribution(ProbabilityDistribution):
         """
 
         # Tons of type/value checking for lbd/loc vs dim
-        lbditer = isinstance(lbd, (list, tuple))
-        lociter = isinstance(loc, (list, tuple))
+        lbditer = isinstance(lbd, (list, tuple, np.ndarray))
+        lociter = isinstance(loc, (list, tuple, np.ndarray))
 
         if lbditer and lociter:
             if len(lbd) > 1 and len(loc) > 1:

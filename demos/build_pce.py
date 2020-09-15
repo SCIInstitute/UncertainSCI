@@ -17,9 +17,9 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 dimension = 3
 
 # Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
-alpha = 1.
+alpha = 0.5
 beta = 1.
-dist = BetaDistribution(alpha=alpha, beta=alpha, dim=dimension)
+dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
 
 # Or can define distribution through mean + stdev on [0,1]
 mu = [1/2., 1/2., 3/4.]
