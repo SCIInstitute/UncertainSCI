@@ -6,6 +6,7 @@
 import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg as splinalg
+import scipy.optimize
 
 def taylor_frequency(p):
     """
@@ -28,6 +29,134 @@ def sine_modulation(left=-1, right=1, N=100):
     x = np.linspace(left, right, N)
 
     return lambda p: np.sin(np.pi * x * taylor_frequency(p))
+
+def mercer_eigenvalues_exponential_kernel(N, a, b):
+    """
+    For a 1D exponential covariance kernel,
+
+      K(s,t) = exp(-|t-s| / a),     s, t \in [-b,b],
+
+    computes the first N eigenvalues of the associated Mercer integral
+    operator.
+
+    Precisely, computes the first N/2 positive solutions to both of the following
+    transcendental equations for w and v:
+
+       1 - a v tan(v b) = 0
+       a w + tan(w b) = 0
+
+    The eigenvalues are subsequently defined through these solutions.
+
+    Returns (1) the N eigenvalues lamb, (2) the first ceil(N/2) solutions for
+    v, (3) the first floor(N/2) solutions for w.
+    """
+
+    assert N > 0 and a > 0 and b > 0
+
+    M = int(np.ceil(N/2))
+    w = np.zeros(M)
+    v = np.zeros(M)
+
+    # First equation transformed:
+    # vt = v b
+    #
+    #  -(b/a) / vt + tan(vt) = 0
+
+    f = lambda x: -(b/a)/x + np.tan(x)
+
+    for n in range(M):
+        # Compute bracketing interval
+        # root somewhere in right-hand part of [2*n-1, 2*n+1]*pi/2 interval
+        RH_value = -1
+        k = 4
+        while RH_value < 0:
+            k += 1
+            right = (2*n+1)*np.pi/2 - 1/k
+            RH_value = f(right)
+
+        # Root can't be on LHS of interval
+        if n == 0:
+            left = 1/k
+            while f(left) > 0:
+                k += 1
+                left = 1/k
+        else:
+            left = n*np.pi
+
+        v[n] = scipy.optimize.brentq(f, left, right)
+
+    v /= b
+
+    # Second equation transformed:
+    # wt = w b
+    #
+    #  (a/b) wt + tan(wt) = 0
+
+    f = lambda x: (a/b)*x + np.tan(x)
+
+    for n in range(M):
+
+        # Compute bracketing interval
+        # root somewhere in [2*n+1, 2*n+3]*pi/2
+        LH_value = 1
+        k = 4
+        while LH_value > 0:
+            k += 1
+            left = (2*n+1)*np.pi/2 + 1/k
+            LH_value = f(left)
+
+        # Root can't be on RHS of interval
+        right = (n+1)*np.pi
+
+        w[n] = scipy.optimize.brentq(f, left, right)
+
+    w /= b
+
+    if (N%2)==1: # Don't need last root for w
+        w = w[:-1]
+
+    lamb = np.zeros(N)
+    oddinds = [i in range(N) if i%2 ==0] # Well, odd for 1-based indexing
+    lamb[oddinds] = 2*a/(1+(a*v)**2)
+    eveninds = [i in range(N) if i%2 ==1] # even for 1-based indexing
+    lamb[eveninds] = 2*a/(1+(a*w)**2)
+
+    return lamb, v, w
+
+def KLE_exponential_covariance_1d(N, a, b, mn):
+    """
+    Returns a pointer to a function the evaluates an N-term Karhunen-Loeve
+    Expansion of a stochastic process with exponential covariance function on a
+    bounded interval [-b,b]. Let the GP have the covariance function,
+
+        C(s,t) = exp(-|t-s| / a),
+
+    and mean function given by mn. Then the N-term KLE of the process is given
+    by
+
+        K_N(x,P) = mn(x) + \sum_{n=1}^N P_n sqrt(\lambda_n) \phi_n(x),
+
+    where (lambda_n, phi_n) are the leading eigenpairs of the associated Mercer
+    kernel. The eigenvalues are computed in
+    mercer_eigenvalues_exponential_kernel. The (P_n) are iid standard normal
+    Gaussian random variables.
+
+    Returns a function lamb(x,P) that takes in a 1D np.ndarray x and a 1D
+    np.ndarray vector P and returns the KLE realization on x for that value of
+    P.  
+    """
+
+    lamb, v, w = mercer_eigenvalues_exponential_kernel(N, a, b)
+
+    efuns = N*[]
+    for i in range(N):
+        if (i%2) == 0:
+            efuns[i] = lambda x: np.cos(v[i/2]*x)     / np.sqrt(b + np.sin(2*v[i/2]*b)/(2*v[i/2]))
+        else:
+            efuns[i] = lambda x: np.sin(w[(i-1)/2]*x) / np.sqrt(b - np.sin(2*w[(i-1)/2]*b)/(2*w[(i-1)/2]))
+
+    KLE = lambda x,p: mn(x) + np.array([efuns[i](x) for i in range(N)]).T @ p
+    return KLE
 
 def laplace_ode_diffusion(x, p):
     """ Parameterized diffusion coefficient for 1D ODE
@@ -167,6 +296,7 @@ def genz_oscillatory(w=0., c=None):
 if __name__ == "__main__":
 
     import pdb
+
     from matplotlib import pyplot as plt
     import scipy as sp
 
