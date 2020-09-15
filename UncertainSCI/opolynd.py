@@ -1,5 +1,5 @@
 import numpy as np
-import UncertainSCI.opoly1d
+from UncertainSCI import opoly1d
 from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
 
 from UncertainSCI.utils.linalg import greedy_d_optimal
