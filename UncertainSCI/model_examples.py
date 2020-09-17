@@ -116,9 +116,9 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
         w = w[:-1]
 
     lamb = np.zeros(N)
-    oddinds = [i in range(N) if i%2 ==0] # Well, odd for 1-based indexing
+    oddinds = [i for i in range(N) if (i%2)==0] # Well, odd for 1-based indexing
     lamb[oddinds] = 2*a/(1+(a*v)**2)
-    eveninds = [i in range(N) if i%2 ==1] # even for 1-based indexing
+    eveninds = [i for i in range(N) if (i%2) ==1] # even for 1-based indexing
     lamb[eveninds] = 2*a/(1+(a*w)**2)
 
     return lamb, v, w
@@ -148,14 +148,16 @@ def KLE_exponential_covariance_1d(N, a, b, mn):
 
     lamb, v, w = mercer_eigenvalues_exponential_kernel(N, a, b)
 
-    efuns = N*[]
+    efuns = N*[None]
     for i in range(N):
         if (i%2) == 0:
-            efuns[i] = lambda x: np.cos(v[i/2]*x)     / np.sqrt(b + np.sin(2*v[i/2]*b)/(2*v[i/2]))
+            i2 = int(i/2)
+            efuns[i] = (lambda i2: lambda x: np.cos(v[i2]*x) / np.sqrt(b + np.sin(2*v[i2]*b)/(2*v[i2])))(i2)
         else:
-            efuns[i] = lambda x: np.sin(w[(i-1)/2]*x) / np.sqrt(b - np.sin(2*w[(i-1)/2]*b)/(2*w[(i-1)/2]))
+            i2 = int((i-1)/2)
+            efuns[i] = (lambda i2: lambda x: np.sin(w[i2]*x) / np.sqrt(b - np.sin(2*w[i2]*b)/(2*w[i2])))(i2)
 
-    KLE = lambda x,p: mn(x) + np.array([efuns[i](x) for i in range(N)]).T @ p
+    KLE = lambda x,p: mn(x) + np.array([np.sqrt(lamb[i])*efuns[i](x) for i in range(N)]).T @ p
     return KLE
 
 def laplace_ode_diffusion(x, p):
@@ -180,7 +182,7 @@ def laplace_grid_x(left, right, N):
     """
     return np.linspace(left, right, N)
 
-def laplace_ode(left=-1., right=1., N=100, f=None):
+def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusion):
     """
 
     Computes the solution to the ODE:
@@ -212,7 +214,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
 
     def create_system(p):
         nonlocal x, xh, N
-        a = laplace_ode_diffusion(xh, p)
+        a = diffusion(xh, p)
         number_nonzeros = 1 + 1 + (N-2)*3
         rows = np.zeros(number_nonzeros, dtype=int)
         cols = np.zeros(number_nonzeros, dtype=int)
@@ -302,10 +304,16 @@ if __name__ == "__main__":
 
     dim = 5
 
+    a = 3
+    b = 1
+    mn = lambda x: np.zeros(x.shape)
+    KLE = KLE_exponential_covariance_1d(dim, a, b, mn)
+    diffusion = lambda x, p: np.exp(KLE(x,p))
+
     left = -1.
     right = 1.
     N = 1000
-    model = laplace_ode(left=left, right=right, N=N)
+    model = laplace_ode(left=left, right=right, N=N, diffusion=diffusion)
     x = laplace_grid_x(left, right, N)
 
     K = 4
@@ -315,7 +323,8 @@ if __name__ == "__main__":
 
     for k in range(K):
         p[k] = np.random.rand(dim)*2 - 1
-        a[k] = laplace_ode_diffusion(x, p[k])
+        #a[k] = laplace_ode_diffusion(x, p[k])
+        a[k] = diffusion(x, p[k])
         u[k] = model(p[k])
 
     for k in range(K):
@@ -328,12 +337,12 @@ if __name__ == "__main__":
         plt.subplot(2, K, k+1)
         plt.plot(x,a[k], 'r')
         plt.title('Diffusion coefficient')
-        plt.ylim([1, 3.0])
+        plt.ylim([0, 3.0])
 
         plt.subplot(2, K, k+1+K)
         plt.plot(x,u[k])
         plt.title('Solution u')
-        plt.ylim([0, 1.5])
+        plt.ylim([-5, 5])
 
     M = 1000
     U = np.zeros([u[0].size, M])
