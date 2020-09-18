@@ -6,12 +6,12 @@ from scipy.special import comb
 
 from UncertainSCI.utils.prob import discrete_sampling
 
+
 def hyperbolic_cross_indices(d, k):
     """
     Returns indices associated with a d-dimensional (isotropic)
     hyperbolic cross index space up to degree k.
     """
-
 
     assert k >= 0
     assert d >= 1
@@ -25,7 +25,7 @@ def hyperbolic_cross_indices(d, k):
     # First add all indices with sparsity 1
     for q in range(d):
         temp = np.zeros([k-1, d], dtype=int)
-        temp[:,q] = np.arange(1, k, dtype=int)
+        temp[:, q] = np.arange(1, k, dtype=int)
         lambdas = np.vstack([lambdas, temp])
 
     # Now determine the maximum 0-norm the entries can be. I.e., for
@@ -37,19 +37,19 @@ def hyperbolic_cross_indices(d, k):
     for p in range(2, pmax+1):
         # Determine all possible locations where nonzero entries can occur
         combs = combinations(range(d), p)
-        combs = np.array( [row for row in combs], dtype=int)
+        combs = np.array([row for row in combs], dtype=int)
 
         # Now we have 2^p < k+1, i.e., an index with nonzero entries
         # np.ones([p 1]) is ok.
         # Keep incrementing these entries until product exceeds k+1
-        possible_indices = np.ones([1, p]);
-        ind = 0;
+        possible_indices = np.ones([1, p])
+        ind = 0
 
         while ind < possible_indices.shape[0]:
             # Add any possibilities that are children of
             # possible_indices[ind,:]
 
-            lambd = possible_indices[ind,:]
+            lambd = possible_indices[ind, :]
             for q in range(p):
                 temp = lambd.copy()
                 temp[q] += 1
@@ -62,12 +62,12 @@ def hyperbolic_cross_indices(d, k):
         arow = lambdas.shape[0]
         lambdas = np.vstack([lambdas, np.zeros([combs.shape[0]*possible_indices.shape[0], d], dtype=int)])
 
-  # Now for each combination, we put in possible_indices
+    # Now for each combination, we put in possible_indices
         for c in range(combs.shape[0]):
             i1 = arow
             i2 = arow + possible_indices.shape[0]
 
-            lambdas[i1:i2,combs[c,:]] = possible_indices;
+            lambdas[i1:i2, combs[c, :]] = possible_indices
 
             arow = i2
 
@@ -98,27 +98,29 @@ def total_degree_indices(d, k):
         n = int(np.round(comb(d-1+(k-qk), d-1)))
         i1 = i0 + n
 
-        lambdas[i0:i1,0] = qk
-        lambdas[i0:i1,1:] = lambdasd1[:n,:]
+        lambdas[i0:i1, 0] = qk
+        lambdas[i0:i1, 1:] = lambdasd1[:n, :]
         i0 = i1
 
     # My version of numpy < 1.12, so I don't have np.flip :(
-    #degrees = np.cumsum(np.flip(lambdas,axis=1), axis=1)
+    # degrees = np.cumsum(np.flip(lambdas,axis=1), axis=1)
     degrees = np.cumsum(np.fliplr(lambdas), axis=1)
 
     ind = np.lexsort(degrees.transpose())
-    lambdas = lambdas[ind,:]
+    lambdas = lambdas[ind, :]
 
     return lambdas
+
 
 def degree_encompassing_N(d, N):
     # Returns the smallest degree k such that nchoosek(d+k,d) >= N
 
     k = 0
-    while np.round(comb(d+k,d)) < N:
+    while np.round(comb(d+k, d)) < N:
         k += 1
 
     return k
+
 
 def total_degree_indices_N(d, N):
     # Returns the first N ( > 0) d-dimensional multi-indices when ordered by
@@ -126,65 +128,65 @@ def total_degree_indices_N(d, N):
 
     assert N > 0
 
-    return total_degree_indices(d, degree_encompassing_N(d,N))[:N,:]
+    return total_degree_indices(d, degree_encompassing_N(d, N))[:N, :]
 
 
-def tensor_product(d,k):
+def tensor_product(d, k):
     # Returns multi-indices associated with d-variate polynomials of
     # degree less than or equal to k. Each row is a multi-index, ordered
     # in p degree, where p = Inf
-    
-    from itertools import product
-    
-    I = np.empty(shape=[0, d], dtype = int)
-    
-    for t in ( _ for _ in product(range(k+1), repeat=d) ):
-        I = np.vstack((I, np.asarray(t)))
-    
-    return I
 
+    from itertools import product
+
+    I = np.empty(shape=[0, d], dtype=int)
+
+    for t in (_ for _ in product(range(k+1), repeat=d)):
+        I = np.vstack((I, np.asarray(t)))
+
+    return I
 
 
 def multi_indices_degree(d, k, p):
     # Returns multi-indices associated with d-variate polynomials of
     # degree less than or equal to k. Each row is a multi-index, ordered
     # in p degree, p could be any positive number including numpy.inf
-    
+
     if p < 1:
-        lambdas = total_degree_indices(d,k)
-        norm = ( np.sum(lambdas**p, axis=1) )**(1/p)
+        lambdas = total_degree_indices(d, k)
+        norm = (np.sum(lambdas**p, axis=1))**(1/p)
         norm = np.round(norm, decimals=8)
         flags = (norm <= k)
         lambdas = lambdas[flags]
-    
+
     elif p == np.inf:
-        lambdas = tensor_product(d,k)
-    
+        lambdas = tensor_product(d, k)
+
     elif p == 1:
-        lambdas = total_degree_indices(d,k)
-    
+        lambdas = total_degree_indices(d, k)
+
     else:
-        lambdas = tensor_product(d,k)
-        norm = ( np.sum(lambdas**p, axis=1) )**(1/p)
+        lambdas = tensor_product(d, k)
+        norm = (np.sum(lambdas**p, axis=1))**(1/p)
         norm = np.round(norm, decimals=8)
         flags = (norm <= k)
         lambdas = lambdas[flags]
-    
+
     return lambdas
 
 
-def pdjk(d,k):
+def pdjk(d, k):
     j = np.arange(k+1)
-    p = np.exp( np.log(d) + sp.gammaln(k+1) - sp.gammaln(j+1) + sp.gammaln(j+d) - sp.gammaln(k+d+1))
+    p = np.exp(np.log(d) + sp.gammaln(k+1) - sp.gammaln(j+1) + sp.gammaln(j+d) - sp.gammaln(k+d+1))
     assert np.abs(sum(p)-1) < 1e-8
     return p
 
+
 def sampling_total_degree_indices(N, d, k):
-    
+
     """
     Chooses N random multi-indices (with the uniform probability law) from the
     set of d-variate multi-indices whose total degree is k and less
-    
+
     Parameters
     ------
     param1: N
@@ -193,53 +195,55 @@ def sampling_total_degree_indices(N, d, k):
     dimension of variables
     param3L k
     total degree of variables
-    
+
     Returns
     ------
     The output lambdas is an N x d matrix, with each row containing one of these multi-indices
     """
-    lambdas = np.zeros((N,d))
-    
-    degrees = discrete_sampling(N, pdjk(d,k), np.arange(k+1)).T
-    
-    for i in range(1,d):
-        for n in range(1,N+1):
-            lambdas[n-1,i-1] = discrete_sampling( 1, pdjk(d-i, degrees[n-1]), np.arange(degrees[n-1],0-1e-8,-1) )
-        
-        degrees = degrees - lambdas[:,i-1]
-    
-    lambdas[:,d-1] = degrees;
-    
+    lambdas = np.zeros((N, d))
+
+    degrees = discrete_sampling(N, pdjk(d, k), np.arange(k+1)).T
+
+    for i in range(1, d):
+        for n in range(1, N+1):
+            lambdas[n-1, i-1] = discrete_sampling(1, pdjk(d-i, degrees[n-1]),
+                                                  np.arange(degrees[n-1], 0-1e-8, -1))
+
+        degrees = degrees - lambdas[:, i-1]
+
+    lambdas[:, d-1] = degrees
+
     return lambdas
 
+
 class LpSet():
-    def __init__(self, dim = 1, order = 0, p = 1):
-        assert dim > 0 and order >= 0 and p>= 0
+    def __init__(self, dim=1, order=0, p=1):
+        assert dim > 0 and order >= 0 and p >= 0
         self.dim = dim
         self.order = order
         self.p = p
-        
+
     def indices(self):
         if self.p < 1:
             lambdas = total_degree_indices(self.dim, self.order)
-            norm = ( np.sum(lambdas**self.p, axis=1) )**(1/self.p)
+            norm = (np.sum(lambdas**self.p, axis=1))**(1/self.p)
             norm = np.round(norm, decimals=8)
             flags = (norm <= self.order)
             lambdas = lambdas[flags]
-            
+
         elif self.p == np.inf:
-            lambdas = tensor_product(self.dim,self.order)
-            
+            lambdas = tensor_product(self.dim, self.order)
+
         elif self.p == 1:
-            lambdas = total_degree_indices(self.dim,self.order)
-            
+            lambdas = total_degree_indices(self.dim, self.order)
+
         else:
-            lambdas = tensor_product(self.dim,self.order)
-            norm = ( np.sum(lambdas**self.p, axis=1) )**(1/self.p)
+            lambdas = tensor_product(self.dim, self.order)
+            norm = (np.sum(lambdas**self.p, axis=1))**(1/self.p)
             norm = np.round(norm, decimals=8)
             flags = (norm <= self.order)
             lambdas = lambdas[flags]
-        
+
         return lambdas
 
 
@@ -247,14 +251,16 @@ class MultiIndexSet():
     def __init__(self):
         pass
 
+
 class TotalDegreeSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
-        self.dim, self.order = dim,order 
+        self.dim, self.order = dim, order
 
     def indices(self):
-        return total_degree_indices(self.dim,self.order)
+        return total_degree_indices(self.dim, self.order)
+
 
 class HyperbolicCrossSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
@@ -263,7 +269,8 @@ class HyperbolicCrossSet(MultiIndexSet):
         self.dim, self.order = dim, order
 
     def indices(self):
-        return hyperbolic_cross_indices(self.dim,self.order)
+        return hyperbolic_cross_indices(self.dim, self.order)
+
 
 if __name__ == "__main__":
 
@@ -282,16 +289,16 @@ if __name__ == "__main__":
     d = 4
     k = 6
 
-    L4 = total_degree_indices(d,k)
+    L4 = total_degree_indices(d, k)
 
     N = L4.shape[0] - 10
-    L42 = total_degree_indices_N(d,N)
+    L42 = total_degree_indices_N(d, N)
 
-    err = np.linalg.norm( L42 - L4[:N,:])
+    err = np.linalg.norm(L42 - L4[:N, :])
 
-    ############## Hyperbolic cross
+    # Hyperbolic cross
     d, k = 2, 33
     lambdas = hyperbolic_cross_indices(d, k)
 
-    plt.plot(lambdas[:,0], lambdas[:,1], 'r.')
+    plt.plot(lambdas[:, 0], lambdas[:, 1], 'r.')
     plt.show()
