@@ -7,7 +7,7 @@ import numpy as np
 
 def taylor_frequency(p):
     """
-    Returns ( \sum_{j=1}^d p_j^j )
+    Returns ( \\sum_{j=1}^d p_j^j )
     """
 
     return np.sum(p**(1 + np.arange(p.size)))
@@ -16,7 +16,7 @@ def sine_modulation(left=-1, right=1, N=100):
     """
     For a d-dimensional parameter p, defines the model,
 
-      f(x,p) = sin [ pi * ( \sum_{j=1}^d p_j^j ) * x ],
+      f(x,p) = sin [ pi * ( \\sum_{j=1}^d p_j^j ) * x ],
 
     where x is N equispaced points on the interval [left, right].
 
@@ -35,7 +35,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
       -d/dx [ a(x,p) d/dx u(x,p) ] = f(x),
 
     where, for a d-dimensional parameter p, a(x,p) has the form
-    
+
       a(x,p) = pi^2/5 + sum_{j=1}^d p_j * sin(j*pi*x) / j^2,
 
     which is positive for all x if all values of p lie between [-1,1].
@@ -75,9 +75,9 @@ def genz_oscillatory(w=0., c=None):
     """
     Returns a pointer to the "oscillatory" Genz test function defined as
 
-       f(p) = \cos{ 2\pi w + \sum_{i=1}^dim c_i p_i }
+       f(p) = \\cos{ 2\pi w + \\sum_{i=1}^dim c_i p_i }
 
-    where p \in R^d. The default value for w is 0, and that for c is a
+    where p \\in R^d. The default value for w is 0, and that for c is a
     d-dimensional vector of ones.
     """
 
