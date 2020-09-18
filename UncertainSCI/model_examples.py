@@ -5,12 +5,14 @@
 
 import numpy as np
 
+
 def taylor_frequency(p):
     """
     Returns ( \\sum_{j=1}^d p_j^j )
     """
 
     return np.sum(p**(1 + np.arange(p.size)))
+
 
 def sine_modulation(left=-1, right=1, N=100):
     """
@@ -26,6 +28,7 @@ def sine_modulation(left=-1, right=1, N=100):
     x = np.linspace(left, right, N)
 
     return lambda p: np.sin(np.pi * x * taylor_frequency(p))
+
 
 def laplace_ode(left=-1., right=1., N=100, f=None):
     """
@@ -62,8 +65,8 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
         nonlocal x
         a = a_eval(x, p)
         A = np.diag(a[1:], k=1) + np.diag(a[1:], k=-1) - (np.diag(np.roll(a, 1) + a))
-        A[-1,0] = a[0]
-        A[0,-1] = a[0]
+        A[-1, 0] = a[0]
+        A[0, -1] = a[0]
         return A
 
     def solve_system(p):
@@ -71,11 +74,12 @@ def laplace_ode(left=-1., right=1., N=100, f=None):
 
     return lambda p: solve_system(p)
 
+
 def genz_oscillatory(w=0., c=None):
     """
     Returns a pointer to the "oscillatory" Genz test function defined as
 
-       f(p) = \\cos{ 2\pi w + \\sum_{i=1}^dim c_i p_i }
+       f(p) = \\cos{ 2\\pi w + \\sum_{i=1}^dim c_i p_i }
 
     where p \\in R^d. The default value for w is 0, and that for c is a
     d-dimensional vector of ones.
@@ -85,13 +89,13 @@ def genz_oscillatory(w=0., c=None):
         nonlocal c
         if c is None:
             c = np.ones(p.size)
-        return np.cos(2*np.pi*w + np.dot(c,p))
+        return np.cos(2*np.pi*w + np.dot(c, p))
 
     return lambda p: cos_eval(p)
 
+
 if __name__ == "__main__":
 
-    import pdb
     model = genz_oscillatory(c=4)
 
     p = np.random.random(2)
