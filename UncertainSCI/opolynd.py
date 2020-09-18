@@ -1,8 +1,30 @@
 import numpy as np
+from UncertainSCI import opoly1d
+from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
 
-from opoly1d import OrthogonalPolynomialBasis1D
+from UncertainSCI.utils.linalg import greedy_d_optimal
 
-from utils.linalg import greedy_d_optimal
+def opolynd_eval(x, lambdas, ab):
+    # Evaluates tensorial orthonormal polynomials associated with the
+    # univariate recurrence coefficients ab.
+
+    try:
+        M, d = x.shape
+    except Exception:
+        d = x.size
+        M = 1
+        x = np.reshape(x, (M, d))
+
+    N, d2 = lambdas.shape
+
+    assert d==d2, "Dimension 1 of x and lambdas must be equal"
+
+    p = np.ones([M, N])
+
+    for qd in range(d):
+        p = p * opoly1d.eval_driver(x[:,qd], lambdas[:,qd], 0, ab)
+
+    return p
 
 class TensorialPolynomials:
     def __init__(self, polys1d = None, dim = None):
@@ -93,7 +115,14 @@ class TensorialPolynomials:
 
 
         if self.isotropic:
-            if fast_sampler:
+
+            fidistinv = getattr(self.polys1d, "fidistinv", None)
+            if callable(fidistinv):
+                has_fidistinv = True
+            else:
+                has_fidistinv = False
+
+            if fast_sampler and has_fidistinv:
                 idistinv = self.polys1d.fidistinv
             else:
                 idistinv = self.polys1d.idistinv
@@ -104,7 +133,14 @@ class TensorialPolynomials:
         else:
             x = np.zeros([M, d])
             for qd in range(self.dim):
-                if fast_sampler:
+
+                fidistinv = getattr(self.polys1d[qd], "fidistinv", None)
+                if callable(fidistinv):
+                    has_fidistinv = True
+                else:
+                    has_fidistinv = False
+
+                if fast_sampler and has_fidistinv:
                     idistinv = self.polys1d[qd].fidistinv
                 else:
                     idistinv = self.polys1d[qd].idistinv

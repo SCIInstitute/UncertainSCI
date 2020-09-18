@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-import model_examples as models
+import UncertainSCI.model_examples as models
 
 class ModelTestCase(unittest.TestCase):
     """

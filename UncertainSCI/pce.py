@@ -2,10 +2,10 @@ from math import floor
 
 import numpy as np
 
-from indexing import MultiIndexSet
-from distributions import ProbabilityDistribution
-from utils.casting import to_numpy_array
-from utils.version import version_lessthan
+from UncertainSCI.indexing import MultiIndexSet
+from UncertainSCI.distributions import ProbabilityDistribution
+from UncertainSCI.utils.casting import to_numpy_array
+from UncertainSCI.utils.version import version_lessthan
 
 class PolynomialChaosExpansion():
     """Base polynomial chaos expansion class.

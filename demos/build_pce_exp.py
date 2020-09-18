@@ -1,33 +1,25 @@
-# Demonstrates generation of a PCE for a simple model
-
 import pdb
 from itertools import chain, combinations
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-from UncertainSCI.distributions import BetaDistribution
+from UncertainSCI.distributions import ExponentialDistribution
 from UncertainSCI.model_examples import sine_modulation, laplace_ode, genz_oscillatory
 from UncertainSCI.indexing import TotalDegreeSet, HyperbolicCrossSet
 from UncertainSCI.pce import PolynomialChaosExpansion
-
 ## Distribution setup
 
 # Number of parameters
-dimension = 3
+dimension = 1
 
-# Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
-alpha = 0.5
-beta = 1.
-dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
-
-# Or can define distribution through mean + stdev on [0,1]
-mu = [1/2., 1/2., 3/4.]
-sigma = [np.sqrt(1/12.), 1/5., 0.3]
-#dist = BetaDistribution(mean=mu, stdev=sigma)
+# Specifies exponential distribution
+lbd = 3*np.ones(dimension)
+loc = np.zeros(dimension)
+dist = ExponentialDistribution(lbd = lbd, loc = loc)
 
 ## Indices setup
-order = 5
+order = 10
 indices = TotalDegreeSet(dim=dimension, order=order)
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
@@ -50,22 +42,6 @@ model = sine_modulation(N=N)
 pce = PolynomialChaosExpansion(indices, dist)
 lsq_residuals = pce.build(model)
 
-# 2 
-# Generate samples first, then query model:
-pce = PolynomialChaosExpansion(indices, dist)
-pce.generate_samples()              # After this, pce.samples contains experimental design
-lsq_residuals = pce.build(model)
-
-# 3
-# Generate samples first, then manually query model, then give model output to pce.
-pce = PolynomialChaosExpansion(indices, dist)
-pce.generate_samples()
-model_output = np.zeros([pce.samples.shape[0], N])
-for ind in range(pce.samples.shape[0]):
-    model_output[ind,:] = model(pce.samples[ind,:])
-pce.build(model_output=model_output)
-
-## All 3 options above are the same thing, just pick one.
 
 # The parameter samples and model evaluations are accessible:
 parameter_samples = pce.samples
@@ -81,6 +57,7 @@ pce2.build(model, samples=parameter_samples)
 ## Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
 stdev = pce.stdev()
+
 
 # Power set of [0, 1, ..., dimension-1]
 variable_interactions = list(chain.from_iterable(combinations(range(dimension), r) for r in range(1, dimension+1)))
