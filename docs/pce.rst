@@ -42,6 +42,7 @@ In order to utilize the PCE approaches in UncertainSCI, two items must be provid
 PolynomialChaosExpansion
 ------------------------
 
-.. automodule:: pce
+.. automodule:: UncertainSCI.pce
 .. autoclass:: PolynomialChaosExpansion
    :members:
+   :undoc-members:
