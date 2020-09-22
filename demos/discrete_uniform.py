@@ -9,10 +9,10 @@ import pdb
 import numpy as np
 from matplotlib import pyplot as plt
 
-from distributions import BetaDistribution, DiscreteUniformDistribution, TensorialDistribution
-from model_examples import sine_modulation
-from indexing import TotalDegreeSet
-from pce import PolynomialChaosExpansion
+from UncertainSCI.distributions import BetaDistribution, DiscreteUniformDistribution, TensorialDistribution
+from UncertainSCI.model_examples import sine_modulation
+from UncertainSCI.indexing import TotalDegreeSet
+from UncertainSCI.pce import PolynomialChaosExpansion
 
 ## Define model
 N = int(1e2) # Number of degrees of freedom of model
