@@ -13,6 +13,7 @@ class PolynomialChaosExpansion():
     Provides interface to construct and manipulate polynomial chaos expansions.
 
     Attributes:
+    -----------
         coefficients: A numpy array of polynomial chaos expansion coefficients.
         indices: A MultiIndexSet instance specifying the polynomial approximation space.
         distribution: A ProbabilityDistribution instance indicating the distribution of the random variable.
@@ -254,7 +255,7 @@ class PolynomialChaosExpansion():
 
         return quantiles
 
-    def total_sensitivity(self, dim_indices = None):
+    def total_sensitivity(self, dim_indices = None, vartol=1e-16):
         """
         Computes total sensitivity associated to dimensions dim_indices from
         PCE coefficients. dim_indices should be a list-type containing
@@ -277,12 +278,16 @@ class PolynomialChaosExpansion():
         variance = self.stdev()**2
         total_sensitivities = np.zeros([dim_indices.size, self.coefficients.shape[1]])
 
+        # Return 0 sensitivity if the variance is 0.
+        zerovar = variance < vartol
+
         for (qj,j) in enumerate(dim_indices):
-            total_sensitivities[qj,:] = np.sum(self.coefficients[indices[:,j]>0,:]**2, axis=0)/variance
+
+            total_sensitivities[qj,~zerovar] = np.sum(self.coefficients[np.ix_(indices[:,j]>0, ~zerovar)]**2, axis=0)/variance[~zerovar]
 
         return total_sensitivities
 
-    def global_sensitivity(self, dim_lists=None):
+    def global_sensitivity(self, dim_lists=None, vartol=1e-16):
         """
         Computes global sensitivity associated to dimensional indices dim_lists
         from PCE coefficients. 
@@ -303,10 +308,15 @@ class PolynomialChaosExpansion():
         variance = self.stdev()**2
         global_sensitivities = np.zeros([len(dim_lists), self.coefficients.shape[1]])
         dim = self.distribution.dim
+
+        # Return 0 sensitivity if the variance is 0.
+        zerovar = variance < vartol
+
         for (qj,j) in enumerate(dim_lists):
             jc = np.setdiff1d(range(dim), j)
             inds = np.logical_and( np.all(indices[:,j] > 0, axis=1), \
                                    np.all(indices[:,jc]==0, axis=1) )
-            global_sensitivities[qj,:] = np.sum(self.coefficients[inds,:]**2, axis=0)/variance
+
+            global_sensitivities[qj,~zerovar] = np.sum(self.coefficients[np.ix_(inds,~zerovar)]**2, axis=0)/variance[~zerovar]
 
         return global_sensitivities
