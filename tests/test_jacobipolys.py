@@ -25,8 +25,8 @@ class JacobiTestCase(unittest.TestCase):
         J = JacobiPolynomials(alpha=alpha,beta=beta)
 
         N = int(np.ceil(60*np.random.rand(1)))
-        x = (1 + 5*np.random.rand(1)) * (1 + np.random.rand(50)) 
-        y = (1 + 5*np.random.rand(1)) * (-1 - np.random.rand(50)) 
+        x = (1 + 5*np.random.rand(1)) * (1 + np.random.rand(50))
+        y = (1 + 5*np.random.rand(1)) * (-1 - np.random.rand(50))
         x = np.concatenate([x, y])
 
         P = J.eval(x, range(N+1))
@@ -61,7 +61,7 @@ class JacobiTestCase(unittest.TestCase):
         V = J.eval(x, range(2*N))
 
         integrals = np.dot(w, V)
-        integrals[0] -= V[0,0] # Exact value
+        integrals[0] -= V[0, 0] # Exact value
 
         self.assertAlmostEqual(np.linalg.norm(integrals,ord=np.inf), 0.)
 
@@ -103,7 +103,7 @@ class IDistTestCase(unittest.TestCase):
         M = 10
         u = np.random.random(M)
 
-        J = JacobiPolynomials(alpha=alpha,beta=beta)
+        J = JacobiPolynomials(alpha=alpha, beta=beta)
 
         delta = 5e-3
         for n in range(nmax)[::-1]:
@@ -127,7 +127,8 @@ class IDistTestCase(unittest.TestCase):
         else:
             errstr = ''
 
-        self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
+        self.assertAlmostEqual(np.linalg.norm(x0-x1, ord=np.inf), 0., delta=delta, msg=errstr)
+
 
 if __name__ == "__main__":
 
