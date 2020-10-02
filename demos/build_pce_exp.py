@@ -7,7 +7,7 @@ from UncertainSCI.distributions import ExponentialDistribution
 from UncertainSCI.model_examples import sine_modulation
 from UncertainSCI.indexing import TotalDegreeSet
 from UncertainSCI.pce import PolynomialChaosExpansion
-## Distribution setup
+# # Distribution setup
 
 # Number of parameters
 dimension = 1
@@ -17,24 +17,24 @@ lbd = 3*np.ones(dimension)
 loc = np.zeros(dimension)
 dist = ExponentialDistribution(lbd=lbd, loc=loc)
 
-## Indices setup
+# # Indices setup
 order = 10
 indices = TotalDegreeSet(dim=dimension, order=order)
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
 # Why +10? That's the default for PolynomialChaosExpansion.build_pce_wafp
 
-## Initializes a pce object
+# # Initializes a pce object
 pce = PolynomialChaosExpansion(indices, dist)
 
-## Define model
+# # Define model
 N = int(1e2)  # Number of degrees of freedom of model
 left = -1.
 right = 1.
 x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
-## Three equivalent ways to run the PCE model:
+# # Three equivalent ways to run the PCE model:
 
 # 1
 # Generate samples and query model in one call:
@@ -53,7 +53,7 @@ pce2.build(model, samples=parameter_samples)
 # pce and pce2 have the same coefficients:
 # np.linalg.norm( pce.coefficients - pce2.coefficients )
 
-## Postprocess PCE: mean, stdev, sensitivities, quantiles
+# # Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
 stdev = pce.stdev()
 
@@ -76,7 +76,7 @@ quantile_levels = np.append(np.concatenate((q_lower, q_upper)), 0.5)
 quantiles = pce.quantile(quantile_levels, M=int(2e3))
 median = quantiles[-1, :]
 
-## For comparison: Monte Carlo statistics
+# # For comparison: Monte Carlo statistics
 M = 1000  # Generate MC samples
 p_phys = dist.MC_samples(M)
 output = np.zeros([M, N])
@@ -89,7 +89,7 @@ MC_stdev = np.std(output, axis=0)
 MC_quantiles = np.quantile(output, quantile_levels, axis=0)
 MC_median = quantiles[-1, :]
 
-## Visualization
+# # Visualization
 V = 50  # Number of MC samples to visualize
 
 # mean +/- stdev plot
@@ -98,11 +98,11 @@ plt.plot(x, mean, 'b', label='PCE mean')
 plt.fill_between(x, mean-stdev, mean+stdev, interpolate=True, facecolor='red', alpha=0.5, label='PCE 1 stdev range')
 
 plt.plot(x, MC_mean, 'b:', label='MC mean')
-plt.plot(x, MC_mean+MC_stdev, 'r:', label='MC mean $\pm$ stdev')
+plt.plot(x, MC_mean+MC_stdev, 'r:', label='MC mean $\\pm$ stdev')
 plt.plot(x, MC_mean-MC_stdev, 'r:')
 
 plt.xlabel('x')
-plt.title('Mean $\pm$ standard deviation')
+plt.title('Mean $\\pm$ standard deviation')
 
 plt.legend(loc='lower right')
 
@@ -118,7 +118,9 @@ band_mass = 1/(2*(Q+1))
 for ind in range(Q):
     alpha = (Q-ind) * 1/Q - (1/(2*Q))
     if ind == 0:
-        plt.fill_between(x, quantiles[ind, :], quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha, label='{0:1.2f} probability mass (each band)'.format(band_mass))
+        plt.fill_between(x, quantiles[ind, :], quantiles[Q+ind, :], interpolate=True,
+                         facecolor='red', alpha=alpha,
+                         label='{0:1.2f} probability mass (each band)'.format(band_mass))
     else:
         plt.fill_between(x, quantiles[ind, :], quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha)
 
@@ -133,7 +135,8 @@ plt.plot(x, MC_median, 'b', label='MC median')
 for ind in range(Q):
     alpha = (Q-ind) * 1/Q - (1/(2*Q))
     if ind == 0:
-        plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha, label='{0:1.2f} probability mass (each band)'.format(band_mass))
+        plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha,
+                         label='{0:1.2f} probability mass (each band)'.format(band_mass))
     else:
         plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha)
 

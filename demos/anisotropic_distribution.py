@@ -19,7 +19,7 @@ dist = BetaDistribution(alpha, beta)
 order = 5  # polynomial degree
 indices = TotalDegreeSet(dim=dist.dim, order=order)
 
-## The remainder of this is essentially the same as quantiles.py
+# # The remainder of this is essentially the same as quantiles.py
 
 print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
 
@@ -47,7 +47,7 @@ median = pce.quantile(0.5, M=int(1e3))[0, :]
 quantiles_lower = pce.quantile(q_lower, M=int(1e3))
 quantiles_upper = pce.quantile(q_upper, M=int(1e3))
 
-## Visualization
+# # Visualization
 M = 50  # Generate MC samples
 p_phys = dist.MC_samples(M)
 

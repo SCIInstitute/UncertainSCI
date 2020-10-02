@@ -12,14 +12,14 @@ from UncertainSCI.model_examples import sine_modulation
 from UncertainSCI.indexing import TotalDegreeSet
 from UncertainSCI.pce import PolynomialChaosExpansion
 
-## Define model
+# # Define model
 N = int(1e2)  # Number of degrees of freedom of model
 left = -1.
 right = 1.
 x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
-## Distribution setup
+# # Distribution setup
 
 # 2D discrete uniform distribution
 # - 13 points equispaced on [3, 5]
@@ -38,7 +38,7 @@ dist2 = BetaDistribution(domain=domain)
 
 dist = TensorialDistribution(distributions=[dist1, dist2])
 
-## Indices setup
+# # Indices setup
 order = 6
 indices = TotalDegreeSet(dim=dist.dim, order=order)
 
@@ -49,11 +49,11 @@ for ind in range(pce.samples.shape[0]):
     model_output[ind, :] = model(pce.samples[ind, :])
 pce.build(model_output=model_output)
 
-## Postprocess PCE: mean, stdev, sensitivities, quantiles
+# # Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
 stdev = pce.stdev()
 
-## MC simulations for comparison
+# # MC simulations for comparison
 M = 10000  # Generate MC samples
 p_phys = dist.MC_samples(M)
 output = np.zeros([M, N])
@@ -64,7 +64,7 @@ for j in range(M):
 MC_mean = np.mean(output, axis=0)
 MC_stdev = np.std(output, axis=0)
 
-## Visualization
+# # Visualization
 V = 50  # Number of MC samples to visualize
 
 # mean +/- stdev plot
