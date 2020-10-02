@@ -370,7 +370,58 @@ class ExponentialDistribution(ProbabilityDistribution):
 
 
 class BetaDistribution(ProbabilityDistribution):
-    """This is a Beta distribution.
+    """.. _beta_distribution:
+
+    Constructs a Beta distribution object; supports multivariate distributions
+    through tensorization. In one dimension, beta distributions have support on
+    the real interval [0,1], with probability density function,
+
+    .. math::
+
+      w(y;\\alpha,\\beta) := \\frac{y^{\\alpha-1} (1-y)^{\\beta-1}}{B(\\alpha,\\beta)}, \\hskip 20pt y \in (0,1),
+
+    where :math:`\\alpha` and :math:`\\beta` are positive real parameters that
+    define the distribution, and :math:`B` is the Beta function. Some special
+    cases of note:
+
+    - :math:`\\alpha = \\beta = 1`: the uniform distribution
+    - :math:`\\alpha = \\beta = \\frac{1}{2}`: the arcsine distribution
+
+    To generate this distribution on a general compact interval :math:`[a,b]`,
+    set the domain parameter below.
+
+    Instead of :math:`(\\alpha, \\beta)`, a mean :math:`\\mu` and standard
+    deviation :math:``\\sigma`` may be set. In this case, :math:`(\\mu,
+    \\sigma)` must correspond to valid (i.e., positive) values of
+    :math:`(\\alpha, \\beta)` on the interval [0,1], or else an error is
+    raised.
+
+    Finally, this class supports tensorization: multidimensional distributions
+    corresopnding to independent one-dimensional marginal distributions are
+    supported. In the case of identically distributed marginals, the `dim`
+    parameter can be set to the appropriate dimension. In case of non-identical
+    marginals, an array or iterable can be input for :math:`\\alpha, \\beta,
+    \\mu, \\sigma`.
+
+    Parameters:
+        alpha (float or iterable of floats, optional): Shape parameter
+        associated to right-hand boundary. Defaults to 1.
+        beta (float or iterable of floats, optional): Shape parameter
+        associated to left-hand boundary. Defaults to 1.
+        mean (float or iterable of floats, optional): Mean of the distribution.
+        Defaults to None.
+        stdev (float or iterable of floats, optional): Standard deviation of
+        the distribution. Defaults to None.
+        dim (int, optional): Dimension of the distribution. Defaults to None.
+        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact
+        hypercube that is the support of the distribution. Defaults to None
+
+    Attributes:
+        dim (int): Dimension of the distribution. 
+        alpha (float or np.ndarray): Shape parameter(s) alpha.
+        beta (float or np.ndarray): Shape parameter(s) beta.
+        polys (:class:`JacobiPolynomials` or list thereof): 
+
     """
     def __init__(self, alpha=None, beta=None, mean=None, stdev=None, dim=None, domain=None):
 
