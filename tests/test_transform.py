@@ -4,13 +4,14 @@ import numpy as np
 
 from UncertainSCI.transformations import AffineTransform
 
+
 class AffineMapTestCase(unittest.TestCase):
     """
     Performs tests for affine maps.
     """
 
     def setUp(self):
-        self.longMessage=True
+        self.longMessage = True
 
     def test_map(self):
         """ Forward affine map. """
@@ -33,7 +34,7 @@ class AffineMapTestCase(unittest.TestCase):
         y_map2 = np.zeros([N, d])
 
         for q in range(d):
-            y_map2[:,q] = (x[:,q] - domain[0,q]) / (domain[1,q] - domain[0,q]) * (image[1,q] - image[0,q]) + image[0,q]
+            y_map2[:, q] = (x[:, q] - domain[0, q]) / (domain[1, q] - domain[0, q]) * (image[1, q] - image[0, q]) + image[0, q]
 
         errs = np.abs(y_map1 - y_map2)
 
@@ -61,12 +62,13 @@ class AffineMapTestCase(unittest.TestCase):
         x_map2 = np.zeros([N, d])
 
         for q in range(d):
-            x_map2[:,q] = (y[:,q] - image[0,q]) / (image[1,q] - image[0,q]) * (domain[1,q] - domain[0,q]) + domain[0,q]
+            x_map2[:, q] = (y[:, q] - image[0, q]) / (image[1, q] - image[0, q]) * (domain[1, q] - domain[0, q]) + domain[0, q]
 
         errs = np.abs(x_map1 - x_map2)
 
         delta = 1e-6
         self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta)
+
 
 if __name__ == "__main__":
 

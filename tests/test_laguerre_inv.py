@@ -1,9 +1,9 @@
 import unittest
 
 import numpy as np
-from scipy import special as sp
 
-from UncertainSCI.families import LaguerrePolynomials, JacobiPolynomials
+from UncertainSCI.families import LaguerrePolynomials
+
 
 class IDistTestCase(unittest.TestCase):
     """
@@ -31,13 +31,10 @@ class IDistTestCase(unittest.TestCase):
             errstr = 'Failed for rho={0:1.3f}, n={1:d}'.format(rho, n)
         else:
             errstr = ''
-        
-        self.assertAlmostEqual(np.linalg.norm(x1-x2,ord=np.inf), 0., delta=delta, msg=errstr)
+
+        self.assertAlmostEqual(np.linalg.norm(x1-x2, ord=np.inf), 0., delta=delta, msg=errstr)
+
 
 if __name__ == "__main__":
 
     unittest.main(verbosity=2)
-
-
-
-
