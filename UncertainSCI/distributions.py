@@ -378,7 +378,7 @@ class BetaDistribution(ProbabilityDistribution):
 
     .. math::
 
-      w(y;\\alpha,\\beta) := \\frac{y^{\\alpha-1} (1-y)^{\\beta-1}}{B(\\alpha,\\beta)}, \\hskip 20pt y \in (0,1),
+      w(y;\\alpha,\\beta) := \\frac{y^{\\alpha-1} (1-y)^{\\beta-1}}{B(\\alpha,\\beta)}, \\hskip 20pt y \\in (0,1),
 
     where :math:`\\alpha` and :math:`\\beta` are positive real parameters that
     define the distribution, and :math:`B` is the Beta function. Some special
@@ -417,11 +417,10 @@ class BetaDistribution(ProbabilityDistribution):
         hypercube that is the support of the distribution. Defaults to None
 
     Attributes:
-        dim (int): Dimension of the distribution. 
+        dim (int): Dimension of the distribution.
         alpha (float or np.ndarray): Shape parameter(s) alpha.
         beta (float or np.ndarray): Shape parameter(s) beta.
-        polys (:class:`JacobiPolynomials` or list thereof): 
-
+        polys (:class:`JacobiPolynomials` or list thereof):
     """
     def __init__(self, alpha=None, beta=None, mean=None, stdev=None, dim=None, domain=None):
 

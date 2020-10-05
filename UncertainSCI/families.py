@@ -29,35 +29,32 @@ def jacobi_recurrence_values(N, alpha, beta):
     if N < 1:
         ab = np.ones((1, 2))
         ab[0, 0] = 0
-        ab[0, 1] = np.exp( (alpha + beta + 1.) * np.log(2.) +
-                      sp.gammaln(alpha + 1.) + sp.gammaln(beta + 1.) -
-                      sp.gammaln(alpha + beta + 2.)
-                    )
+        ab[0, 1] = np.exp((alpha + beta + 1.) * np.log(2.) +
+                          sp.gammaln(alpha + 1.) + sp.gammaln(beta + 1.) -
+                          sp.gammaln(alpha + beta + 2.))
         ab = np.sqrt(ab)
         return ab
 
-    ab = np.ones((N+1, 2)) * np.array([beta**2.- alpha**2., 1.])
+    ab = np.ones((N+1, 2)) * np.array([beta**2. - alpha**2., 1.])
 
     # Special cases
     ab[0, 0] = 0.
     ab[1, 0] = (beta - alpha) / (alpha + beta + 2.)
-    ab[0, 1] = np.exp( (alpha + beta + 1.) * np.log(2.) +
+    ab[0, 1] = np.exp((alpha + beta + 1.) * np.log(2.) +
                       sp.gammaln(alpha + 1.) + sp.gammaln(beta + 1.) -
-                      sp.gammaln(alpha + beta + 2.)
-                    )
+                      sp.gammaln(alpha + beta + 2.))
 
     ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / (
-                   (alpha + beta + 2.)**2 * (alpha + beta + 3.) )
+                   (alpha + beta + 2.)**2 * (alpha + beta + 3.))
 
     if N > 1:
         ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / (
-                   (alpha + beta + 2.)**2 * (alpha + beta + 3.) )
+                   (alpha + beta + 2.)**2 * (alpha + beta + 3.))
 
         ab[2, 0] /= (2. + alpha + beta) * (4. + alpha + beta)
         inds = 2
         ab[2, 1] = 4 * inds * (inds + alpha) * (inds + beta) * (inds + alpha + beta)
         ab[2, 1] /= (2. * inds + alpha + beta)**2 * (2. * inds + alpha + beta + 1.) * (2. * inds + alpha + beta - 1)
-
 
     if N > 2:
         inds = np.arange(2., N+1)
@@ -68,9 +65,6 @@ def jacobi_recurrence_values(N, alpha, beta):
     ab[:, 1] = np.sqrt(ab[:, 1])
 
     return ab
-
-
-
 
 
 def jacobi_idist_driver(x, n, alpha, beta, M):
@@ -85,20 +79,19 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
 
     F = np.zeros(x.size)
 
-    ab = jacobi_recurrence_values(n,alpha, beta)
+    ab = jacobi_recurrence_values(n, alpha, beta)
     ab[0, 1] = 1
 
     if n > 0:
-        xn,wn = gauss_quadrature_driver(ab, n)
+        xn, wn = gauss_quadrature_driver(ab, n)
 
     """
     This is the (inverse) n'th root of the leading coefficient square of p_n
     """
     if n == 0:
-        kn_factor = 0 # could be any value since we don't use it when n = 0
+        kn_factor = 0  # could be any value since we don't use it when n = 0
     else:
         kn_factor = np.exp(-1/n * np.sum(np.log(ab[:, 1]**2)))
-
 
     for ind in range(x.size):
         if x[ind] == -1:
@@ -115,16 +108,15 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
         for j in range(n):
             # ab = quad_mod(ab, un[j])
             ab = quadratic_modification(ab, un[j])
-            logfactor = logfactor + np.log(ab[0,1]**2 * ((x[ind]+1)/2)**2 * kn_factor)
+            logfactor = logfactor + np.log(ab[0, 1]**2 * ((x[ind]+1)/2)**2 * kn_factor)
             ab[0, 1] = 1.
-
 
         root = (3.-x[ind]) / (1.+x[ind])
 
         for k in range(A):
-            #ab = lin_mod(ab, root)
+            # ab = lin_mod(ab, root)
             ab = linear_modification(ab, root)
-            logfactor = logfactor + np.log(ab[0,1]**2 * 1/2 * (x[ind]+1))
+            logfactor = logfactor + np.log(ab[0, 1]**2 * 1/2 * (x[ind]+1))
             ab[0, 1] = 1.
 
         u, w = gauss_quadrature_driver(ab, M)
@@ -145,7 +137,7 @@ def fidistinv_setup_helper1(ug, exps):
     ug_mid = 1/2 * (ug[:-1] + ug[1:])
     ug = np.sort(np.append(ug, ug_mid))
 
-    exponents = np.zeros( (2,ug.size-1) )
+    exponents = np.zeros((2, ug.size-1))
 
     exponents[0, ::2] = 2/3
     exponents[1, 1::2] = 2/3
@@ -155,13 +147,14 @@ def fidistinv_setup_helper1(ug, exps):
 
     return ug, exponents
 
+
 def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
 
     # vgrid = np.cos( np.linspace(np.pi, 0, M) )
     # Or
     # vgrid = np.cos( np.linspace(np.pi, 0, M+1)[:-1] + M/(2*np.pi) )
     # Or
-    vgrid = np.cos( np.linspace(np.pi, 0, M+2) )
+    vgrid = np.cos(np.linspace(np.pi, 0, M+2))
     vgrid = vgrid[1:-1]
 
     ab = jacobi_recurrence_values(M, -1/2, -1/2)
@@ -169,9 +162,9 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
 
     iV = np.linalg.inv(V)
 
-    ugrid = np.zeros( (M, ug.size - 1) )
-    xgrid = np.zeros( (M, ug.size - 1) )
-    xcoeffs = np.zeros( (M, ug.size - 1) )
+    ugrid = np.zeros((M, ug.size - 1))
+    xgrid = np.zeros((M, ug.size - 1))
+    xcoeffs = np.zeros((M, ug.size - 1))
 
     for q in range(ug.size - 1):
         ugrid[:, q] = (vgrid + 1) / 2 * (ug[q+1] - ug[q]) + ug[q]
@@ -202,6 +195,7 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
 
     return data
 
+
 def fidistinv_driver(u, n, data):
 
     if isinstance(u, float) or isinstance(u, int):
@@ -218,10 +212,10 @@ def fidistinv_driver(u, n, data):
         return np.zeros(0)
 
     if n.size != 1:
-        assert u.size == n.size # Inputs u and n must be the same size, or n must be a scalar
+        assert u.size == n.size  # Inputs u and n must be the same size, or n must be a scalar
 
     N = max(n)
-    assert len(data) >= N+1 # Input data does not cover range of n
+    assert len(data) >= N+1  # Input data does not cover range of n
 
     x = np.zeros(u.size)
     if n.size == 1:
@@ -233,6 +227,7 @@ def fidistinv_driver(u, n, data):
 
     return x
 
+
 def driver_helper(u, data):
 
     tol = 1e-12
@@ -242,12 +237,12 @@ def driver_helper(u, data):
     ab = jacobi_recurrence_values(M, -1/2, -1/2)
 
     app = np.append(data[0, :], data[1, -1])
-    edges = np.insert(app, [0,app.size], [-np.inf, np.inf])
+    edges = np.insert(app, [0, app.size], [-np.inf, np.inf])
     j = np.digitize(u, edges, right=False)
     B = edges.size - 1
 
     x = np.zeros(u.size)
-    x[np.where(j == 1)] = data[2, 0] # Boundary bins
+    x[np.where(j == 1)] = data[2, 0]  # Boundary bins
     x[np.where(j == B)] = data[3, -1]
 
     for qb in range(2, B):
@@ -256,18 +251,18 @@ def driver_helper(u, data):
             continue
 
         q = qb - 1
-        vgrid = ( u[umask] - data[0, q-1] ) / ( data[1, q-1] - data[0, q-1] ) * 2 - 1
+        vgrid = (u[umask] - data[0, q-1]) / (data[1, q-1] - data[0, q-1]) * 2 - 1
         V = eval_driver(vgrid, np.arange(M), 0, ab)
         temp = np.dot(V, data[6:, q-1])
         with np.errstate(divide='ignore', invalid='ignore'):
-            temp = temp / ( (1 + vgrid)**data[4, q-1] * (1 - vgrid)**data[5, q-1] )
+            temp = temp / ((1 + vgrid)**data[4, q-1] * (1 - vgrid)**data[5, q-1])
 
         if data[4, q-1] != 0:
             flags = abs(u[umask] - data[0, q-1]) < tol
             temp[flags] = 0
             temp = temp * (data[3, q-1] - data[2, q-1]) + data[2, q-1]
         else:
-            flags = abs(u[umask] - data[1,q-1]) < tol
+            flags = abs(u[umask] - data[1, q-1]) < tol
             temp[flags] = 0
             temp = temp * (data[3, q-1] - data[2, q-1]) + data[3, q-1]
 
@@ -280,17 +275,17 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     """
     Jacobi Polynomial family.
     """
-    def __init__(self, alpha=0., beta=0., domain=[-1., 1.],**options):
+    def __init__(self, alpha=0., beta=0., domain=[-1., 1.], **options):
         OrthogonalPolynomialBasis1D.__init__(self, **options)
         assert alpha > -1., beta > -1.
         self.alpha, self.beta = alpha, beta
 
-        assert len(domain)==2
+        assert len(domain) == 2
         self.domain = np.array(domain).reshape([2, 1])
         self.standard_domain = np.array([-1, 1]).reshape([2, 1])
         self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
 
-    def recurrence_driver(self,N):
+    def recurrence_driver(self, N):
         # Returns the first N+1 recurrence coefficient pairs for the Jacobi
         # polynomial family.
         ab = jacobi_recurrence_values(N, self.alpha, self.beta)
@@ -364,7 +359,6 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
                 x[flags] = idistinv_driver(u[flags], i, primitive, ab, supp)
 
         return x
-
 
     def fidistinv_jacobi_setup(self, n, data):
         ns = np.arange(len(data), n+1)

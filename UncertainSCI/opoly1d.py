@@ -140,7 +140,8 @@ def s_driver(x, n, ab):
         s[:, 2] = s[:, 2] / ab[2, 1]
 
     for j in range(3, nmax+1):
-        s[:, j] = 1 / np.sqrt(1 + s[:, j-1]**2) * ((x - ab[j, 0]) * s[:, j-1] - ab[j-1, 1] * s[:, j-2] / np.sqrt(1 + s[:, j-2]**2))
+        s[:, j] = 1 / np.sqrt(1 + s[:, j-1]**2) * \
+                  ((x - ab[j, 0]) * s[:, j-1] - ab[j-1, 1] * s[:, j-2] / np.sqrt(1 + s[:, j-2]**2))
         s[:, j] = s[:, j] / ab[j, 1]
 
     return s[:, n.flatten()]
@@ -308,8 +309,7 @@ def idistinv_driver(u, n, primitive, ab, supp):
 
     x = np.zeros(u.size,)
     for j in range(u.size):
-        fun = lambda xx: primitive(xx) - u[j]
-        x[j] = optimize.bisect(fun, intervals[j, 0], intervals[j, 1])
+        x[j] = optimize.bisect(lambda xx: primitive(xx) - u[j], intervals[j, 0], intervals[j, 1])
 
     return x
 
@@ -707,7 +707,8 @@ class OrthogonalPolynomialBasis1D:
             C[dj, 0] = np.exp(gammaln(dj+1) - np.sum(np.log(ab[1:(dj+1), 1])))
 
             for n in range(dj, N-1):
-                C[n+1, :] = 1/ab[n+1, 1] * (self.apply_jacobi_matrix(C[n, :]) - ab[n+1, 0]*C[n, :] - ab[n, 1]*C[n-1, :] + dj*Cprev[n, :])
+                C[n+1, :] = 1/ab[n+1, 1] * (self.apply_jacobi_matrix(C[n, :])
+                                            - ab[n+1, 0]*C[n, :] - ab[n, 1]*C[n-1, :] + dj*Cprev[n, :])
 
         return C[:, :-1]
 
