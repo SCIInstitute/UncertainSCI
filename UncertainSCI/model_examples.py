@@ -8,18 +8,20 @@ from scipy import sparse
 from scipy.sparse import linalg as splinalg
 import scipy.optimize
 
+
 def taylor_frequency(p):
     """
-    Returns ( \sum_{j=1}^d p_j^j )
+    Returns ( \\sum_{j=1}^d p_j^j )
     """
 
     return np.sum(p**(1 + np.arange(p.size)))
+
 
 def sine_modulation(left=-1, right=1, N=100):
     """
     For a d-dimensional parameter p, defines the model,
 
-      f(x,p) = sin [ pi * ( \sum_{j=1}^d p_j^j ) * x ],
+      f(x,p) = sin [ pi * ( \\sum_{j=1}^d p_j^j ) * x ],
 
     where x is N equispaced points on the interval [left, right].
 
@@ -30,11 +32,12 @@ def sine_modulation(left=-1, right=1, N=100):
 
     return lambda p: np.sin(np.pi * x * taylor_frequency(p))
 
+
 def mercer_eigenvalues_exponential_kernel(N, a, b):
     """
     For a 1D exponential covariance kernel,
 
-      K(s,t) = exp(-|t-s| / a),     s, t \in [-b,b],
+      K(s,t) = exp(-|t-s| / a),     s, t \\in [-b,b],
 
     computes the first N eigenvalues of the associated Mercer integral
     operator.
@@ -112,16 +115,17 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
 
     w /= b
 
-    if (N%2)==1: # Don't need last root for w
+    if (N % 2) == 1:  # Don't need last root for w
         w = w[:-1]
 
     lamb = np.zeros(N)
-    oddinds = [i for i in range(N) if (i%2)==0] # Well, odd for 1-based indexing
+    oddinds = [i for i in range(N) if (i % 2) == 0]  # Well, odd for 1-based indexing
     lamb[oddinds] = 2*a/(1+(a*v)**2)
-    eveninds = [i for i in range(N) if (i%2) ==1] # even for 1-based indexing
+    eveninds = [i for i in range(N) if (i % 2) == 1]  # even for 1-based indexing
     lamb[eveninds] = 2*a/(1+(a*w)**2)
 
     return lamb, v, w
+
 
 def KLE_exponential_covariance_1d(N, a, b, mn):
     """
@@ -134,7 +138,7 @@ def KLE_exponential_covariance_1d(N, a, b, mn):
     and mean function given by mn. Then the N-term KLE of the process is given
     by
 
-        K_N(x,P) = mn(x) + \sum_{n=1}^N P_n sqrt(\lambda_n) \phi_n(x),
+        K_N(x,P) = mn(x) + \\sum_{n=1}^N P_n sqrt(\\lambda_n) \\phi_n(x),
 
     where (lambda_n, phi_n) are the leading eigenpairs of the associated Mercer
     kernel. The eigenvalues are computed in
@@ -143,28 +147,29 @@ def KLE_exponential_covariance_1d(N, a, b, mn):
 
     Returns a function lamb(x,P) that takes in a 1D np.ndarray x and a 1D
     np.ndarray vector P and returns the KLE realization on x for that value of
-    P.  
+    P.
     """
 
     lamb, v, w = mercer_eigenvalues_exponential_kernel(N, a, b)
 
     efuns = N*[None]
     for i in range(N):
-        if (i%2) == 0:
+        if (i % 2) == 0:
             i2 = int(i/2)
             efuns[i] = (lambda i2: lambda x: np.cos(v[i2]*x) / np.sqrt(b + np.sin(2*v[i2]*b)/(2*v[i2])))(i2)
         else:
             i2 = int((i-1)/2)
             efuns[i] = (lambda i2: lambda x: np.sin(w[i2]*x) / np.sqrt(b - np.sin(2*w[i2]*b)/(2*w[i2])))(i2)
 
-    KLE = lambda x,p: mn(x) + np.array([np.sqrt(lamb[i])*efuns[i](x) for i in range(N)]).T @ p
+    KLE = lambda x, p: mn(x) + np.array([np.sqrt(lamb[i])*efuns[i](x) for i in range(N)]).T @ p
     return KLE
+
 
 def laplace_ode_diffusion(x, p):
     """ Parameterized diffusion coefficient for 1D ODE
 
     For a d-dimensional parameter p, the diffusion coefficient a(x,p) has the form
-    
+
       a(x,p) = pi^2/5 + sum_{j=1}^d p_j * sin(j*pi*(x+1)/2) / j^2,
 
     which is positive for all x if all values of p lie between [-1,1].
@@ -175,12 +180,14 @@ def laplace_ode_diffusion(x, p):
         a_val += p[q] * np.sin((q+1)*np.pi*(x+1)/2)/(q+1)**2
     return a_val
 
+
 def laplace_grid_x(left, right, N):
     """
     Computes one-dimensional equispaced grid with N points on the interval
     (left, right).
     """
     return np.linspace(left, right, N)
+
 
 def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusion):
     """
@@ -192,7 +199,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
     with homogeneous Dirichlet boundary conditions at x = left, x = right.
 
     For a d-dimensional parameter p, a(x,p) is the function defined in laplace_ode_diffusion.
-    
+
     Uses an equispaced finite-difference discretization of the ODE.
 
     """
@@ -238,7 +245,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
             rows[ind], cols[ind], vals[ind] = q, q+1, -a[q]
             ind += 1
 
-        A = sparse.csc_matrix((vals, (rows, cols)), shape=(N,N))
+        A = sparse.csc_matrix((vals, (rows, cols)), shape=(N, N))
 
         return A
 
@@ -247,6 +254,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
         return splinalg.spsolve(create_system(p), fx*(h**2))
 
     return lambda p: solve_system(p)
+
 
 def laplace_grid_xy(left, right, N1, down, up, N2):
     """
@@ -261,11 +269,12 @@ def laplace_grid_xy(left, right, N1, down, up, N2):
 
     return X.flatten(order='C'), Y.flatten(order='C')
 
+
 def laplace_pde_diffusion(x, p):
     """ Parameterized diffusion coefficient for 2D PDE
 
     For a d-dimensional parameter p, the diffusion coefficient a(x,p) has the form
-    
+
       a(x,p) = pi^2/5 + sum_{j=1}^d p_j * sin(j*pi*(x+1)/2) / j^2,
 
     which is positive for all x if all values of p lie between [-1,1].
@@ -281,9 +290,9 @@ def genz_oscillatory(w=0., c=None):
     """
     Returns a pointer to the "oscillatory" Genz test function defined as
 
-       f(p) = \cos{ 2\pi w + \sum_{i=1}^dim c_i p_i }
+       f(p) = \\cos{ 2\\pi w + \\sum_{i=1}^dim c_i p_i }
 
-    where p \in R^d. The default value for w is 0, and that for c is a
+    where p \\in R^d. The default value for w is 0, and that for c is a
     d-dimensional vector of ones.
     """
 
@@ -291,13 +300,12 @@ def genz_oscillatory(w=0., c=None):
         nonlocal c
         if c is None:
             c = np.ones(p.size)
-        return np.cos(2*np.pi*w + np.dot(c,p))
+        return np.cos(2*np.pi*w + np.dot(c, p))
 
     return lambda p: cos_eval(p)
 
-if __name__ == "__main__":
 
-    import pdb
+if __name__ == "__main__":
 
     from matplotlib import pyplot as plt
     import scipy as sp
@@ -308,7 +316,7 @@ if __name__ == "__main__":
     b = 1
     mn = lambda x: np.zeros(x.shape)
     KLE = KLE_exponential_covariance_1d(dim, a, b, mn)
-    diffusion = lambda x, p: np.exp(KLE(x,p))
+    diffusion = lambda x, p: np.exp(KLE(x, p))
 
     left = -1.
     right = 1.
@@ -323,7 +331,7 @@ if __name__ == "__main__":
 
     for k in range(K):
         p[k] = np.random.rand(dim)*2 - 1
-        #a[k] = laplace_ode_diffusion(x, p[k])
+        # a[k] = laplace_ode_diffusion(x, p[k])
         a[k] = diffusion(x, p[k])
         u[k] = model(p[k])
 
@@ -335,22 +343,22 @@ if __name__ == "__main__":
         index = col + (row-1)*K/2
 
         plt.subplot(2, K, k+1)
-        plt.plot(x,a[k], 'r')
+        plt.plot(x, a[k], 'r')
         plt.title('Diffusion coefficient')
         plt.ylim([0, 3.0])
 
         plt.subplot(2, K, k+1+K)
-        plt.plot(x,u[k])
+        plt.plot(x, u[k])
         plt.title('Solution u')
         plt.ylim([-5, 5])
 
     M = 1000
     U = np.zeros([u[0].size, M])
     for m in range(M):
-        U[m,:] = model(np.random.rand(dim)*2 - 1)
+        U[m, :] = model(np.random.rand(dim)*2 - 1)
 
-    _,svs,_ = np.linalg.svd(U)
-    _,r,_ = sp.linalg.qr(U, pivoting=True)
+    _, svs, _ = np.linalg.svd(U)
+    _, r, _ = sp.linalg.qr(U, pivoting=True)
 
     plt.figure()
     plt.semilogy(svs[:100], 'r')

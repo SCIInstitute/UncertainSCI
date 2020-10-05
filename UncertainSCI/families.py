@@ -694,7 +694,7 @@ def hfreud_idist_driver(x, n, alpha, rho, M=25):
         I = np.sum(w * np.exp(- (x[ind]/2)**alpha * (u+1)**alpha))
 
         logfactor = logfactor + (2*n+rho+1) * np.log(x[ind]/2) + np.log(alpha) + \
-                    (rho+1) * np.log(2) - sp.gammaln((rho+1)/alpha) - np.log(rho+1)
+                                (rho+1) * np.log(2) - sp.gammaln((rho+1)/alpha) - np.log(rho+1)
 
         F[ind] = np.exp(logfactor + np.log(I))
 
