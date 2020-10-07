@@ -35,19 +35,26 @@ def eval_driver(x, n, d, ab):
         p[:, j] = 1/ab[j, 1] * ((xf - ab[j, 0])*p[:, j-1] - ab[j-1, 1]*p[:, j-2])
 
     if type(d) == int:
-        if d == 0:
-            return p[:, n.flatten()]
-        else:
-            d = [d]
+        d = [d]
+#        if d == 0:
+#            return p[:, n.flatten()]
+#        else:
+#            d = [d]
 
     preturn = np.zeros([p.shape[0], n.size, len(d)])
 
-    # Parse the list d to find which indices contain which
-    # derivative orders
+    def assign_p_d(dval, parray):
+        """
+        Assigns dimension 2 of the nonlocal array preturn according to values
+        in the derivative list d.
+        """
+        nonlocal preturn
 
-    indlocations = [i for i, val in enumerate(d) if val == 0]
-    for i in indlocations:
-        preturn[:, :, i] = p[:, n.flatten()]
+        indlocations = [i for i, val in enumerate(d) if val == dval]
+        for i in indlocations:
+            preturn[:, :, i] = parray[:, n.flatten()]
+
+    assign_p_d(0, p)
 
     for qd in range(1, max(d)+1):
 
@@ -66,10 +73,7 @@ def eval_driver(x, n, d, ab):
             else:
                 pd[:, qn] = 1/ab[qn, 1] * ((xf - ab[qn, 0]) * pd[:, qn-1] - ab[qn-1, 1] * pd[:, qn-2] + qd*p[:, qn-1])
 
-        # Assign pd to proper locations
-        indlocations = [i for i, val in enumerate(d) if val == qd]
-        for i in indlocations:
-            preturn[:, :, i] = pd[:, n.flatten()]
+        assign_p_d(qd, pd)
 
         p = pd
 
