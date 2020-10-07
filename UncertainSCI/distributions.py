@@ -85,12 +85,15 @@ class NormalDistribution(ProbabilityDistribution):
         # Tons of type/value checking for mean/cov vs dim
         meaniter = isinstance(mean, (list, tuple, np.ndarray))
 
+        if mean is None:
+            mean = 0.
+
         if cov is None:
             if meaniter:
                 cov = np.eye(len(mean))
-            elif mean is None:
-                mean = [0.]
-                cov = np.eye(1)
+#            elif mean is None:
+#                mean = [0.]
+#                cov = np.eye(1)
             else:  # mean is a scalar
                 mean = [mean, ]
                 cov = np.eye(1)
@@ -107,8 +110,8 @@ class NormalDistribution(ProbabilityDistribution):
                     except ValueError:
                         print('Covariance must be symmetric, positive definite')
 
-                elif len(mean) == 1 and cov.shape[0] == 1:
-                    pass
+#                elif len(mean) == 1 and cov.shape[0] == 1:
+#                    pass
 
                 elif len(mean) == 1 and cov.shape[0] > 1:
                     mean = [mean[0] for i in range(cov.shape[0])]
@@ -116,9 +119,9 @@ class NormalDistribution(ProbabilityDistribution):
                 elif cov.shape[0] == 1 and len(mean) > 1:
                     cov = np.eye(len(mean)) * cov[0]
 
-            elif mean is None:
-                mean = [0. for i in range(cov.shape[0])]
-
+#            elif mean is None:
+#                mean = [0. for i in range(cov.shape[0])]
+#
             else:  # mean is a scalar
                 mean = [mean for i in range(cov.shape[0])]
 
@@ -324,8 +327,8 @@ class ExponentialDistribution(ProbabilityDistribution):
         if lbditer and lociter:
             if len(lbd) > 1 and len(loc) > 1:
                 assert len(lbd) == len(loc), "Lbd and loc parameter inputs must be of the same size"
-            elif len(lbd) == 1 and len(loc) == 1:
-                pass
+#            elif len(lbd) == 1 and len(loc) == 1:
+#                pass
             elif len(lbd) == 1:
                 lbd = [lbd[0] for i in range(len(loc))]
             elif len(loc) == 1:
@@ -481,11 +484,14 @@ class BetaDistribution(ProbabilityDistribution):
         # 3. User specifies domain hypercube
 
         if len(alpha) > 1 or len(beta) > 1:  # Case 1:
-            if len(alpha) != len(beta):
-                raise ValueError('Input parameters alpha and beta must be the same dimension')
+            assert len(alpha) == len(beta), 'Input parameters alpha and beta must be the same dimension'
+#            if len(alpha) != len(beta):
+#                raise ValueError('Input parameters alpha and beta must be the same dimension')
 
-            if (dim is not None) and (dim != 1) and (dim != len(alpha)):
-                raise ValueError('Alpha, beta parameter lists must have size consistent with input dim')
+            assert (dim is None) or (dim == 1) or (dim == len(alpha)), \
+                'Alpha, beta parameter lists must have size consistent with input dim'
+#            if (dim is not None) and (dim != 1) and (dim != len(alpha)):
+#                raise ValueError('Alpha, beta parameter lists must have size consistent with input dim')
 
             if (domain is not None) and (domain.shape[1] != 1) and (domain.shape[1] != len(alpha)):
                 raise ValueError('Alpha, beta parameter lists must have size consistent with hypercube domain')
@@ -598,8 +604,6 @@ class BetaDistribution(ProbabilityDistribution):
         if alphiter and betaiter:
             if len(alpha) > 1 and len(beta) > 1:
                 assert len(alpha) == len(beta), "Alpha and Beta parameter inputs must be of the same size"
-            elif len(alpha) == 1 and len(beta) == 1:
-                pass
             elif len(alpha) == 1:
                 alpha = [alpha[0] for i in range(len(beta))]
             elif len(beta) == 1:
