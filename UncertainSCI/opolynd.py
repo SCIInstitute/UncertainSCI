@@ -127,8 +127,7 @@ class TensorialPolynomials:
             else:
                 idistinv = self.polys1d.idistinv
 
-            univ_inv = lambda uu, nn: idistinv(uu, nn)
-            return univ_inv(np.random.random([M, d]), Lambdas)
+            return idistinv(np.random.random([M, d]), Lambdas)
 
         else:
             x = np.zeros([M, d])
@@ -145,8 +144,7 @@ class TensorialPolynomials:
                 else:
                     idistinv = self.polys1d[qd].idistinv
 
-                univ_inv = lambda uu, nn: idistinv(uu, nn)
-                x[:, qd] = univ_inv(np.random.random(M), Lambdas[:, qd])
+                x[:, qd] = idistinv(np.random.random(M), Lambdas[:, qd])
             return x
 
     def wafp_sampling(self, indices, oversampling=10, sampler='idist', K=None, fast_sampler=True):

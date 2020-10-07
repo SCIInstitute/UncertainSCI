@@ -342,7 +342,9 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
 
         if n.size == 1:
             n = int(n)
-            primitive = lambda xx: self.idist(xx, n, M=M)
+
+            def primitive(xx):
+                return self.idist(xx, n, M=M)
 
             ab = self.recurrence_driver(2*n + M+1)
             x = idistinv_driver(u, n, primitive, ab, supp)
@@ -355,7 +357,10 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             ab = self.recurrence_driver(2*nmax + M+1)
             for i in range(nmax+1):
                 flags = ind == i+1
-                primitive = lambda xx: self.idist(xx, i, M=M)
+
+                def primitive(xx):
+                    return self.idist(xx, i, M=M)
+
                 x[flags] = idistinv_driver(u[flags], i, primitive, ab, supp)
 
         return x
@@ -403,7 +408,9 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             exps = np.array([1/(self.beta+1), 1/(self.alpha+1)])
             ug, exponents = fidistinv_setup_helper1(ug, exps)
 
-            idistinv = lambda u: self.idistinv(u, nn)
+            def idistinv(u):
+                return self.idistinv(u, nn)
+
             data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10, self.alpha, self.beta))  # , E_n?
 
         return data
@@ -864,7 +871,10 @@ def hfreud_idistinv(u, n, alpha, rho):
 
         supp = np.array([0, rhs])
         ab = laguerre_recurrence_values(2*n + max(100, n), alpha, rho)
-        primitive = lambda xx: hfreud_idist(xx, n, alpha, rho)
+
+        def primitive(xx):
+            return hfreud_idist(xx, n, alpha, rho)
+
         x = idistinv_driver(u, n, primitive, ab, supp)
     else:
         nmax = np.amax(n)
@@ -886,7 +896,10 @@ def hfreud_idistinv(u, n, alpha, rho):
             supp = [0, rhs]
 
             flags = ind == qq+1
-            primitive = lambda xx: hfreud_idist(xx, qq, alpha, rho)
+
+            def primitive(xx):
+                return hfreud_idist(xx, qq, alpha, rho)
+
             x[flags] = idistinv_driver(u[flags], qq, primitive, ab, supp)
 
     return x
