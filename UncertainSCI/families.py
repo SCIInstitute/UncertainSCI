@@ -121,8 +121,9 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
 
         u, w = gauss_quadrature_driver(ab, M)
 
-        I = np.sum(w * (2 - 1/2 * (u+1) * (x[ind]+1))**Aa)
-        F[ind] = np.exp(logfactor - alpha*np.log(2) - sp.betaln(beta+1, alpha+1) - np.log(beta+1) + (beta+1) * np.log((x[ind]+1)/2)) * I
+        Ival = np.sum(w * (2 - 1/2 * (u+1) * (x[ind]+1))**Aa)
+        F[ind] = np.exp(logfactor - alpha*np.log(2) - sp.betaln(beta+1, alpha+1) -
+                        np.log(beta+1) + (beta+1) * np.log((x[ind]+1)/2)) * Ival
 
     return F
 
@@ -444,7 +445,8 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             n = np.asarray(n)
 
         if len(data) < max(n[:]) + 1:
-            print('Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'.format(self.alpha, self.beta), end='', flush=True)
+            msg = 'Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'
+            print(msg.format(self.alpha, self.beta), end='', flush=True)
             data = self.fidistinv_jacobi_setup(max(n[:]), data)
             with open(os.path.join(path, filename), 'wb') as f:
                 pickle.dump(data, f)
@@ -698,12 +700,12 @@ def hfreud_idist_driver(x, n, alpha, rho, M=25):
 
         u, w = gauss_quadrature_driver(ab, M)
 
-        I = np.sum(w * np.exp(- (x[ind]/2)**alpha * (u+1)**alpha))
+        Ival = np.sum(w * np.exp(- (x[ind]/2)**alpha * (u+1)**alpha))
 
         logfactor = logfactor + (2*n+rho+1) * np.log(x[ind]/2) + np.log(alpha) + \
                                 (rho+1) * np.log(2) - sp.gammaln((rho+1)/alpha) - np.log(rho+1)
 
-        F[ind] = np.exp(logfactor + np.log(I))
+        F[ind] = np.exp(logfactor + np.log(Ival))
 
     return F
 
@@ -759,11 +761,11 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
             ab[0, 1] = 1
 
         u, w = gauss_quadrature_driver(ab, M)
-        I = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
+        Ival = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
 
         logfactor = logfactor + (-x[ind]**alpha) + sp.gammaln(1/alpha) - sp.gammaln((rho+1)/alpha)
 
-        F[ind] = np.exp(logfactor + np.log(I))
+        F[ind] = np.exp(logfactor + np.log(Ival))
 
     return F
 
