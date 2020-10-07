@@ -65,7 +65,8 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
     #
     #  -(b/a) / vt + tan(vt) = 0
 
-    f = lambda x: -(b/a)/x + np.tan(x)
+    def f(x):
+        return -(b/a)/x + np.tan(x)
 
     for n in range(M):
         # Compute bracketing interval
@@ -95,7 +96,8 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
     #
     #  (a/b) wt + tan(wt) = 0
 
-    f = lambda x: (a/b)*x + np.tan(x)
+    def f(x):
+        return (a/b)*x + np.tan(x)
 
     for n in range(M):
 
@@ -161,7 +163,9 @@ def KLE_exponential_covariance_1d(N, a, b, mn):
             i2 = int((i-1)/2)
             efuns[i] = (lambda i2: lambda x: np.sin(w[i2]*x) / np.sqrt(b - np.sin(2*w[i2]*b)/(2*w[i2])))(i2)
 
-    KLE = lambda x, p: mn(x) + np.array([np.sqrt(lamb[i])*efuns[i](x) for i in range(N)]).T @ p
+    def KLE(x, p):
+        return mn(x) + np.array([np.sqrt(lamb[i])*efuns[i](x) for i in range(N)]).T @ p
+
     return KLE
 
 
@@ -207,7 +211,8 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
     assert N > 2
 
     if f is None:
-        f = lambda x: np.pi**2 * np.cos(np.pi*x)
+        def f(x):
+            return np.pi**2 * np.cos(np.pi*x)
 
     x = laplace_grid_x(left, right, N)
     h = x[1] - x[0]
@@ -314,9 +319,14 @@ if __name__ == "__main__":
 
     a = 3
     b = 1
-    mn = lambda x: np.zeros(x.shape)
+
+    def mn(x):
+        return np.zeros(x.shape)
+
     KLE = KLE_exponential_covariance_1d(dim, a, b, mn)
-    diffusion = lambda x, p: np.exp(KLE(x, p))
+
+    def diffusion(x, p):
+        return np.exp(KLE(x, p))
 
     left = -1.
     right = 1.
