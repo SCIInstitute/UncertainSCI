@@ -437,7 +437,8 @@ class BetaDistribution(ProbabilityDistribution):
         self._detect_dimension(alpha, beta, dim, domain)
 
         for qd in range(self.dim):
-            assert self.alpha[qd] > 0 and self.beta[qd] > 0, "Parameter vectors alpha and beta must have strictly positive components"
+            assert self.alpha[qd] > 0 and self.beta[qd] > 0, \
+                    "Parameter vectors alpha and beta must have strictly positive components"
         assert self.dim > 0, "Dimension must be positive"
         assert self.domain.shape == (2, self.dim)
 
@@ -632,7 +633,8 @@ class BetaDistribution(ProbabilityDistribution):
             raise ValueError('Mean of a standard Beta distribution must be between 0 and 1.')
 
         if stdev >= np.sqrt(mu*(1-mu)):
-            raise ValueError('Standard deviation of a Beta random variable must be smaller than the geometric mean of mu and (1-mu)')
+            msg = 'Standard deviation of a Beta random variable must be smaller than the geometric mean of mu and (1-mu)'
+            raise ValueError(msg)
 
         temp = (mu * (1-mu) - stdev**2)/stdev**2
 

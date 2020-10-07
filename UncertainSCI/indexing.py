@@ -138,12 +138,12 @@ def tensor_product(d, k):
 
     from itertools import product
 
-    I = np.empty(shape=[0, d], dtype=int)
+    Ival = np.empty(shape=[0, d], dtype=int)
 
     for t in (_ for _ in product(range(k+1), repeat=d)):
-        I = np.vstack((I, np.asarray(t)))
+        Ival = np.vstack((Ival, np.asarray(t)))
 
-    return I
+    return Ival
 
 
 def multi_indices_degree(d, k, p):
