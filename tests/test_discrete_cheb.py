@@ -4,13 +4,14 @@ import numpy as np
 
 from UncertainSCI.families import DiscreteChebyshevPolynomials
 
+
 class DiscreteChebTestCase(unittest.TestCase):
     """
     Performs basic tests for univariate discrete Chebyshev polynomials.
     """
 
     def setUp(self):
-        self.longMessage=True
+        self.longMessage = True
 
     def test_eval(self):
         """Evaluation/orthogonality test."""
@@ -41,7 +42,7 @@ class DiscreteChebTestCase(unittest.TestCase):
 
         delta = 1e-6
         err = np.linalg.norm(u[-1] - 1.)
-        msg = "Failed for (M, n)=({0:d}, {1:d})".format(M,n)
+        msg = "Failed for (M, n)=({0:d}, {1:d})".format(M, n)
 
         self.assertAlmostEqual(err, 0, delta=delta, msg=msg)
 
@@ -65,9 +66,10 @@ class DiscreteChebTestCase(unittest.TestCase):
 
         delta = 1e-6
         err = np.linalg.norm(x-x2, ord=np.inf)
-        msg = "Failed for (M, n)=({0:d}, {1:d}), domain=[{2:1.6f}, {3:1.6f}]".format(M,n,domain[0], domain[1])
+        msg = "Failed for (M, n)=({0:d}, {1:d}), domain=[{2:1.6f}, {3:1.6f}]".format(M, n, domain[0], domain[1])
 
         self.assertAlmostEqual(err, 0, delta=delta, msg=msg)
+
 
 if __name__ == "__main__":
 

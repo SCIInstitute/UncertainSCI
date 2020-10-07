@@ -4,15 +4,15 @@ import numpy as np
 
 from UncertainSCI.families import JacobiPolynomials
 
+
 class JacobiTestCase(unittest.TestCase):
     """
     Performs basic tests for univariate Jacobi polynomials
     """
 
     def setUp(self):
-        self.longMessage=True
+        self.longMessage = True
 
-    #def test_eval(self):
     #    """
     #    Evaluation of orthogonal polynomials.
     #    """
@@ -21,24 +21,24 @@ class JacobiTestCase(unittest.TestCase):
         """ Evaluation of orthogonal polynomial ratios.  """
 
         alpha = -1. + 10*np.random.rand(1)[0]
-        beta =  -1. + 10*np.random.rand(1)[0]
-        J = JacobiPolynomials(alpha=alpha,beta=beta)
+        beta = -1. + 10*np.random.rand(1)[0]
+        J = JacobiPolynomials(alpha=alpha, beta=beta)
 
         N = int(np.ceil(60*np.random.rand(1)))
-        x = (1 + 5*np.random.rand(1)) * (1 + np.random.rand(50)) 
-        y = (1 + 5*np.random.rand(1)) * (-1 - np.random.rand(50)) 
+        x = (1 + 5*np.random.rand(1)) * (1 + np.random.rand(50))
+        y = (1 + 5*np.random.rand(1)) * (-1 - np.random.rand(50))
         x = np.concatenate([x, y])
 
         P = J.eval(x, range(N+1))
         rdirect = np.zeros([x.size, N+1])
-        rdirect[:,0] = P[:,0]
-        rdirect[:,1:] = P[:,1:]/P[:,:-1]
+        rdirect[:, 0] = P[:, 0]
+        rdirect[:, 1:] = P[:, 1:]/P[:, :-1]
 
         r = J.r_eval(x, range(N+1))
 
         delta = 1e-6
         errs = np.abs(r-rdirect)
-        i,j = np.where(errs > delta)[:2]
+        i, j = np.where(errs > delta)[:2]
         if i.size > 0:
             errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, x={3:1.6f}'.format(alpha, beta, j[0], x[i[0]])
         else:
@@ -50,20 +50,20 @@ class JacobiTestCase(unittest.TestCase):
         """Gaussian quadrature integration accuracy"""
 
         alpha = -1. + 10*np.random.rand(1)[0]
-        beta =  -1. + 10*np.random.rand(1)[0]
+        beta = -1. + 10*np.random.rand(1)[0]
 
-        J = JacobiPolynomials(alpha=alpha,beta=beta)
+        J = JacobiPolynomials(alpha=alpha, beta=beta)
         N = int(np.ceil(60*np.random.rand(1)))
 
-        x,w = J.gauss_quadrature(N)
+        x, w = J.gauss_quadrature(N)
         w /= w.sum()    # Force probability measure
 
         V = J.eval(x, range(2*N))
 
         integrals = np.dot(w, V)
-        integrals[0] -= V[0,0] # Exact value
+        integrals[0] -= V[0, 0]  # Exact value
 
-        self.assertAlmostEqual(np.linalg.norm(integrals,ord=np.inf), 0.)
+        self.assertAlmostEqual(np.linalg.norm(integrals, ord=np.inf), 0.)
 
 
 class IDistTestCase(unittest.TestCase):
@@ -89,21 +89,21 @@ class IDistTestCase(unittest.TestCase):
         F2 = np.zeros(F1.shape)
         for xind, xval in enumerate(x):
             yquad = (y+1)/2.*(xval+1) - 1.
-            F2[xind] = np.dot(w,J.eval(yquad, n)**2) * (xval+1)/2
+            F2[xind] = np.dot(w, J.eval(yquad, n)**2) * (xval+1)/2
 
-        self.assertAlmostEqual(np.linalg.norm(F1-F2,ord=np.inf), 0.)
+        self.assertAlmostEqual(np.linalg.norm(F1-F2, ord=np.inf), 0.)
 
     def test_fidist_jacobi(self):
         """Fast induced sampling routine for Jacobi polynomials."""
 
         alpha = np.random.random()*11 - 1.
-        beta =  np.random.random()*11 - 1.
+        beta = np.random.random()*11 - 1.
 
         nmax = 4
         M = 10
         u = np.random.random(M)
 
-        J = JacobiPolynomials(alpha=alpha,beta=beta)
+        J = JacobiPolynomials(alpha=alpha, beta=beta)
 
         delta = 5e-3
         for n in range(nmax)[::-1]:
@@ -116,7 +116,7 @@ class IDistTestCase(unittest.TestCase):
             else:
                 errstr = ''
 
-            self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
+            self.assertAlmostEqual(np.linalg.norm(x0-x1, ord=np.inf), 0., delta=delta, msg=errstr)
 
         n = np.array(np.round(np.random.random(M)), dtype=int)
         x0 = J.idistinv(u, n)
@@ -127,7 +127,8 @@ class IDistTestCase(unittest.TestCase):
         else:
             errstr = ''
 
-        self.assertAlmostEqual(np.linalg.norm(x0-x1,ord=np.inf), 0., delta=delta, msg=errstr)
+        self.assertAlmostEqual(np.linalg.norm(x0-x1, ord=np.inf), 0., delta=delta, msg=errstr)
+
 
 if __name__ == "__main__":
 

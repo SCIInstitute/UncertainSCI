@@ -1,10 +1,11 @@
 import numpy as np
 from scipy import sparse as sprs
 
+
 class AffineTransform:
     def __init__(self, domain=None, image=None, A=None, b=None):
         """
-        Initializes a general affine map of the form 
+        Initializes a general affine map of the form
 
           x ---> x*A.T + b,
 
@@ -27,8 +28,8 @@ class AffineTransform:
             a = np.zeros(d)
             b = np.zeros(d)
             for q in range(d):
-                a[q] = (image[1,q] - image[0,q]) / (domain[1,q] - domain[0,q])
-                b[q] = image[0,q] - domain[0,q]*a[q]
+                a[q] = (image[1, q] - image[0, q]) / (domain[1, q] - domain[0, q])
+                b[q] = image[0, q] - domain[0, q]*a[q]
 
             self.A = sprs.diags(a, 0)
             self.b = b
@@ -55,9 +56,9 @@ class AffineTransform:
                 return self.A.dot(x) + self.b
             elif self.b.size == 1:
                 if isinstance(self.A, sprs.spmatrix):
-                    return self.A.todense()[0,0]*x + self.b
+                    return self.A.todense()[0, 0]*x + self.b
                 else:
-                    return self.A[0,0]*x + self.b
+                    return self.A[0, 0]*x + self.b
 
         else:
             return self.A.dot(x.T).T + self.b
@@ -69,9 +70,9 @@ class AffineTransform:
                 return self.Ainv.dot(x) + self.binv
             elif self.b.size == 1:
                 if isinstance(self.A, sprs.spmatrix):
-                    return self.Ainv.todense()[0,0]*x + self.binv
+                    return self.Ainv.todense()[0, 0]*x + self.binv
                 else:
-                    return self.Ainv[0,0]*x + self.binv
+                    return self.Ainv[0, 0]*x + self.binv
 
         else:
             return self.Ainv.dot(x.T).T + self.binv
