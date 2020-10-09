@@ -5,13 +5,14 @@ from scipy.linalg import qr
 
 from UncertainSCI.utils.linalg import greedy_d_optimal
 
+
 class LinalgTestCase(unittest.TestCase):
     """
     Performs basis tests for linear algebra routines.
     """
 
     def setUp(self):
-        self.longMessage=True
+        self.longMessage = True
 
     def test_greedy_d_optimal(self):
         """ Greedy D-optimal designs. """
@@ -27,12 +28,12 @@ class LinalgTestCase(unittest.TestCase):
 
         _, P2 = qr(A.T, pivoting=True, mode='r')
 
-        temp = A[P2[:N],:]
-        G = np.dot(temp.T, temp)
-        Ginvwm = np.dot(np.linalg.inv(G), A[P2[N:],:].T)
+        temp = A[P2[:N], :]
+        # G = np.dot(temp.T, temp)
+        # Ginvwm = np.dot(np.linalg.inv(G), A[P2[N:], :].T)
 
         # Confirm greedy determinantal stuff
-        for q in range (p - N):
+        for q in range(p - N):
             detvals = np.zeros(M-N-q)
             for ind in range(M-N-q):
                 temp = A[np.append(P2[:(N+q)], P2[N+q+ind]), :]
