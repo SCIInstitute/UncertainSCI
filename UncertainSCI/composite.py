@@ -2,31 +2,33 @@ import numpy as np
 from UncertainSCI.families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
 from UncertainSCI.opoly1d import linear_modification, quadratic_modification
 from UncertainSCI.opoly1d import gauss_quadrature_driver, jacobi_matrix_driver
-import pdb
-import itertools
+from UncertainSCI.utils.array_unique import array_unique
+import UncertainSCI as uSCI
+import os
+import scipy.io as sio
+import cProfile
 
-class Composite_quad():
-    def __init__(self, domain, weight, l_step, r_step, N_start, N_step, sing, sing_strength):
+class Composite():
+    def __init__(self, domain, weight, l_step, r_step, N_start, N_step, sing, sing_strength, tol):
         """
-        The computation of recurrence coefficients envolves computing \int_{s_j} q(x) d\mu(x)
-        Known: coefficients and ONs wrt weight w(x)=1 (legendre) on [-1,1]
-        compute coefficients wrt the same weight composed with map A by affine_mapping on s_j
-        compute coefficients wrt modified measure d\mod_mu(x) by lin and quad_modification
-        compute \int_{s_j} q(x) C d\mod_mu(x) by GQ since we know coefficients wrt mod_mu(x)
+        The computation of recurrence coefficients mainly envolves
+        computing \int_{s_j} q(x) d\mu(x)
 
         Params
         ------
-        domain: given domain 1x2 numpy.ndarray, end points including np.inf
-        weight: given measure or weight function
+        domain: 1x2 numpy.ndarray, end points including np.inf
+        weight: measure or weight function
         l_step: step moving left
         r_step: step moving right
         N_start: starting number of quadrature nodes
         N_step: step of increasing quadrature nodes
         sing: singularities of measure
+        sing_strength: len(sing)x2 numpy.ndarray, exponents at the singularities
+        tol: the criterion for iterative quadrature points and extensive strategy when computing the integral
 
         Returns
         ------
-        the recurrence coefficients wrt given measure
+        the recurrence coefficients wrt given smooth or pws measure
         """
         self.domain = domain
         self.weight = weight
@@ -36,6 +38,17 @@ class Composite_quad():
         self.N_step = N_step
         self.sing = sing
         self.sing_strength = sing_strength
+        self.tol = tol
+
+    def find_demar(self, zeros):
+        """
+        Given zeros of polynomials, find the demarcations of interval,
+        i.e. end points of subintervals
+        """
+        # zeros = zeros[(zeros > self.domain[0])&(zeros < self.domain[1])]
+        endpts = np.concatenate((self.domain, self.sing, zeros), axis = None)
+        return np.sort(np.unique(endpts))
+
 
     def affine_mapping(self, ab, a, b):
         """
@@ -43,6 +56,7 @@ class Composite_quad():
         and its recurrence coefficients {a_n, b_n}
         
         Given a bijective affine map A: \R to \R of form A(x) = b*x + a, a,b \in \R
+        b and a can be obtained using change of variables
 
         Aim to find recurrence coefficients {alpha_n, beta_n} for a new sequence of polynomials
         that are orthonormal under the same weight function w(x) composed with A.
@@ -53,192 +67,318 @@ class Composite_quad():
         mapped_ab[1:,1] = ab[1:,1] / np.abs(b)
         return mapped_ab
 
-    def gq_linmod(self, ab_J, zeros):
+
+    def find_jacobi(self, a, b, N_quad, zeros, lin = True):
         """
-        obtain the GQ nodes and weights wrt linear modified measure d\mod_mu(x) on [-1,1].
+        if there are singularities on the boundary of interval [a,b]
+        there are three cases:
+        1. a and b are both in sing
+        2. a in sing, b not
+        3. b in sing, a not
+
+        if neither a or b in singularities
+        we use affine_mapping method to compute the recurrence coefficients wrt
+        the mapped Legendre measure on [a,b], mapping from [-1,1] to [a,b],
+        then compute the GQ nodes and weights using the gauss_quadrature_driver method,
+        i.e. \int_a^b q(x) w(x) dx ~ \sum_{i=1}^M q(xg_i) w(xg_i) wg_i,
+
+        \int_a^b q(x) d\mu(x) = \int_a^b q(x) w(x) dx = \sum_{i=1}^M q(x_i) w(x_i) w_i
+        {x_i,w_i}_{i=1}^M are GQ nodes and weights wrt mapped Legendre measure on [a,b]
+        """
+        if lin:
+            mapped_coeff = ((b-a)/2)**len(zeros)
+        else:
+            mapped_coeff = ((b-a)/2)**(2*len(zeros))
         
-        Params
-        ------
-        ab_J: recurrence coefficients of the measure to be modified on [-1,1]
-        zeros: zeros of orthogonal polynomials that lies on [-1,1]
-        """
-        if zeros == []:
-            ab_mod = ab_J
-            xg,wg = gauss_quadrature_driver(ab = ab_mod, N = len(ab_mod)-1)
-            signs = 1.
-        else:
-            ab_mod = ab_J
-            signs = 1.
-            for i in range(len(zeros)):
-                ab_mod,sgn = linear_modification(alphbet=ab_mod, x0=zeros[i])
-                signs = signs * sgn
-            xg,wg = gauss_quadrature_driver(ab = ab_mod, N = len(ab_mod)-1)
-        return xg,wg,signs
+        mapped_zeros = 2/(b-a)*zeros - (a+b)/(b-a)
 
-    def gq_quadmod(self, ab_J, zeros):
-        """
-        obtain the GQ nodes and weights wrt quadratic modified measure d\mod_mu(x) on [-1,1].
-        """
-        ab_mod = ab_J
-        for i in range(len(zeros)):
-            ab_mod = quadratic_modification(alphbet=ab_mod, z0=zeros[i])
-        xg,wg = gauss_quadrature_driver(ab = ab_mod, N = len(ab_mod)-1)
-        return xg,wg
-
-    def makearray(self, x):
-        """
-        make x an array no matter the instance of x is
-        """
-        if isinstance(x, float) or isinstance(x, int):
-            y = np.asarray([x])
-        else:
-            y = np.asarray(x)
-        return y
-
-    def map_cv(self, u, a, b):
-        """
-        map from [a,b] to [-1,1] using the change of variable given u
-        """
-        return (b-a)/2 * u + (a+b)/2
-
-    def invmap_cv(self, x, a, b):
-        """
-        map from [-1,1] to [a,b] using the change of variable given x
-        """
-        return 2/(b-a) * x - (a+b)/(b-a)
-
-    def normal_coeff(self):
-        """
-        compute the normalization coefficient b_0
-        """
-        endpts = np.concatenate((self.domain, self.sing), axis = None)
-        demar = np.sort(np.unique(endpts))
-        s = 0
-        for i in range(len(demar)-1):
-            xg,wg,sgn,integrands = self.find_gq(a = demar[i], b = demar[i+1], zeros = [])
-            s += np.sum(integrands * wg)
-        return np.sqrt(s)
-
-    def find_gq(self, a, b, zeros, lin = True):
-        """
-        Given subinterval [a,b] and mapped zeros of polynomials on [-1,1]
-        compute the GQ nodes and weight wrt the modified measure on [-1,1]
-        """
         if a in self.sing and b in self.sing:
             a_r_expstr = self.sing_strength[np.where(self.sing == a)][0,1]
             b_l_expstr = self.sing_strength[np.where(self.sing == b)][0,0]
             J = JacobiPolynomials(alpha = b_l_expstr, beta = a_r_expstr, probability_measure = False)
+            integrands = lambda u: self.weight((b-a)/2*u + (a+b)/2) \
+                    * (b-((b-a)/2*u + (a+b)/2))**-b_l_expstr \
+                    * (((b-a)/2*u + (a+b)/2)-a)**-a_r_expstr \
+                    * ((b-a)/2)**(b_l_expstr + a_r_expstr + 1) * mapped_coeff
+            ab = J.recurrence(N = N_quad)
+            if len(zeros) == 0:
+                ab_mod = ab; signs = 1.
+            else:
+                ab_mod, signs = self.measure_mod(ab = ab, zeros = mapped_zeros, lin = lin)
 
         elif a in self.sing:
             a_r_expstr = self.sing_strength[np.where(self.sing == a)][0,1]
-            b_l_expstr = 0.
             J = JacobiPolynomials(alpha = 0., beta = a_r_expstr, probability_measure = False)
+            integrands = lambda u: self.weight((b-a)/2*u + (a+b)/2) \
+                    * (((b-a)/2*u + (a+b)/2)-a)**-a_r_expstr \
+                    * ((b-a)/2)**(a_r_expstr + 1) * mapped_coeff
+            ab = J.recurrence(N = N_quad)
+            if len(zeros) == 0:
+                ab_mod = ab; signs = 1.
+            else:
+                ab_mod, signs = self.measure_mod(ab = ab, zeros = mapped_zeros, lin = lin)
 
         elif b in self.sing:
             b_l_expstr = self.sing_strength[np.where(self.sing == b)][0,0]
-            a_r_expstr = 0.
             J = JacobiPolynomials(alpha = b_l_expstr, beta = 0., probability_measure = False)
+            integrands = lambda u: self.weight((b-a)/2*u + (a+b)/2) \
+                    * (b-((b-a)/2*u + (a+b)/2))**-b_l_expstr \
+                    * ((b-a)/2)**(b_l_expstr + 1) * mapped_coeff
+            ab = J.recurrence(N = N_quad)
+            if len(zeros) == 0:
+                ab_mod = ab; signs = 1.
+            else:
+                ab_mod, signs = self.measure_mod(ab = ab, zeros = mapped_zeros, lin = lin)
 
         else:
             J = JacobiPolynomials(alpha=0., beta=0., probability_measure=False)
-            a_r_expstr = 0.
-            b_l_expstr = 0.
+            integrands = lambda u: self.weight(u)
+            ab = self.affine_mapping(ab = J.recurrence(N = N_quad), a = -(a+b)/(b-a), b = 2/(b-a))
+            if len(zeros) == 0:
+                ab_mod = ab; signs = 1.
+            else:
+                ab_mod, signs = self.measure_mod(ab = ab, zeros = zeros, lin = lin)
 
-        if lin:
-            ug,wg,sgn = self.gq_linmod(ab_J = J.recurrence(N = len(zeros)+10), zeros = zeros)
+        return integrands, ab_mod, signs
+
+    def measure_mod(self, ab, zeros, lin = True):
+        """
+        compute the recurrence coefficients wrt the modified measure using
+        linear or quadratic modification in opoly1d
+        """
+        signs = 1.
+        if len(zeros) == 0:
+            return ab, signs
         else:
-            ug,wg = self.gq_quadmod(ab_J = J.recurrence(N = len(zeros)+10), zeros = zeros)
-            sgn = 1.
+            for i in range(len(zeros)):
+                if lin:
+                    ab,sgn = linear_modification(alphbet=ab, x0=zeros[i])
+                    signs = signs * sgn
+                else:
+                    ab = quadratic_modification(alphbet=ab, z0=zeros[i])
+        return ab, signs
+    
 
-        x = self.map_cv(u = ug, a = a, b = b)
-        integrands = self.weight(x) * (b-x)**(-b_l_expstr) * (x-a)**(-a_r_expstr) \
-                    * ((b-a)/2)**(b_l_expstr + a_r_expstr + 1)
-
-        return ug, wg, sgn, integrands
-
-    def eval_integral(self, zeros):
+    def eval_integral(self, a, b, zeros, leadingc, lin = True, addzeros = []):
         """
-        Give the zeros of polynomials q(x) on the domain
-        evaluate the integral \int q(x) dmu(x)
+        compute the integral \int_a^b q(x) dmu(x) with an iterated updating quadrature points
         """
-        endpts = np.cancatenate((self.domain, self.sing, zeros), axis = None)
-        demar = np.sort(np.unique(endpts))
-        s = 0
-        for i in range(len(demar)-1):
-            l,r = demar[i],demar[i+1]
-            mapped_zeros = self.invmap_cv(x = zeros, a = l, b = r)
-            ug,wg,sgn,integrands = self.find_gq(a = l, b = r, zeros = mapped_zeros)
-        return ug, wg, sgn, integrands
+        s = 0.; s_new = 1. # make iteration begin
+        N_quad = len(zeros) + self.N_start
+        while np.abs(s - s_new) > self.tol:
+            integrands, ab_mod, signs = self.find_jacobi(a = a, b = b, N_quad = N_quad, \
+                    zeros = zeros, lin = lin)
+            if len(addzeros) > 0:
+                ab,sgn = self.measure_mod(ab = ab_mod, zeros = addzeros, lin = True)
+                ab_mod = ab; signs = signs * sgn
+
+            ug,wg = gauss_quadrature_driver(ab = ab_mod, N = len(ab_mod)-1)
+            s = np.sum(leadingc * signs * integrands(ug) * wg)
+
+            N_quad += self.N_step
+            
+            integrands, ab_mod, signs = self.find_jacobi(a = a, b = b, N_quad = N_quad, \
+                    zeros = zeros, lin = lin)
+            if len(addzeros) > 0:
+                ab,sgn = self.measure_mod(ab = ab_mod, zeros = addzeros, lin = True)
+                ab_mod = ab; signs = signs * sgn
+
+            ug,wg = gauss_quadrature_driver(ab = ab_mod, N = len(ab_mod)-1)
+            s_new = np.sum(leadingc * signs * integrands(ug) * wg)
+        return s_new
+    
+    
+    def eval_extend(self, a, b, zeros, leadingc, lin = True, addzeros = []):
+        """
+        compute the integral \int_a^b q(x) dmu(x) when the boundaries a and/or b is inf
+        using an interval extension strategy
+        """
+        if a == -np.inf and b == np.inf:
+            l = -1.; r = 1.
+            s = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+            Q_minus = 1.
+            while np.abs(Q_minus) > self.tol:
+                r = l; l = l - self.l_step
+                Q_minus = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+                s += Q_minus
+
+            l = -1.; r = 1.
+            Q_plus = 1.
+            while np.abs(Q_plus) > self.tol:
+                l = r; r = r + self.r_step
+                Q_plus = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+                s += Q_plus
+
+        elif a == -np.inf:
+            r = b; l = b - self.l_step
+            s = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+            Q_minus = 1.
+            while np.abs(Q_minus) > self.tol:
+                r = l; l = l - self.l_step
+                Q_minus = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+                s += Q_minus
+
+        elif b == np.inf:
+            l = a; r = a + self.r_step
+            s = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+            Q_plus = 1.
+            while np.abs(Q_plus) > self.tol:
+                l = r; r = r + self.r_step
+                Q_plus = self.eval_integral(a = l, b = r, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+                s += Q_plus
+
+        else:
+            s = self.eval_integral(a = a, b = b, zeros = zeros, leadingc = leadingc, lin = lin, addzeros = addzeros)
+
+        return s
+
 
     def recurrence(self, N):
+        """
+        return (N+1)x2 recurrence coefficients
+        """
         ab = np.zeros((N+1,2))
-        ab[0,0] = 0.
-        ab[0,1] = self.normal_coeff()
+        ab[0,0] = 0
 
-        # compute G_01 = \int p_0 \tilde{p}_1 dmu(x) on [a,b]
-        r_p = [] # p_0 has no zeros
-        r_ptilde = self.makearray(ab[0,0]) # \tilde{p}_1 has a zero a_0 = 0
-        r_pptilde = np.sort(np.append(r_p, r_ptilde))
-
-        endpts = np.concatenate((self.domain, self.sing, r_pptilde), axis = None)
-        demar = np.sort(np.unique(endpts))
-        s_1 = 0
-        for i in range(len(demar)-1):
-            l,r = demar[i],demar[i+1]
-            mapped_zeros = self.invmap_cv(x = r_pptilde, a = l, b = r)
-            ug,wg,sgn,integrands = self.find_gq(a = l, b = r, zeros = mapped_zeros)
-            leadingcoeff_p = 1 / np.prod(ab[:1,1])
-            leadingcoeff_ptilde = 1 / (ab[0,1] * np.prod(ab[:1,1]))
-            coeff = leadingcoeff_p * leadingcoeff_ptilde * ((r-l)/2)**(len(r_pptilde))
-            s_1 += np.sum(sgn * coeff * integrands * wg)
-        ab[1,0] = ab[0,0] + ab[0,1] * s_1
-
-        # compute G_11 = \int \hat{p}_1^2 dmu(x) on [a,b]
-        r_phat = self.makearray(ab[1,0]) # \hat{p}_1 has a zeros a_1
-        s_2 = 0
-        for i in range(len(demar)-1):
-            l,r = demar[i],demar[i+1]
-            mapped_zeros = self.invmap_cv(x = r_phat, a = l, b = r)
-            ug,wg,sgn,integrands = self.find_gq(a = l, b = r, zeros = mapped_zeros, lin = False)
-            leadingcoeff_phat = 1 / (ab[0,1] * np.prod(ab[:1,1]))
-            coeff = leadingcoeff_phat * ((r-l)/2)**(len(r_phat))
-            s_2 += np.sum(coeff**2 * integrands * wg)
-        ab[1,1] = ab[0,1] * np.sqrt(s_2)
-
-        for i in range(2,N+1):
+        # compute b_0
+        demar = self.find_demar(zeros = [])
+        s = 0
+        for i in range(len(demar) - 1):
+            s += self.eval_extend(a = demar[i], b = demar[i+1], zeros =  np.zeros(0,), leadingc = 1, lin = True)
+        ab[0,1] = np.sqrt(s)
+        if N == 0:
+            return ab
+        
+        for i in range(1,N+1):
             ab[i,0],ab[i,1] = ab[i-1,0],ab[i-1,1]
-            r_p,_ = gauss_quadrature_driver(ab = ab[:i], N = i-1)
-            r_ptilde,_ = gauss_quadrature_driver(ab = ab[:i+1], N = i)
-            r_pptilde = np.sort(np.append(r_p, r_ptilde))
+            if i == 1:
+                r_p = []
+                r_ptilde = ab[0,0] # \tilde{p}_1 has a zero a_0 = 0
+            else:
+                r_p,_ = gauss_quadrature_driver(ab = ab[:i], N = i-1)
+                r_ptilde,_ = gauss_quadrature_driver(ab = ab[:i+1], N = i)
+            r_pptilde = np.append(r_p, r_ptilde)
+            demar = self.find_demar(zeros = r_pptilde)
+            demar = array_unique(a = demar, tol = 1e-8)
 
-            endpts = np.concatenate((self.domain, self.sing, r_pptilde), axis = None)
-            demar = np.sort(np.unique(endpts))
+            leadingcoeff_p = 1 / np.prod(ab[:i,1])
+            leadingcoeff_ptilde = 1 / (ab[i-1,1] * np.prod(ab[:i,1]))
+            c = leadingcoeff_p * leadingcoeff_ptilde
             
-            # How to unique the numpy array demar with a tolerance
-            for m,n in itertools.product(range(len(demar)), range(len(demar))):
-                if np.isclose(demar[m], demar[n], atol = 1e-8):
-                    demar = np.delete(demar,m)
-            s_1 = 0
+            s = 0.
             for j in range(len(demar)-1):
-                l,r = demar[j],demar[j+1]
-                mapped_zeros = self.invmap_cv(x = r_pptilde, a = l, b = r)
-                ug,wg,sgn,integrands = self.find_gq(a = l, b = r, zeros = mapped_zeros)
-                leadingcoeff_p = 1 / np.prod(ab[:i,1])
-                leadingcoeff_ptilde = 1 / (ab[i-1,1] * np.prod(ab[:i,1]))
-                coeff = leadingcoeff_p * leadingcoeff_ptilde * ((r-l)/2)**(len(r_pptilde))
-                s_1 += np.sum(sgn * coeff * integrands * wg)
-            ab[i,0] = ab[i-1,0] + ab[i-1,1] * s_1
+                s += self.eval_extend(a = demar[j], b = demar[j+1], zeros = r_pptilde, leadingc = c, lin = True)
+            ab[i,0] = ab[i-1,0] + ab[i-1,1] * s
 
-            r_phat,_ = gauss_quadrature_driver(ab = ab[:i+1], N = i)
-            s_2 = 0
+            if i == 1:
+                r_phat = np.asarray([ab[1,0]]) # \hat{p}_1 has a zeros a_1
+            else:
+                r_phat,_ = gauss_quadrature_driver(ab = ab[:i+1], N = i)
+
+            leadingcoeff_phat = 1 / (ab[i-1,1] * np.prod(ab[:i,1]))
+            c = leadingcoeff_phat**2
+            
+            s = 0.
             for k in range(len(demar)-1):
-                l,r = demar[k],demar[k+1]
-                mapped_zeros = self.invmap_cv(x = r_phat, a = l, b = r)
-                ug,wg,sgn,integrands = self.find_gq(a = l, b = r, zeros = mapped_zeros, lin = False)
-                leadingcoeff_phat = 1 / (ab[i-1,1] * np.prod(ab[:i,1]))
-                coeff = leadingcoeff_phat * ((r-l)/2)**(len(r_phat))
-                s_2 += np.sum(coeff**2 * integrands * wg)
-            ab[i,1] = ab[i-1,1] * np.sqrt(s_2)
-
+                s += self.eval_extend(a = demar[k], b = demar[k+1], zeros = r_phat, leadingc = c, lin = False)
+            ab[i,1] = ab[i-1,1] * np.sqrt(s)
+            
         return ab
+
+
+    def stieltjes(self, N):
+        """
+        return (N+1)x2 recurrence coefficients
+        """
+        ab = np.zeros((N+1,2))
+        ab[0,0] = 0
+
+        # compute b_0
+        zeros = np.zeros(0,)
+        demar = self.find_demar(zeros = zeros)
+        demar = array_unique(a = demar, tol = 1e-8)
+
+        s = 0
+        for i in range(len(demar) - 1):
+            s += self.eval_extend(a = demar[i], b = demar[i+1], zeros = zeros, leadingc = 1, lin = True)
+        ab[0,1] = np.sqrt(s)
+        if N == 0:
+            return ab
+
+        for i in range(1,N+1):
+            ab[i,0],ab[i,1] = ab[i-1,0],ab[i-1,1]
+
+            # a_n = <x p_n-1, p_n-1> = \int (x-0) p_n-1^2 dmu
+            
+            if i == 1:
+                r_p = np.zeros(0,)
+            else:
+                r_p,_ = gauss_quadrature_driver(ab = ab[:i], N = i-1)
+
+            addzeros = np.zeros(1,)
+            demar = self.find_demar(zeros = np.concatenate((r_p, addzeros), axis = None))
+            demar = array_unique(a = demar, tol = 1e-8)
+            
+            leadingcoeff_p = 1 / np.prod(ab[:i,1])
+            c = leadingcoeff_p
+            
+            s = 0.
+            for j in range(len(demar)-1):
+                s += self.eval_extend(a = demar[j], b = demar[j+1], zeros = r_p, leadingc = c**2, lin = False, addzeros = addzeros)
+            ab[i,0] = s
+            
+            # b_n^2 = <x p_n-1, b_n p_n> = <x p_n-1, (x-a_n)p_n-1 - b_n-1 p_n-2>
+            #       = \int x(x-a_n) p_n-1^2 - b_n-1 x p_n-1 p_n-2
+            addzeros = np.array([0., ab[i,0]])
+            demar = self.find_demar(zeros = np.concatenate((r_p, addzeros), axis = None))
+            demar = array_unique(a = demar, tol = 1e-8)
+            s_1 = 0.
+            for k in range(len(demar)-1):
+                s_1 += self.eval_extend(a = demar[k], b = demar[k+1], zeros = r_p, leadingc = c**2, lin = False, addzeros = addzeros)
+            
+
+            if i == 1:
+                s_2 = 0
+            else:
+                if i == 2:
+                    r_pminus = np.zeros(0,)
+                else:
+                    r_pminus,_ = gauss_quadrature_driver(ab = ab[:i], N = i-2)
+
+                r_ppminus = np.append(r_p, r_pminus)
+                    
+                addzeros = np.zeros(1,)
+                demar = self.find_demar(zeros = np.concatenate((r_ppminus, addzeros), axis = None))
+                demar = array_unique(a = demar, tol = 1e-8)
+
+                leadingcoeff_pminus = 1/ np.prod(ab[:i-1,1])
+                c = ab[i-1,1] * leadingcoeff_p * leadingcoeff_pminus
+
+                s_2 = 0.
+                for k in range(len(demar)-1):
+                    s_2 += self.eval_extend(a = demar[k], b = demar[k+1], zeros = r_ppminus, leadingc = c, lin = True, addzeros = addzeros)
+            ab[i,1] = np.sqrt(s_1 - s_2)
+                
+        return ab
+
+
+if __name__ == '__main__':
+    pr = cProfile.Profile()
+    pr.enable()
+
+    A = Composite(domain = [-np.inf,np.inf], weight = lambda x: np.exp(-x**4), \
+            l_step = 2, r_step = 2, N_start = 10, N_step = 10, \
+            sing = np.zeros(0,), sing_strength = np.zeros(0,), tol = 1e-10)
+    n = 20
     
+    data_dir = os.path.dirname(uSCI.__file__)
+    mat_fname = os.path.join(data_dir, 'ab_exact_4.mat')
+    mat_contents = sio.loadmat(mat_fname)
+    ab_exact = mat_contents['coeff'][:n+1]
+    
+    ab = A.recurrence(N = n)
+    ab_s = A.stieltjes(N = n)
+    print (np.linalg.norm(ab - ab_exact, None), np.linalg.norm(ab_s - ab_exact, None))
+
+    pr.print_stats(sort='tottime')
+    pr.disable()
