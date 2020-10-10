@@ -39,7 +39,7 @@ class NoComposite():
         self.sing_strength = sing_strength
         self.tol = tol
 
-    def find_jacobi(self, a, b, N_quad):
+    def find_jacobi(self, a, b):
         
         if a in self.sing and b in self.sing:
             a_r_expstr = self.sing_strength[np.where(self.sing == a)][0,1]
@@ -71,17 +71,25 @@ class NoComposite():
         return J,integrands
 
     def eval_integral(self, f, a, b):
+        J,integrands = self.find_jacobi(a = a, b = b)
+        
         N_quad = self.N_start
-        s = 0; s_new = 1 # make iteration begin
-        while np.abs(s - s_new) > 1e-8:
-            J,intergands = self.find_jacobi(a = a, b = b, N_quad = N_quad)
-            ug,wg = J.gauss_quadrature(N_quad)
-            xg = (b-a) / 2 * ug + (a+b) / 2
-            s = np.sum(f(xg) * self.weight(xg) * wg)
+        ug,wg = J.gauss_quadrature(N_quad)
+        xg = (b-a) / 2 * ug + (a+b) / 2
+        s = np.sum(f(xg) * integrands(xg) * wg)
+
+        N_quad += self.N_step
+        ug,wg = J.gauss_quadrature(N_quad)
+        xg = (b-a) / 2 * ug + (a+b) / 2
+        s_new = np.sum(f(xg) * integrands(xg) * wg)
+
+        while np.abs(s - s_new) > self.tol:
+            s = s_new
             N_quad += self.N_step
             ug,wg = J.gauss_quadrature(N_quad)
             xg = (b-a) / 2 * ug + (a+b) / 2
-            s_new = np.sum(f(xg) * self.weight(xg) * wg)
+            s_new = np.sum(f(xg) * integrands(xg) * wg)
+        
         return s_new
 
     def eval_extend(self, f, a, b):
@@ -212,24 +220,118 @@ class NoComposite():
             
         return ab
 
+    def eval_mom(self, k):
+        """
+        return finite moments, 2k numpy.array up to order 2k-1
+        """
+        mom = np.zeros(2*k,)
+        endpts = np.concatenate((self.domain, self.sing), axis = None)
+        demar = np.sort(np.unique(endpts))
+        
+        for i in range(len(mom)):
+            s = 0.
+            for j in range(len(demar)-1):
+                s += self.eval_extend(f = lambda x: x**i, a = demar[j], b = demar[j+1])
+            mom[i] = s
+        return mom
+
+    def eval_coeff_aPC(self, k):
+        """
+        return coefficients, k+1 numpy.array of polynomials of degree k
+        """
+        M = np.zeros((k+1,k+1))
+        for i in range(k):
+            M[i,:] = self.eval_mom(k = k)[i:i+k+1]
+        M[k,k] = 1.
+        b = np.zeros(k+1,)
+        b[k] = 1
+        return np.linalg.solve(M, b)
+
+    def eval_disc_p(self, x, k):
+        """
+        return the values of monic orthogonal polynomials of degree k
+        """
+        s = 0.
+        for i in range(k+1):
+            s += self.eval_coeff_aPC(k = k)[i] * x**i
+        return s
+
+    def eval_nc(self, k):
+        """
+        return k+1 numpy.array normalization constants up to polynomials of degree k
+        """
+        nc = np.zeros(k+1,)
+
+        endpts = np.concatenate((self.domain, self.sing), axis = None)
+        demar = np.sort(np.unique(endpts))
+        
+        for i in range(len(nc)):
+            s = 0.
+            for j in range(len(demar) - 1):
+                s += self.eval_extend(f = lambda x: self.eval_disc_p(x, i)**2, a = demar[j], b = demar[j+1])
+            assert s >= 0.
+            nc[i] = s
+        return np.sqrt(nc)
+
+    def aPC(self, N):
+        """
+        return N+1 x 2 numpy.array recurrence coefficients
+        using arbitrary polynomial chaos expansion
+        """
+        nc = self.eval_nc(k = N)
+        
+        ab = np.zeros((N+1,2))
+        ab[0,0] = 0.
+
+        endpts = np.concatenate((self.domain, self.sing), axis = None)
+        demar = np.sort(np.unique(endpts))
+
+        ab[0,1] = nc[0]
+        if N == 0:
+            return ab
+        
+        for i in range(1,N+1):
+
+            # a_n = <x p_n-1, p_n-1> = \int (x-0) p_n-1^2 dmu
+            s = 0.
+            for j in range(len(demar)-1):
+                s += self.eval_extend(f = lambda x: x * (self.eval_disc_p(x, i-1) / nc[i-1])**2, a = demar[j], b = demar[j+1])
+            ab[i,0] = s
+
+            # b_n^2 = <x p_n-1, b_n p_n> = <x p_n-1, (x-a_n)p_n-1 - b_n-1 p_n-2>
+            #       = \int x(x-a_n) p_n-1^2 - b_n-1 x p_n-1 p_n-2
+            
+            s_1 = 0.
+            for k in range(len(demar)-1):
+                s_1 += self.eval_extend(f = lambda x: x * (x - ab[i,0]) * (self.eval_disc_p(x, i-1) / nc[i-1])**2, a = demar[k], b = demar[k+1])
+            
+            if i == 1:
+                s_2 = 0.
+            else:
+                s_2 = 0.
+                for k in range(len(demar)-1):
+                    s_2 += self.eval_extend(f = lambda x: ab[i-1,1] * x * (self.eval_disc_p(x, i-1) / nc[i-1]) * (self.eval_disc_p(x, i-2) / nc[i-2]), a = demar[k], b = demar[k+1])
+            ab[i,1] = np.sqrt(s_1 - s_2)
+                
+        return ab
+
 
 if __name__ == '__main__':
-    pr = cProfile.Profile()
-    pr.enable()
 
     A = NoComposite(domain = [-np.inf,np.inf], weight = lambda x: np.exp(-x**4), \
             l_step = 2, r_step = 2, N_start = 10, N_step = 10, \
             sing = np.zeros(0,), sing_strength = np.zeros(0,), tol = 1e-10)
-    n = 99
-    
+    n = 5
+
     data_dir = os.path.dirname(uSCI.__file__)
     mat_fname = os.path.join(data_dir, 'ab_exact_4.mat')
     mat_contents = sio.loadmat(mat_fname)
     ab_exact = mat_contents['coeff'][:n+1]
-    
+
     ab = A.recurrence(N = n)
     ab_s = A.stieltjes(N = n)
-    print (np.linalg.norm(ab - ab_exact, None), np.linalg.norm(ab_s - ab_exact, None))
+    ab_aPC = A.aPC(N = n)
+    print (np.linalg.norm(ab - ab_exact, None))
+    print (np.linalg.norm(ab_s - ab_exact, None))
+    print (np.linalg.norm(ab_aPC - ab_exact, None))
 
-    pr.print_stats(sort='tottime')
-    pr.disable()

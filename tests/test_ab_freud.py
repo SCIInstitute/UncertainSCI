@@ -9,12 +9,12 @@ import scipy.io as sio
 import time
 
 class IDistTestCase(unittest.TestCase):
-    n = 99
+    n = 20
 
     def test_freud2(self, n = n):
 
         A = Composite(domain = [-np.inf,np.inf], weight = lambda x: np.exp(-x**2), \
-            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-10, \
+            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-12, \
             sing = np.zeros(0,), sing_strength = np.zeros(0,))
 
         start = time.time()
@@ -35,7 +35,7 @@ class IDistTestCase(unittest.TestCase):
     def test_freud4(self, n = n):
         
         A = Composite(domain = [-np.inf,np.inf], weight = lambda x: np.exp(-x**4), \
-            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-10, \
+            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-12, \
             sing = np.zeros(0,), sing_strength = np.zeros(0,))
         
         start = time.time()
@@ -59,7 +59,7 @@ class IDistTestCase(unittest.TestCase):
     def test_freud6(self, n = n):
         
         A = Composite(domain = [-np.inf,np.inf], weight = lambda x: np.exp(-x**6), \
-            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-10, \
+            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-12, \
             sing = np.zeros(0,), sing_strength = np.zeros(0,))
         
         start = time.time()
@@ -84,23 +84,22 @@ if __name__ == "__main__":
 
     unittest.main(verbosity=2)
     """
-    too slow and error increasing badly with larger n
+    if we use composite routine, too slow and error increasing badly with larger n
 
-    ~2s with err~e-14 for f2; ~2s with err~e-13 for f4, ~2s with err~e-12 for f6 when n = 10,
-    ~15s with err~e-13 for f2; ~16s with err~e-10 for f4, ~70s with err~e-9 for f6 when n = 20,
-    ~45s with err~e-12 for f2; ~1200s with err~e-7 for f4, ~?s with err~e-? for f6 when n = 30,
+    ~1.90s with err~e-14 for f2; ~1.63s with err~e-13 for f4, ~2.10s with err~e-12 for f6 when n = 10,
+    ~15.51s with err~e-13 for f2; ~76.29s with err~e-10 for f4, ~?s with err~e-? for f6 when n = 20,
 
     could fail for some big n
     numpy.linalg.LinAlgError: Eigenvalues did not converge
 
 
-
     if we use nocomposite routine, i.e. procedure without computing zeros of polynomials
     
-    ~0.15s with err~e-15 for f2; ~0.15s with err~e-15 for f4, ~0.15s with err~e-15 for f6 when n = 10,
-    ~0.40s with err~e-15 for f2; ~0.40s with err~e-15 for f4, ~0.40s with err~e-12 for f6 when n = 20,
-    ~1.0s with err~e-15 for f2; ~0.6s with err~e-15 for f4, ~0.9s with err~e-12 for f6 when n = 30,
-    ~2.0s with err~e-14 for f2; ~1.5s with err~e-13 for f4, ~2.5s with err~e-11 for f6 when n = 50,
-    ~8.0s with err~e-14 for f2; ~6.5s with err~e-12 for f4, ~8.5s with err~e-10 for f6 when n = 99,
+    ~0.14s with err~e-15 for f2; ~0.10s with err~e-15 for f4, ~0.13s with err~e-15 for f6 when n = 10,
+    ~0.39s with err~e-15 for f2; ~0.24s with err~e-15 for f4, ~0.31s with err~e-15 for f6 when n = 20,
+    ~0.75s with err~e-15 for f2; ~0.43s with err~e-15 for f4, ~0.58s with err~e-15 for f6 when n = 30,
+    ~1.18s with err~e-15 for f2; ~0.98s with err~e-15 for f4, ~1.12s with err~e-15 for f6 when n = 40,
+    ~2.06s with err~e-15 for f2; ~1.29s with err~e-15 for f4, ~1.44s with err~e-15 for f6 when n = 50,
+    ~7.10s with err~e-14 for f2; ~4.63s with err~e-14 for f4, ~5.70s with err~e-14 for f6 when n = 99,
 
     """

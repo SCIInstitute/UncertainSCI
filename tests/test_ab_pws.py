@@ -8,7 +8,7 @@ import scipy.integrate as integrate
 class IDistTestCase(unittest.TestCase):
 
     def test_pws(self):
-        n = 50
+        n = 300
 
         xi = 1/10
         yita = (1-xi)/(1+xi)
@@ -22,7 +22,7 @@ class IDistTestCase(unittest.TestCase):
                     lambda x: np.abs(x)**gm * (x**2-xi**2)**p * (1-x**2)**q])
 
 
-        A = Composite(domain = [-1.,1.], weight = weight, l_step = 2, r_step = 2, \
+        A = NoComposite(domain = [-1.,1.], weight = weight, l_step = 2, r_step = 2, \
                 N_start = 10, N_step = 10, tol = 1e-10, \
                 sing = np.array([-1., -xi, xi, 1.]), \
                 sing_strength = np.array([[0, q], [p, 0], [0, p], [q,0]]))
@@ -119,12 +119,28 @@ if __name__ == "__main__":
 
     unittest.main(verbosity=2)
 
-    """for all cases
-    ~1s with err~e-15 when n = 10,
-    ~10s with err~e-14 when n = 20,
-    ~40s with err~e-14 when n = 30,
-    ~100s with err~e-14 when n = 40,
-    ~200s with err~e-14 when n = 50, fails by numpy.linalg.LinAlgError: Eigenvalues did not converge
+    """
+    for case pw1, i.e. gm = 1, p = q = -1/2
+    
+    if we use composite routine,
+    
+    ~1.82s with err~e-15 when n = 10,
+    ~11.33s with err~e-14 when n = 20,
+    ~39.24s with err~e-14 when n = 30,
+    ~104.04s with err~e-14 when n = 40,
+    failed by numpy.linalg.LinAlgError: Eigenvalues did not converge when n = 50
+
+
+    if we use nocomposite routine, i.e. procedure without computing zeros of polynomials
+    
+    ~0.07s with err~e-15 when n = 10,
+    ~0.15s with err~e-15 when n = 20,
+    ~0.25s with err~e-15 when n = 30,
+    ~0.41s with err~e-15 when n = 40,
+    ~0.60s with err~e-14 when n = 50,
+    ~2.69s with err~e-14 when n = 100,
+    ~13.42s with err~e-14 when n = 200,
+    ~39.09s with err~e-14 when n = 300,
         
     """
 
