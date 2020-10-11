@@ -22,6 +22,42 @@ class ProbabilityDistribution:
 
 
 class NormalDistribution(ProbabilityDistribution):
+    """.._normal_distribution
+    
+    Constructs a normal distribution object; supports multivariate distributions
+    through tensorization.
+    In one dimension, the probability density function (by a constant) is
+
+    .. math::
+
+      w(y; \\mu, \\sigma) := e^{-\\frac{1}{2} (\\frac{x-\\mu}{\\sigma})^2}
+
+    where :math:`\\mu` is the mean and :math:`\\sigma` is the standard deviation that
+    define the distribution. Some special case of note:
+
+    - :math:`\\mu = 0, \\sigma = 1`: the standard normal distribution
+
+    In multivariate dimension, the probability density function (by a constant) is
+
+    .. math::
+
+      w(y; \\mu, \\Sigma) := e^{-\\frac{1}{2} (x - \\mu)^T \\Sigma^{-1} (x - \\mu)}
+
+    where: :math:`\\mu` is d-mensional mean vector and :math:`\\Sigma` is :math:`d\\times d` covariance matrix.
+    Note the covariance matrix must be symmetric positive definite.
+
+    Parameters:
+        mean (float or iterable of floats, optional): Mean of the distribution. Defaults to 0.
+        cov (float or np.ndarray, optional): Standard deviation or covarince matrix of the distribution. Defaults to 1.
+        dim (int, optional): Dimension of the distribution. Default to None.
+
+    Attributes:
+        dim (int, optional)
+        mean (float or iterable of floats, optional)
+        cov (float or np.ndarray, optional)
+        polys (:class:`HermitePolynomials` or list thereof):
+
+    """
     def __init__(self, mean=None, cov=None, dim=None):
 
         mean, cov = self._convert_meancov_to_iterable(mean, cov)
@@ -176,6 +212,57 @@ class NormalDistribution(ProbabilityDistribution):
 
 
 class ExponentialDistribution(ProbabilityDistribution):
+    """.. _exponential_distribution:
+
+    Constructs a Exponential distribution object; supports multivariate distributions
+    through tensorization. In one dimension, exponential distributions have support on
+    the real interval :math:`[x_0,\\infty)`, with probability density function,
+
+    .. math::
+
+      w(y;\\lambda, x_0) := \\lambda e^{-\\lambda (x - x_0)}
+
+    where :math:`\\lambda` is a positive real parameter that define the distribution.
+    Some special cases of note:
+
+    - :math:`\\lambda = 1` and :math:`x_0 = 0`: standard exponential distribution
+
+    or reflected exponential distributions, support on the real interval
+    :math:`(-\\infty,x_0]`, with probability density function,
+
+    .. math::
+
+      w(y;\\lambda, \\mu) := \\lambda e^{-\\lambda (-(x - x_0))} = \\lambda e^{\\lambda (x - x_0)}
+
+    where :math:`\\lambda` is a positive real parameter that define the distribution.
+
+    Instead of :math:`(\\lambda, x_0)`, a mean :math:`\\mu` and standard
+    deviation :math:`\\sigma` may be set. In this case, :math:`(\\mu, \\sigma)`
+    must correspond to valid values of :math:`(\\lambda, x_0)` on the interval,
+    or else an error is raised.
+
+    Finally, this class supports tensorization: multidimensional distributions
+    corresopnding to independent one-dimensional marginal distributions are
+    supported. In the case of identically distributed marginals, the `dim`
+    parameter can be set to the appropriate dimension. In case of non-identical
+    marginals, an array or iterable can be input for :math:`\\lambda, x_0,
+    \\mu, \\sigma`.
+
+    Parameters:
+        lbd (float or iterable of floats, optional): Scale parameter. Defaults to 1.
+        loc (float or iterable of floats, optional): Location parameter. Defaults to 0.
+        mean (float or iterable of floats, optional): Mean of the distribution. Defaults to None.
+        stdev (float or iterable of floats, optional): Standard deviation of the distribution. Defaults to None.
+        dim (int, optional): Dimension of the distribution. Defaults to None.
+
+    Attributes:
+        dim (int): Dimension of the distribution.
+        lbd (float or np.ndarray): Scale parameter lbd.
+        loc (float or np.ndarray): Location parameter loc.
+        polys (:class:`LaguerrePolynomials` or list thereof):
+
+    """
+    
 
     def __init__(self, flag=True, lbd=None, loc=None, mean=None, stdev=None, dim=None):
 
@@ -394,7 +481,7 @@ class BetaDistribution(ProbabilityDistribution):
     set the domain parameter below.
 
     Instead of :math:`(\\alpha, \\beta)`, a mean :math:`\\mu` and standard
-    deviation :math:``\\sigma`` may be set. In this case, :math:`(\\mu,
+    deviation :math:`\\sigma` may be set. In this case, :math:`(\\mu,
     \\sigma)` must correspond to valid (i.e., positive) values of
     :math:`(\\alpha, \\beta)` on the interval [0,1], or else an error is
     raised.
@@ -407,17 +494,12 @@ class BetaDistribution(ProbabilityDistribution):
     \\mu, \\sigma`.
 
     Parameters:
-        alpha (float or iterable of floats, optional): Shape parameter
-        associated to right-hand boundary. Defaults to 1.
-        beta (float or iterable of floats, optional): Shape parameter
-        associated to left-hand boundary. Defaults to 1.
-        mean (float or iterable of floats, optional): Mean of the distribution.
-        Defaults to None.
-        stdev (float or iterable of floats, optional): Standard deviation of
-        the distribution. Defaults to None.
+        alpha (float or iterable of floats, optional): Shape parameter associated to right-hand boundary. Defaults to 1.
+        beta (float or iterable of floats, optional): Shape parameter associated to left-hand boundary. Defaults to 1.
+        mean (float or iterable of floats, optional): Mean of the distribution. Defaults to None.
+        stdev (float or iterable of floats, optional): Standard deviation of the distribution. Defaults to None.
         dim (int, optional): Dimension of the distribution. Defaults to None.
-        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact
-        hypercube that is the support of the distribution. Defaults to None
+        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact hypercube that is the support of the distribution. Defaults to None
 
     Attributes:
         dim (int): Dimension of the distribution.
@@ -657,6 +739,25 @@ class BetaDistribution(ProbabilityDistribution):
 
 
 class DiscreteUniformDistribution(ProbabilityDistribution):
+    """.._discrete_uniform_distribution:
+
+    Constructs a Discrete Uniform distribution object; supports multivariate distributions
+    through tensorization. In one dimension, Discrete Uniform distributions have support on
+    the positive real line.
+
+    To generate this distribution on a general compact interval :math:`[a,b]`,
+    set the domain parameter below.
+
+    Parameters:
+        n (int or iterable of int, optional): Orders of each dimension. Defaults to None.
+        dim (int, optional): Dimension of the distribution. Defaults to None.
+        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact hypercube that is the support of the distribution. Defaults to None.
+
+    Attributes:
+        dim (int): Dimension of the distribution.
+        polys (:class:`JacobiPolynomials` or list thereof):
+
+    """
     def __init__(self, n=None, domain=None, dim=None):
 
         if n is None:

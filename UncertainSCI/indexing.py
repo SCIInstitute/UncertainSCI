@@ -8,11 +8,7 @@ from UncertainSCI.utils.prob import discrete_sampling
 
 
 def hyperbolic_cross_indices(d, k):
-    """
-    Returns indices associated with a d-dimensional (isotropic)
-    hyperbolic cross index space up to degree k.
-    """
-
+    
     assert k >= 0
     assert d >= 1
 
@@ -75,10 +71,7 @@ def hyperbolic_cross_indices(d, k):
 
 
 def total_degree_indices(d, k):
-    # Returns multi-indices associated with d-variate polynomials of
-    # degree less than or equal to k. Each row is a multi-index, ordered
-    # in total-degree-graded reverse lexicographic ordering.
-
+    
     assert d > 0
     assert k >= 0
 
@@ -217,6 +210,19 @@ def sampling_total_degree_indices(N, d, k):
 
 
 class LpSet():
+    """.._total_degree_indices
+
+    Returns multi-indices associated with d-variate polynomials of
+    degree less than or equal to k. Each row is a multi-index, ordered
+    in p degree, p could be any positive number including numpy.inf
+    
+    Parameters:
+        d (int, required): Dimension of Lp space.
+        k (int, required): highest degree of Lp space.
+        p (float, int, inf, required): ordered degree
+    
+    """
+
     def __init__(self, dim=1, order=0, p=1):
         assert dim > 0 and order >= 0 and p >= 0
         self.dim = dim
@@ -253,6 +259,18 @@ class MultiIndexSet():
 
 
 class TotalDegreeSet(MultiIndexSet):
+    """.._total_degree_indices
+
+    Returns multi-indices associated with d-variate polynomials of
+    degree less than or equal to k. Each row is a multi-index, ordered
+    in total-degree-graded reverse lexicographic ordering.
+    
+    Parameters:
+        d (int, required): Dimension of total degree index space.
+        k (int, required): highest degree of total degree index space.
+    
+    """
+    
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
@@ -263,6 +281,17 @@ class TotalDegreeSet(MultiIndexSet):
 
 
 class HyperbolicCrossSet(MultiIndexSet):
+    """.._hyperbolic_cross_indices
+
+    Returns indices associated with a d-dimensional (isotropic)
+    hyperbolic cross index space up to degree k.
+
+    Parameters:
+        d (int, required): Dimension of hyperbolic cross index space.
+        k (int, required): highest degree of hyperbolic cross index space.
+    
+    """
+
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
