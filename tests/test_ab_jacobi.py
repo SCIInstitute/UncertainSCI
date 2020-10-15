@@ -8,13 +8,14 @@ import pdb
 class IDistTestCase(unittest.TestCase):
 
     def test_jacobi(self):
-        n = 300
+        n = 50
 
-        alpha = np.random.uniform(-1, 5)
-        beta = np.random.uniform(-1, 5)
+        #alpha = np.random.uniform(-1, 5)
+        #beta = np.random.uniform(-1, 5)
+        alpha, beta = 0.014562820144002897, -0.7082352763985857
         print (alpha,beta)
 
-        A = NoComposite(domain = [-1,1], weight = lambda x: (1-x)**alpha * (1+x)**beta, \
+        A = Composite(domain = [-1,1], weight = lambda x: (1-x)**alpha * (1+x)**beta, \
                 l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-12, \
                 sing = np.array([-1,1]), sing_strength = np.array([[0,beta],[alpha,0]]))
         ab = A.recurrence(N = n)
@@ -81,3 +82,9 @@ if __name__ == "__main__":
     ~30.46s with err~e-14 when n = 300,
     
     """
+
+    alpha, beta = 0.014562820144002897, -0.7082352763985857
+
+    A = Composite(domain = [-1,1], weight = lambda x: (1-x)**alpha * (1+x)**beta, \
+            l_step = 2, r_step = 2, N_start = 10, N_step = 10, tol = 1e-12, \
+            sing = np.array([-1,1]), sing_strength = np.array([[0,beta],[alpha,0]]))

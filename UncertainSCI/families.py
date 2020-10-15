@@ -20,6 +20,17 @@ from scipy import special as sp
 from scipy.stats import beta as bbeta
 from scipy.stats import gamma
 
+def jacobi_weight_normalized(x, alpha, beta):
+    """
+    Evaluates the Jacobi weight function defined as 
+
+      w(x) = (1/B(beta+1,alpha+1)) * (1-x)**alpha, (1+x)**beta,
+
+    for alpha, beta > -1, and |x| <= 1. This weight function is a probability
+    density on [-1,1].
+    """
+
+    return 1/bbeta(beta+1,alpha+1) * (1-x)**alpha * (1+x)**beta
 
 def jacobi_recurrence_values(N, alpha, beta):
     """

@@ -42,7 +42,7 @@ class Composite():
         self.sing_strength = sing_strength
         self.tol = tol
 
-    def find_demar(self, zeros):
+    def find_demar(self, zeros=()):
         """
         Given zeros of polynomials, find the demarcations of interval,
         i.e. end points of subintervals
@@ -299,7 +299,7 @@ class Composite():
         return ab
 
 
-    def stieltjes(self, N):
+    def stieltjes(self, N, method=0):
         """
         return (N+1)x2 recurrence coefficients using stieltjes method
         """
