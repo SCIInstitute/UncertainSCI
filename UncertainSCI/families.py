@@ -24,13 +24,15 @@ def jacobi_weight_normalized(x, alpha, beta):
     """
     Evaluates the Jacobi weight function defined as 
 
-      w(x) = (1/B(beta+1,alpha+1)) * (1-x)**alpha, (1+x)**beta,
+      w(x) = C(alpha,beta) * (1-x)**alpha, (1+x)**beta,
+
+      1/C(alpha,beta) = B(beta+1,alpha+1) * 2**(alpha+beta+1)
 
     for alpha, beta > -1, and |x| <= 1. This weight function is a probability
     density on [-1,1].
     """
 
-    return 1/bbeta(beta+1,alpha+1) * (1-x)**alpha * (1+x)**beta
+    return 1/(2**(alpha+beta+1)*sp.beta(beta+1,alpha+1)) * (1-x)**alpha * (1+x)**beta
 
 def jacobi_recurrence_values(N, alpha, beta):
     """
@@ -301,7 +303,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         # Returns the first N+1 recurrence coefficient pairs for the Jacobi
         # polynomial family.
         ab = jacobi_recurrence_values(N, self.alpha, self.beta)
-        if self.probability_measure and N > 0:
+        if self.probability_measure and N >= 0:
             ab[0, 1] = 1.
 
         return ab

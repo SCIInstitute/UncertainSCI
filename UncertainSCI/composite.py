@@ -1,8 +1,9 @@
 import numpy as np
 from UncertainSCI.families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
-from UncertainSCI.opoly1d import linear_modification, quadratic_modification
+from UncertainSCI.opoly1d import linear_modification, quadratic_modification, eval_driver, leading_coefficient_driver
 from UncertainSCI.opoly1d import gauss_quadrature_driver, jacobi_matrix_driver
 from UncertainSCI.utils.array_unique import array_unique
+from UncertainSCI.utils.quad import gq_modification_composite
 import pdb
 import UncertainSCI as uSCI
 import os
@@ -10,11 +11,156 @@ import scipy.io as sio
 from scipy.linalg import null_space
 import cProfile
 
+def compute_subintervals(a, b, singularity_list):
+    """
+    Returns an M x 4 numpy array, where each row contains the left-hand point,
+    right-hand point, left-singularity strength, and right-singularity
+    strength.
+    """
+
+    # Tolerance for resolving internal versus boundary singularities.
+    tol = 1e-8
+    singularities  = np.array([entry[0] for entry in singularity_list])
+    strength_left  = np.array([entry[1] for entry in singularity_list])
+    strength_right = np.array([entry[2] for entry in singularity_list])
+
+    # We can discard any singularities that lie to the left of a or the right of b
+    discard = []
+    for (ind,s) in enumerate(singularities):
+        if s < a-tol or s > b+tol:
+            discard.append(ind)
+
+    singularities  = np.delete(singularities, discard)
+    strength_left  = np.delete(strength_left, discard)
+    strength_right = np.delete(strength_right, discard)
+
+    # Sort remaining valid singularities
+    order = np.argsort(singularities)
+    singularities  = singularities[order]
+    strength_left  = strength_left[order]
+    strength_right = strength_right[order]
+
+    # Make sure there aren't doubly-specified singularities
+    if np.any(np.diff(singularities) < tol):
+        raise ValueError("Overlapping singularities were specified. Singularities must be unique")
+
+    S = singularities.size
+
+    if S > 0:
+
+        # Extend the singularities lists if we need to add interval endpoints
+        a_sing = np.abs(singularities[0] - a) <= tol
+        b_sing = np.abs(singularities[-1] - b) <= tol
+
+        # Figure out if singularities match endpoints
+        if not b_sing:
+            singularities = np.hstack([singularities, b])
+            strength_left = np.hstack([singularities, 0])
+            strength_right = np.hstack([singularities, 0]) # Doesn't matter
+        if not a_sing:
+            singularities = np.hstack([a, singularities])
+            strength_left = np.hstack([0, singularities])  # Doesn't matter
+            strength_right = np.hstack([0, singularities]) # Doesn't matter
+
+
+        # Use the singularities lists to identify subintervals
+        S = singularities.size
+        subintervals = np.zeros([S-1, 4])
+        for q in range(S-1):
+            subintervals[q,:] = [singularities[q], singularities[q+1], strength_right[q], strength_left[q+1]]
+
+    else:
+
+        subintervals = np.zeros([1, 4])
+        subintervals[0,:] = [a, b, 0, 0]
+
+    return subintervals
+
+
+def compute_ttr_bounded(a, b, weight, N, singularity_list, Nquad=10):
+    """ Three-term recurrence coefficients from quadrature
+
+    Computes the first N three-term recurrence coefficient pairs associated to
+    weight on the bounded interval [a,b]. 
+
+    Performs global integration on [a,b] using utils.quad.gq_modification_composite.
+    """
+
+    assert a < b
+
+    # First divide [a,b] into subintervals based on singularity locations.
+    subintervals = compute_subintervals(a, b, singularity_list)
+
+    ab = np.zeros([N, 2])
+    ab[0,1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad, subintervals=subintervals))
+
+    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+
+    for n in range(0,N-1):
+        # Guess next coefficients
+        ab[n+1,0], ab[n+1,1] = ab[n,0], ab[n,1]
+
+        integrand = lambda x: weight(x) * peval(x,n).flatten() * peval(x, n+1).flatten()
+        ab[n+1,0] += ab[n,1] * gq_modification_composite(integrand, a, b, n+1+Nquad, subintervals)
+
+        integrand = lambda x: weight(x) * peval(x, n+1).flatten()**2
+        ab[n+1,1] *= np.sqrt(gq_modification_composite(integrand, a, b, n+1+Nquad, subintervals))
+
+    return ab
+
+def compute_ttr_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
+    """ Three-term recurrence coefficients from composite quadrature
+
+    Computes the first N three-term recurrence coefficient pairs associated to
+    weight on the bounded interval [a,b]. 
+
+    Performs composite quadrature on [a,b] using utils.quad.gq_modification_composite.
+    """
+
+    assert a < b
+
+    # First divide [a,b] into subintervals based on singularity locations.
+    global_subintervals = compute_subintervals(a, b, singularity_list)
+
+    ab = np.zeros([N, 2])
+    ab[0,1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad, subintervals=global_subintervals))
+
+    integrand = weight
+
+    for n in range(0,N-1):
+        # Guess next coefficients
+        ab[n+1,0], ab[n+1,1] = ab[n,0], ab[n,1]
+
+        # Set up linear modification roots and subintervals
+        breaks = singularity_list.copy()
+        pn_zeros = gauss_quadrature_driver(ab, n)[0]
+        pn1_zeros = gauss_quadrature_driver(ab, n+1)[0]
+
+        roots = np.hstack([pn_zeros, pn1_zeros])
+        breaks += [[z, 0, 0] for z in roots]
+        subintervals = compute_subintervals(a, b, breaks)
+
+        # Leading coefficient
+        qlc = np.prod(leading_coefficient_driver(n+2, ab)[-2:])
+
+        ab[n+1,0] += ab[n,1] * gq_modification_composite(integrand, a, b, n+1+Nquad, subintervals,roots=roots, leading_coefficient=qlc)
+
+        # Here subintervals are the global ones
+        pn1_zeros = gauss_quadrature_driver(ab, n+1)[0]
+        qlc = (leading_coefficient_driver(n+2, ab)[-1])**2
+
+        #if n==1:
+        #    asdf
+
+        ab[n+1,1] *= np.sqrt(gq_modification_composite(integrand, a, b, n+1+Nquad, global_subintervals, quadroots=pn1_zeros, leading_coefficient=qlc))
+
+    return ab
+
 class Composite():
     def __init__(self, domain, weight, l_step, r_step, N_start, N_step, sing, sing_strength, tol):
         """
         The computation of recurrence coefficients mainly envolves
-        computing \int_{s_j} q(x) d\mu(x)
+        computing \\int_{s_j} q(x) d\\mu(x)
 
         Params
         ------
@@ -57,7 +203,7 @@ class Composite():
         Given a weight function w(x) with an associated orthonormal polynomial family {p_n}
         and its recurrence coefficients {a_n, b_n}
         
-        Given a bijective affine map A: \R to \R of form A(x) = b*x + a, a,b \in \R
+        Given a bijective affine map A: \\R to \\R of form A(x) = b*x + a, a,b \\in \\R
         b and a can be obtained using change of variables
 
         Aim to find recurrence coefficients {alpha_n, beta_n} for a new sequence of polynomials
@@ -82,9 +228,9 @@ class Composite():
         we use affine_mapping method to compute the recurrence coefficients wrt
         the mapped Legendre measure on [a,b], mapping from [-1,1] to [a,b],
         then compute the GQ nodes and weights using the gauss_quadrature_driver method,
-        i.e. \int_a^b q(x) w(x) dx ~ \sum_{i=1}^M q(xg_i) w(xg_i) wg_i,
+        i.e. \\int_a^b q(x) w(x) dx ~ \\sum_{i=1}^M q(xg_i) w(xg_i) wg_i,
 
-        \int_a^b q(x) d\mu(x) = \int_a^b q(x) w(x) dx = \sum_{i=1}^M q(x_i) w(x_i) w_i
+        \\int_a^b q(x) d\\mu(x) = \\int_a^b q(x) w(x) dx = \\sum_{i=1}^M q(x_i) w(x_i) w_i
         {x_i,w_i}_{i=1}^M are GQ nodes and weights wrt mapped Legendre measure on [a,b]
         """
         if lin:
@@ -166,7 +312,7 @@ class Composite():
 
     def eval_integral(self, a, b, zeros, leadingc, lin = True, addzeros = []):
         """
-        compute the integral \int_a^b q(x) dmu(x) with an iterated updating quadrature points
+        compute the integral \\int_a^b q(x) dmu(x) with an iterated updating quadrature points
         addzeros only for the purpuse of stieltjes method
         """
         N_quad = len(zeros) + self.N_start
@@ -203,7 +349,7 @@ class Composite():
     
     def eval_extend(self, a, b, zeros, leadingc, lin = True, addzeros = []):
         """
-        compute the integral \int_a^b q(x) dmu(x) when the boundaries a and/or b is inf
+        compute the integral \\int_a^b q(x) dmu(x) when the boundaries a and/or b is inf
         using an interval extension strategy
         """
         if a == -np.inf and b == np.inf:
