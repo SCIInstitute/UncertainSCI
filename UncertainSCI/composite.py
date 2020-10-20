@@ -1,15 +1,10 @@
 import numpy as np
-from UncertainSCI.families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
-from UncertainSCI.opoly1d import linear_modification, quadratic_modification, eval_driver, leading_coefficient_driver
-from UncertainSCI.opoly1d import gauss_quadrature_driver, jacobi_matrix_driver
-from UncertainSCI.utils.array_unique import array_unique
+
+from UncertainSCI.opoly1d import linear_modification, quadratic_modification
+from UncertainSCI.opoly1d import eval_driver, leading_coefficient_driver
+from UncertainSCI.opoly1d import gauss_quadrature_driver
+
 from UncertainSCI.utils.quad import gq_modification_composite
-import pdb
-import UncertainSCI as uSCI
-import os
-import scipy.io as sio
-from scipy.linalg import null_space
-import cProfile
 
 def compute_subintervals(a, b, singularity_list):
     """
@@ -55,12 +50,12 @@ def compute_subintervals(a, b, singularity_list):
         # Figure out if singularities match endpoints
         if not b_sing:
             singularities = np.hstack([singularities, b])
-            strength_left = np.hstack([singularities, 0])
-            strength_right = np.hstack([singularities, 0]) # Doesn't matter
+            strength_left = np.hstack([strength_left, 0])
+            strength_right = np.hstack([strength_right, 0]) # Doesn't matter
         if not a_sing:
             singularities = np.hstack([a, singularities])
-            strength_left = np.hstack([0, singularities])  # Doesn't matter
-            strength_right = np.hstack([0, singularities]) # Doesn't matter
+            strength_left = np.hstack([0, strength_left])  # Doesn't matter
+            strength_right = np.hstack([0, strength_right]) # Doesn't matter
 
 
         # Use the singularities lists to identify subintervals
@@ -105,8 +100,90 @@ def compute_ttr_bounded(a, b, weight, N, singularity_list, Nquad=10):
 
         integrand = lambda x: weight(x) * peval(x, n+1).flatten()**2
         ab[n+1,1] *= np.sqrt(gq_modification_composite(integrand, a, b, n+1+Nquad, subintervals))
+        
 
     return ab
+
+
+
+def gq_modification_unbounded_composite(integrand, a, b, N, singularity_list, adaptive=True, tol = 1e-8, step = 2, **kwargs):
+    """
+    Functional as the same as util.quad.gq_modification_composite but with a unbounded interval [a,b]
+    I expect this method lying in the util.quad, but the issue is:
+
+    1. Subintervals are changed when extending the intervals that we're integrating on,
+    thus subintervals cannot be a argument, instead, We use singularity_list.
+
+    2. Method compute_subintervals in the composite is required to obtain the subintervals for different interval [a,b]
+
+    So We temporarily put this method here, maybe change this later for bettter consideration.
+    """
+    
+    if a == -np.inf and b == np.inf:
+        l = -1.; r = 1.
+        subintervals = compute_subintervals(l, r, singularity_list)
+        integral = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)  
+        
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            r = l; l = r - step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+        
+        l = -1.; r = 1.
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            l = r; r = l + step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+
+    elif a == -np.inf:
+        r = b; l = b - step
+        subintervals = compute_subintervals(l, r, singularity_list)
+        integral = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            r = l; l = r - step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+
+    elif b == np.inf:
+        l = a; r = a + step
+        subintervals = compute_subintervals(l, r, singularity_list)
+        integral = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            l = r; r = l + step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+    
+    return integral
+
+
+
+def compute_ttr_unbounded(a, b, weight, N, singularity_list, Nquad=10):
+    assert a < b
+    ab = np.zeros([N, 2])
+    ab[0,1] = np.sqrt(gq_modification_unbounded_composite(weight, a, b, Nquad, singularity_list))
+
+    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+
+    for n in range(0,N-1):
+        # Guess next coefficients
+        ab[n+1,0], ab[n+1,1] = ab[n,0], ab[n,1]
+
+        integrand = lambda x: weight(x) * peval(x,n).flatten() * peval(x, n+1).flatten()
+        ab[n+1,0] += ab[n,1] * gq_modification_unbounded_composite(integrand, a, b, n+1+Nquad, singularity_list)
+
+        integrand = lambda x: weight(x) * peval(x, n+1).flatten()**2
+        ab[n+1,1] *= np.sqrt(gq_modification_unbounded_composite(integrand, a, b, n+1+Nquad, singularity_list))
+
+    return ab
+
 
 def compute_ttr_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
     """ Three-term recurrence coefficients from composite quadrature
@@ -155,6 +232,41 @@ def compute_ttr_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
         ab[n+1,1] *= np.sqrt(gq_modification_composite(integrand, a, b, n+1+Nquad, global_subintervals, quadroots=pn1_zeros, leading_coefficient=qlc))
 
     return ab
+
+def compute_ttr_unbounded_composite(a, b, weight, N, singularity_list, Nquad=10):
+    assert a < b
+
+    ab = np.zeros([N, 2])
+    ab[0,1] = np.sqrt(gq_modification_unbounded_composite(weight, a, b, Nquad, singularity_list))
+
+    integrand = weight
+
+    for n in range(0,N-1):
+        # Guess next coefficients
+        ab[n+1,0], ab[n+1,1] = ab[n,0], ab[n,1]
+
+        # Set up linear modification roots and subintervals
+        breaks = singularity_list.copy()
+        pn_zeros = gauss_quadrature_driver(ab, n)[0]
+        pn1_zeros = gauss_quadrature_driver(ab, n+1)[0]
+
+        roots = np.hstack([pn_zeros, pn1_zeros])
+        breaks += [[z, 0, 0] for z in roots]
+
+        # Leading coefficient
+        qlc = np.prod(leading_coefficient_driver(n+2, ab)[-2:])
+
+        ab[n+1,0] += ab[n,1] * gq_modification_unbounded_composite(integrand, a, b, n+1+Nquad, breaks ,roots=roots, leading_coefficient=qlc)
+
+        # Here subintervals are the global ones
+        pn1_zeros = gauss_quadrature_driver(ab, n+1)[0]
+        qlc = (leading_coefficient_driver(n+2, ab)[-1])**2
+
+        ab[n+1,1] *= np.sqrt(gq_modification_unbounded_composite(integrand, a, b, n+1+Nquad, singularity_list, quadroots=pn1_zeros, leading_coefficient=qlc))
+
+    return ab
+
+
 
 class Composite():
     def __init__(self, domain, weight, l_step, r_step, N_start, N_step, sing, sing_strength, tol):
@@ -719,30 +831,3 @@ class Composite():
             ab[i,1] = np.sqrt(s_1 - s_2)
                 
         return ab
-
-
-if __name__ == '__main__':
-    A = Composite(domain = [-np.inf,np.inf], weight = lambda x: np.exp(-x**4), \
-        l_step = 2, r_step = 2, N_start = 10, N_step = 10, \
-        sing = np.zeros(0,), sing_strength = np.zeros(0,), tol = 1e-10)
-
-    # m = A.eval_mom(k = 2)
-    # c = A.eval_coeff_aPC(k = 2)
-    # c0 = (-m[2]*m[1]**2 + m[2]**2*m[0] - m[3]*m[0]*m[1] + m[1]**2*m[2]) \
-            # / (m[0]*m[1]**2 - m[2]*m[0]**2)
-    # c1 = (m[3]*m[0] - m[1]*m[2]) / (m[1]**2 - m[2]*m[0])
-    
-    
-    n = 5
-    data_dir = os.path.dirname(uSCI.__file__)
-    mat_fname = os.path.join(data_dir, 'ab_exact_4.mat')
-    mat_contents = sio.loadmat(mat_fname)
-    ab_exact = mat_contents['coeff'][:n+1]
-
-
-    ab = A.recurrence(N = n)
-    ab_s = A.stieltjes(N = n)
-    # ab_aPC = A.aPC(N = n)
-    # print (np.linalg.norm(ab - ab_exact, None))
-    # print (np.linalg.norm(ab_s - ab_exact, None))
-    # print (np.linalg.norm(ab_aPC - ab_exact, None)) # too slow!

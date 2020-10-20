@@ -3,9 +3,11 @@ import numpy as np
 from UncertainSCI.families import jacobi_recurrence_values, jacobi_weight_normalized
 
 from UncertainSCI.opoly1d import linear_modification, quadratic_modification
-from UncertainSCI.opoly1d import gauss_quadrature_driver, jacobi_matrix_driver
+from UncertainSCI.opoly1d import gauss_quadrature_driver
 
-def gq_modification(integrand, a, b, N, roots=np.zeros(0), quadroots=np.zeros(0), Nmax=100, gamma=(0,0), leading_coefficient=1., adaptive=True):
+import pdb
+
+def gq_modification(integrand, a, b, N, roots=np.zeros(0), quadroots=np.zeros(0), Nmax=100, gamma=(0,0), leading_coefficient=1.):
     """
     Uses Gaussian quadrature to approximate
 
@@ -100,7 +102,17 @@ def gq_modification(integrand, a, b, N, roots=np.zeros(0), quadroots=np.zeros(0)
 
     return integral
 
-def gq_modification_composite(integrand, a, b, N, subintervals=np.zeros([0,4]), **kwargs):
+def gq_modification_adaptive(integrand, a, b, N, N_step = 10, tol = 1e-8, **kwargs):
+    s = gq_modification(integrand, a, b, N, **kwargs)
+    s_new = gq_modification(integrand, a, b, N = N + N_step, **kwargs)
+    
+    while np.abs(s - s_new) > tol:
+        s = s_new
+        N += N_step
+        s_new = gq_modification(integrand, a, b, N = N, **kwargs)
+    return s_new
+
+def gq_modification_composite(integrand, a, b, N, subintervals=np.zeros([0,4]), adaptive=True, **kwargs):
     """
     Uses a composite quadrature rule where each subinterval uses
     gq_modification to integrate. The integral is split into
@@ -125,7 +137,6 @@ def gq_modification_composite(integrand, a, b, N, subintervals=np.zeros([0,4]), 
 
     See gq_modification for a description of these inputs.
     """
-
     integral = 0.
 
     if subintervals.shape[0] == 0:
@@ -134,6 +145,9 @@ def gq_modification_composite(integrand, a, b, N, subintervals=np.zeros([0,4]), 
 
     for q in range(subintervals.shape[0]):
         gamma = [subintervals[q,3], subintervals[q,2]]
-        integral += gq_modification(integrand, subintervals[q,0], subintervals[q,1], N, gamma=gamma, **kwargs)
+        if adaptive:
+            integral += gq_modification_adaptive(integrand, subintervals[q,0], subintervals[q,1], N, gamma=gamma, **kwargs)
+        else:
+            integral += gq_modification(integrand, subintervals[q,0], subintervals[q,1], N, gamma=gamma, **kwargs)
 
     return integral
