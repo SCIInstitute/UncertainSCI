@@ -102,7 +102,7 @@ def gq_modification(integrand, a, b, N, roots=np.zeros(0), quadroots=np.zeros(0)
 
     return integral
 
-def gq_modification_adaptive(integrand, a, b, N, N_step = 10, tol = 1e-8, **kwargs):
+def gq_modification_adaptive(integrand, a, b, N, N_step = 10, tol = 1e-12, **kwargs):
     s = gq_modification(integrand, a, b, N, **kwargs)
     s_new = gq_modification(integrand, a, b, N = N + N_step, **kwargs)
     

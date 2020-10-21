@@ -134,12 +134,8 @@ class TTRTestCase(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main(verbosity=2)
     
-    """Ran 4 tests in 160.975s
-    
-    in test_stieltjes_unbounded_composite
-    AssertionError: 1.3044781255189264e-07 != 0 within 1e-08 delta : Failed for (N) = (20)
-
-    which is okay for tolerance issues.
+    """
+    Ran 4 tests in 167.953s
     
     N = 100 for nocomposite and N = 20 for composite
     

@@ -122,7 +122,8 @@ class TTRTestCase(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
-    """Ran 4 tests in 51.785s
+    """
+    Ran 4 tests in 50.237s
 
     N = 100 for nocomposite and N = 20 for composite
     
