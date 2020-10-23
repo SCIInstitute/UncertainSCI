@@ -6,6 +6,8 @@ from UncertainSCI.opoly1d import gauss_quadrature_driver
 
 from UncertainSCI.utils.quad import gq_modification_composite
 
+import pdb
+
 def compute_subintervals(a, b, singularity_list):
     """
     Returns an M x 4 numpy array, where each row contains the left-hand point,
@@ -104,6 +106,27 @@ def compute_ttr_bounded(a, b, weight, N, singularity_list, Nquad=10):
 
     return ab
 
+
+def compute_ttr_discrete(xg, wg, N):
+
+    assert all(i >=0 for i in wg)
+    assert N <= len(xg)
+
+    ab = np.zeros([N, 2])
+    ab[0,1] = np.sqrt(np.sum(wg))
+
+    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+
+    for n in range(0,N-1):
+        # Guess next coefficients
+        ab[n+1,0], ab[n+1,1] = ab[n,0], ab[n,1]
+
+        integrand = lambda x: peval(x,n).flatten() * peval(x, n+1).flatten()
+        ab[n+1,0] += ab[n,1] * np.sum(integrand(xg) * wg)
+        integrand = lambda x: peval(x, n+1).flatten()**2
+        ab[n+1,1] *= np.sqrt( np.sum(integrand(xg) * wg) )
+        
+    return ab
 
 
 def gq_modification_unbounded_composite(integrand, a, b, N, singularity_list, adaptive=True, tol = 1e-12, step = 1, **kwargs):
