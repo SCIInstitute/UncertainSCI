@@ -5,8 +5,8 @@ import numpy as np
 from UncertainSCI.families import jacobi_weight_normalized, jacobi_recurrence_values
 from UncertainSCI.families import hermite_recurrence_values
 
-from UncertainSCI.composite import compute_ttr_bounded, compute_ttr_unbounded
-from UncertainSCI.composite import compute_ttr_bounded_composite, compute_ttr_unbounded_composite
+from UncertainSCI.mthd_mod_correct import compute_ttr_bounded, compute_ttr_unbounded
+from UncertainSCI.mthd_mod_correct import compute_ttr_bounded_composite, compute_ttr_unbounded_composite
 
 class TTRTestCase(unittest.TestCase):
     """
