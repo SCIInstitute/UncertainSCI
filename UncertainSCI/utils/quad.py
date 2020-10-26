@@ -87,7 +87,7 @@ def gq_modification(integrand, a, b, N, roots=np.zeros(0), quadroots=np.zeros(0)
             ab = quadratic_modification(ab, map_to_standard(x0))
             ab[0,1] *= C
         for x0 in roots:
-            ab,_ = linear_modification(ab, map_to_standard(x0))
+            ab = linear_modification(ab, map_to_standard(x0))
             ab[0,1] *= Csqrt
     else:
         ab[0,1] *= np.abs(leading_coefficient)

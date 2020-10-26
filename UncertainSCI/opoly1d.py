@@ -350,7 +350,7 @@ def linear_modification(alphbet, x0):
     bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
     ab[:, 1] = alphbet[:-1, 1] * np.sqrt(bcorrect)
     
-    return ab,sgn
+    return ab
 
 
 class OrthogonalPolynomialBasis1D:
