@@ -6,6 +6,7 @@ import numpy as np
 
 from UncertainSCI.utils import quad
 from UncertainSCI.families import JacobiPolynomials, jacobi_weight_normalized
+from UncertainSCI.families import HermitePolynomials
 
 class QuadTestCase(unittest.TestCase):
     """

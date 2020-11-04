@@ -5,7 +5,7 @@ from UncertainSCI.families import jacobi_recurrence_values, jacobi_weight_normal
 from UncertainSCI.opoly1d import linear_modification, quadratic_modification
 from UncertainSCI.opoly1d import gauss_quadrature_driver
 
-import pdb
+from UncertainSCI.utils.compute_subintervals import compute_subintervals
 
 def gq_modification(integrand, a, b, N, roots=np.zeros(0), quadroots=np.zeros(0), Nmax=100, gamma=(0,0), leading_coefficient=1.):
     """
@@ -151,3 +151,61 @@ def gq_modification_composite(integrand, a, b, N, subintervals=np.zeros([0,4]), 
             integral += gq_modification(integrand, subintervals[q,0], subintervals[q,1], N, gamma=gamma, **kwargs)
 
     return integral
+
+def gq_modification_unbounded_composite(integrand, a, b, N, singularity_list, adaptive=True, tol = 1e-12, step = 1, **kwargs):
+    """
+    Functional as the same as util.quad.gq_modification_composite but with a unbounded interval [a,b]
+    I expect this method lying in the util.quad, but the issue is:
+
+    1. Subintervals are changed when extending the intervals that we're integrating on,
+    thus subintervals cannot be a argument, instead, We use singularity_list.
+
+    2. Method compute_subintervals in the composite is required to obtain the subintervals for different interval [a,b]
+
+    So We temporarily put this method here, maybe change this later for bettter consideration.
+    """
+    
+    if a == -np.inf and b == np.inf:
+        l = -1.; r = 1.
+        subintervals = compute_subintervals(l, r, singularity_list)
+        integral = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)  
+        
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            r = l; l = r - step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+        
+        l = -1.; r = 1.
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            l = r; r = l + step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+
+    elif a == -np.inf:
+        r = b; l = b - step
+        subintervals = compute_subintervals(l, r, singularity_list)
+        integral = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            r = l; l = r - step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+
+    elif b == np.inf:
+        l = a; r = a + step
+        subintervals = compute_subintervals(l, r, singularity_list)
+        integral = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+        integral_new = 1.
+        while np.abs(integral_new) > tol:
+            l = r; r = l + step
+            subintervals = compute_subintervals(l, r, singularity_list)
+            integral_new = gq_modification_composite(integrand, l, r, N, subintervals, adaptive, **kwargs)
+            integral += integral_new
+    
+    return integral
+
