@@ -33,9 +33,9 @@ b = 1.
 
 xi = 1/10
 yita = (1-xi)/(1+xi)
-gm = -1
-p = 1/2
-q = 1/2
+gm = 1
+p = -1/2
+q = -1/2
 
 def ab_pws1(N):
     """
@@ -124,7 +124,7 @@ singularity_list = [ [-1, 0, q],
                      [1, q, 0]
                      ]
 
-N_array = [10, 20, 40, 80]
+N_array = [20, 40, 60, 80, 100]
 
 t_predict_correct = np.zeros(len(N_array))
 t_stieltjes = np.zeros(len(N_array))
@@ -143,7 +143,7 @@ for k in tqdm(iter_n):
     
     for ind, N in enumerate(N_array):
         
-        ab = ab_pws4(N)[:N]
+        ab = ab_pws1(N)[:N]
 
         m = compute_mom_bounded(a, b, weight, N, singularity_list)
 

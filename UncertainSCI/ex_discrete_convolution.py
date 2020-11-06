@@ -6,6 +6,8 @@ from UncertainSCI.compute_ttr import predict_correct_discrete, stieltjes_discret
 from UncertainSCI.utils.compute_mom import compute_mom_discrete
 from UncertainSCI.families import JacobiPolynomials
 
+from UncertainSCI.utils.verify_orthonormal import verify_orthonormal
+
 import time
 from tqdm import tqdm
 
@@ -112,14 +114,16 @@ du = (u[-1] - u[0]) / (n-1)
 q = compute_q(a = a, N = n)
 w = du*q
 
-N_array = [10, 20, 40, 80]
+N_array = [20, 40, 60, 80, 100]
 
+t_lanczos = np.zeros(len(N_array))
 t_predict_correct = np.zeros(len(N_array))
 t_stieltjes = np.zeros(len(N_array))
 t_aPC = np.zeros(len(N_array))
 t_hankel_det = np.zeros(len(N_array))
 t_mod_cheb = np.zeros(len(N_array))
 
+l2_lanczos = np.zeros(len(N_array))
 l2_predict_correct = np.zeros(len(N_array))
 l2_stieltjes = np.zeros(len(N_array))
 l2_aPC = np.zeros(len(N_array))
@@ -130,39 +134,49 @@ iter_n = np.arange(10)
 for k in tqdm(iter_n):
     
     for ind, N in enumerate(N_array):
-        
-        ab = lanczos_stable(u, w)[:N,:]
 
         m = compute_mom_discrete(u, w, N)
+
+        # Lanczos
+        start = time.time()
+        ab_lanczos = lanczos_stable(u, w)[:N]
+        end = time.time()
+        t_lanczos[ind] += (end - start) / len(iter_n)
+        l2_lanczos[ind] += np.linalg.norm(verify_orthonormal(ab_lanczos, np.arange(N), u, w) - np.eye(N), None)
+        
 
         # Predict-Correct
         start = time.time()
         ab_predict_correct = predict_correct_discrete(u, w, N)
         end = time.time()
         t_predict_correct[ind] += (end - start) / len(iter_n)
-        l2_predict_correct[ind] += np.linalg.norm(ab - ab_predict_correct, None) / len(iter_n)
+        l2_predict_correct[ind] += np.linalg.norm(verify_orthonormal(ab_predict_correct, np.arange(N), u, w) - np.eye(N), None)
+        
 
         # Stieltjes
         start = time.time()
         ab_stieltjes = stieltjes_discrete(u, w, N)
         end = time.time()
         t_stieltjes[ind] += (end - start) / len(iter_n)
-        l2_stieltjes[ind] += np.linalg.norm(ab - ab_stieltjes, None) / len(iter_n)
+        l2_stieltjes[ind] += np.linalg.norm(verify_orthonormal(ab_stieltjes, np.arange(N), u, w) - np.eye(N), None)
+        
 
         # Arbitrary Polynomial Chaos Expansion
         start = time.time()
         ab_aPC = aPC_discrete(u, w, N, m)
         end = time.time()
         t_aPC[ind] += (end - start) / len(iter_n)
-        l2_aPC[ind] += np.linalg.norm(ab - ab_aPC, None) / len(iter_n)
-
+        l2_aPC[ind] += np.linalg.norm(verify_orthonormal(ab_aPC, np.arange(N), u, w) - np.eye(N), None)
+        
+        
         # Hankel Determinant
         start = time.time()
         ab_hankel_det = hankel_det(N, m)
         end = time.time()
         t_hankel_det[ind] += (end - start) / len(iter_n)
-        l2_hankel_det[ind] += np.linalg.norm(ab - ab_hankel_det, None) / len(iter_n)
-
+        l2_hankel_det[ind] += np.linalg.norm(verify_orthonormal(ab_hankel_det, np.arange(N), u, w) - np.eye(N), None)
+        
+    
         # Modified Chebyshev
         J = JacobiPolynomials(probability_measure=False)
         peval = lambda x, n: J.eval(x, n)
@@ -174,7 +188,9 @@ for k in tqdm(iter_n):
         ab_mod_cheb = mod_cheb(N, mod_mom, J)
         end = time.time()
         t_mod_cheb[ind] += (end - start) / len(iter_n)
-        l2_mod_cheb[ind] += np.linalg.norm(ab - ab_mod_cheb, None) / len(iter_n)
+        l2_mod_cheb[ind] += np.linalg.norm(verify_orthonormal(ab_mod_cheb, np.arange(N), u, w) - np.eye(N), None)
+
+
 
 """
 N_array = [10, 20, 40, 80] with tol = 1e-12

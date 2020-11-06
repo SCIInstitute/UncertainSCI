@@ -32,7 +32,7 @@ b = np.inf
 weight = lambda x: np.exp(-x**6)
 singularity_list = []
 
-N_array = [10, 20, 40, 80]
+N_array = [20, 40, 60, 80, 100]
 
 t_predict_correct = np.zeros(len(N_array))
 t_stieltjes = np.zeros(len(N_array))
