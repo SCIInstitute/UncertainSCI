@@ -8,8 +8,13 @@ from UncertainSCI.utils.compute_mom import compute_freud_mom
 from UncertainSCI.utils.quad import gq_modification_unbounded_composite
 from UncertainSCI.families import HermitePolynomials
 
+import UncertainSCI as uSCI
+import os
+path = os.path.join(os.path.dirname(uSCI.__file__), 'utils')
+
 import scipy.io
-ab_true = scipy.io.loadmat('ab_exact_6.mat')['coeff']
+ab_true = scipy.io.loadmat(os.path.join(path, 'ab_freud_6.mat'))['coeff']
+t_vpa = scipy.io.loadmat(os.path.join(path, 'time_freud_6.mat'))['time']
 
 import time
 from tqdm import tqdm
@@ -107,51 +112,51 @@ for k in tqdm(iter_n):
 
 
 """
-N_array = [10, 20, 40, 80] with tol = 1e-12
+N_array = [20, 40, 60, 80, 100] with tol = 1e-12
 
 --- l2 error ---
 
 l2_predict_correct
-array([2.56198773e-14, 2.59281844e-14, 2.64537346e-14, 2.75287150e-14])
+array([2.59281844e-14, 2.64537346e-14, 2.68816085e-14, 2.75287150e-14, 2.81177506e-14])
 
 l2_stieltjes
-array([1.31272668e-14, 1.67486852e-14, 3.94620768e-14, 1.08525933e-13])
+array([1.67486852e-14, 3.94620768e-14, 5.85110601e-14, 1.08525933e-13, 1.37666177e-13])
 
 l2_aPC
-array([5.48362747e-15, 5.26124069e-13, 2.34414728e+00, 1.44344032e+01])
+array([5.26124069e-13, 2.34414728e+00, 9.23702801e+00, 1.44344032e+01, 1.85587088e+01])
 
 l2_hankel_det
-array([2.93423607e-13, 1.66904850e-06,            nan,            nan])
+array([1.6690485e-06, nan, nan, nan, nan])
 
 l2_mod_cheb
-array([8.51074879e-07,            nan,            nan,            nan])
+array([nan, nan, nan, nan, nan])
 
 l2_dPI
-array([2.33817107e-13, 3.37781893e-07,            nan,            nan])
+array([3.37781893e-07, nan, nan, nan, nan])
 
 
 --- elapsed time ---
 
+t_vpa
+array([19.13496825, 101.10079443, 300.40989682, 633.19571353, 1362.86210165])
+
 t_predict_correct
-array([0.08822312, 0.21739731, 0.65255425, 2.24310095])
+array([0.25285034, 0.73279095, 1.5709497 , 2.77099221, 3.88456888])
 
 t_stieltjes
-array([0.08634825, 0.21933298, 0.65884335, 2.28546083])
+array([0.24215713, 0.71564181, 1.44721944, 2.60755253, 3.88914647])
 
 t_aPC
-array([0.11161239, 0.27295992, 0.87868631, 3.37976277])
+array([0.30945857, 1.00195348, 2.4321327 , 3.96090567, 6.37820582])
 
 t_hankel_det
-array([0.00096233, 0.00280547, 0.00995796, 0.03304174])
+array([0.00329375, 0.01088281, 0.02324004, 0.03885903, 0.06196311])
 
 t_mod_cheb
-array([0.00036709, 0.00159335, 0.00634692, 0.02583933])
+array([0.00208695, 0.00677912, 0.0152849 , 0.03929386, 0.0435277 ])
 
 t_dPI
-array([6.57558441e-05, 1.39927864e-04, 2.62403488e-04, 4.75573540e-04])
+array([0.00014725, 0.0002964 , 0.00041327, 0.00047672, 0.00083344])
 
-t_add_precision, N = [1, 25, 50, 75, 100]
-array([[4.48289360e-01, 3.36911962e+01, 1.80471437e+02, 5.87673851e+02,
-        1.26675784e+03]])
 """
 

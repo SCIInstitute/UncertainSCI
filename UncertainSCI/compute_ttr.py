@@ -603,9 +603,10 @@ def dPI6(N, rho = 0.):
 """
 Lanczos Method
 """
-def lanczos_stable(x, w):
+
+def lanczos_unstable(x, w, N):
     """
-    Given length-n vectors x and w, computes the first n three-term recurrence
+    Given length-n vectors x and w, computes the first N three-term recurrence
     coefficients for an orthogonal polynomial family that is orthogonal with
     respect to the discrete inner product
     
@@ -614,6 +615,94 @@ def lanczos_stable(x, w):
     This code assumes that w has all non-negative entries. The degree-j
     orthogonal polynomial p_j satisfies a recurrence relation
     """
+    assert len(x) == len(w)
+    
+    n = len(w) + 1
+    w = np.sqrt(w)
+
+    # Initialize variables
+    qs = np.zeros([n,n])
+    v = np.zeros(n)
+    v[0] = 1.
+    qs[:,0] = v
+
+    a = np.zeros(N)
+    b = np.zeros(N)
+
+    for s in range(N+1):
+        z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
+        # print (z)
+
+        if s > 0:
+            a[s-1] = v.dot(z)
+
+        # single orthogonalization
+        z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
+
+        if s < N:
+            znorm = np.linalg.norm(z)
+            b[s] = znorm**2
+            v = z / znorm
+            qs[:,s+1] = v
+
+    ab = np.zeros([N+1, 2])
+    ab[1:,0] = a
+    ab[0:-1,1] = np.sqrt(b)
+
+    return ab[:-1,:]
+
+def lanczos_stable(x, w, N):
+    """
+    Given length-n vectors x and w, computes the first N three-term recurrence
+    coefficients for an orthogonal polynomial family that is orthogonal with
+    respect to the discrete inner product
+    
+    < f, g > = sum_{j=1}^n f(x(j)) g(x(j)) w(j)
+
+    This code assumes that w has all non-negative entries. The degree-j
+    orthogonal polynomial p_j satisfies a recurrence relation
+    """
+    assert len(x) == len(w)
+    
+    n = len(w) + 1
+    w = np.sqrt(w)
+
+    # Initialize variables
+    qs = np.zeros([n,n])
+    v = np.zeros(n)
+    v[0] = 1.
+    qs[:,0] = v
+
+    a = np.zeros(N)
+    b = np.zeros(N)
+
+    for s in range(N+1):
+        z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
+        # print (z)
+
+        if s > 0:
+            a[s-1] = v.dot(z)
+
+        # double orthogonalization
+        z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
+        z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
+
+        if s < N:
+            znorm = np.linalg.norm(z)
+            b[s] = znorm**2
+            v = z / znorm
+            qs[:,s+1] = v
+
+    ab = np.zeros([N+1, 2])
+    ab[1:,0] = a
+    ab[0:-1,1] = np.sqrt(b)
+
+    return ab[:-1,:]
+
+
+"""
+def lanczos_stable(x, w):
+    
     assert len(x) == len(w)
     
     n = len(w) + 1
@@ -650,57 +739,32 @@ def lanczos_stable(x, w):
     ab[0:-1,1] = np.sqrt(b)
 
     return ab[:-1,:]
+"""
 
-# def lanczos(u, q, d):
-    # N = len(u)
-    # v = np.zeros((N,d))
-    # tilde_v = np.zeros((N,d+1))
-    # tilde_v[:,0] = np.sqrt(q)
-#
-    # bet = np.zeros(d,)
-    # alph = np.zeros(d,)
-    # for i in range(d):
-        # bet[i] = np.linalg.norm(tilde_v[:,i], None)
-        # v[:,i] = tilde_v[:,i] / bet[i]
-        # alph[i] = np.sum(u * v[:,i]**2)
-        # if i == 0:
-            # tilde_v[:,i+1] = (u - alph[i]) * v[:,i]
-        # else:
-            # tilde_v[:,i+1] = (u - alph[i]) * v[:,i] - bet[i-1] * v[:,i-1]
-#
-    # ab = np.zeros((d+1,2))
-    # ab[1:,0] = alph
-    # ab[:-1,1] = np.sqrt(bet)
-    # return ab[:-1,:]
+def lanczos(x, w, N):
+    """
+    Given length-M vector x and w, computes the first N coefficients.
+    consider conditions under which the Lanczos algorithm serves as
+    a discrete approximation to the Stieltjes procedure, i.e. stieltjes_discrete
 
+    Requires M >> N
+    """
+    ab = np.zeros([N+1,2])
+    assert len(x) == len(w), 'x and w should have the same size'
+    assert len(x) >= N, 'size of x should much larger than N'
+    M = len(x)
+    v = np.zeros([M,N])
+    tilde_v = np.zeros([M,N+1])
+    tilde_v[:,0] = np.sqrt(w)
 
+    for i in range(N):
+        ab[i,1] = np.linalg.norm(tilde_v[:,i], None)
+        v[:,i] = tilde_v[:,i] / ab[i,1]
+        ab[i+1,0] = np.sum(x * v[:,i]**2)
+        if i == 0:
+            tilde_v[:,i+1] = (x - ab[i+1,0]) * v[:,i]
+        else:
+            tilde_v[:,i+1] = (x - ab[i+1,0]) * v[:,i] - ab[i,1] * v[:,i-1]
 
-# def lanczos(A, d, tilde_v_0):
-    # """
-    # Given: an N×N symmetric matrix A,
-    # compute the symmetric, tridiagonal Jacobi matrix T
-    # T is constructed subdiagonalily by alpha and beta
-#
-    # Return
-    # (dx2) numpy.array alphbet
-    # """
-    # N = len(A)
-    # v = np.zeros((N, d))
-    # tilde_v = np.zeros((N, d+1))
-    # alph = np.zeros(d,); bet = np.zeros(d,)
-#
-    # tilde_v[:,0] = tilde_v_0
-    # for i in range(d):
-        # bet[i] = np.linalg.norm(tilde_v[:,i], None)
-        # v[:,i] = tilde_v[:,i] / bet[i]
-        # alph[i] = (v[:,i].dot(A)).dot(v[:,i])
-        # if i == 0:
-            # tilde_v[:,i+1] = (A - alph[i]*np.eye(len(A))).dot(v[:,i])
-        # else:
-            # tilde_v[:,i+1] = (A - alph[i]*np.eye(len(A))).dot(v[:,i]) - bet[i-1]*v[:,i-1]
-#
-    # ab = np.zeros((d+1,2))
-    # ab[1:,0] = alph; ab[:-1,1] = np.sqrt(bet)
-#
-    # return ab
+    return ab[:N]
 
