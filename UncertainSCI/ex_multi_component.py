@@ -9,6 +9,7 @@ from UncertainSCI.families import JacobiPolynomials
 import time
 from tqdm import tqdm
 
+import pdb
 """
 We use six methods
 
@@ -56,7 +57,7 @@ beta = 0.4
 t = np.array([2.])
 y = np.array([1.])
 
-M = 41
+M = 40
 
 # ab_true = np.array([[3.7037037037e-2, 1.5000000000e0], \
                    # [3.2391629514e-2, 2.3060042904e-1], \
@@ -67,6 +68,8 @@ ab_true = np.array([[1.2777777778e0, 2.0000000000e0], \
                    [-1.9575723334e-3, 2.4959807576e-1], \
                    [-1.9175655273e-4, 2.4998241443e-1], \
                    [-3.4316341540e-5, 2.4999770643e-1]])
+
+ab_true[:,1] = np.sqrt(ab_true[:,1])
 
 xg, wg = JacobiPolynomials(alpha, beta).gauss_quadrature(M)
 xg = np.hstack([xg, t])
@@ -82,23 +85,15 @@ t_mod_cheb = np.zeros(len(N_array))
 t_lanczos_stable = np.zeros(len(N_array))
 t_lanczos_unstable = np.zeros(len(N_array))
 
-l2_a_predict_correct = np.zeros(len(N_array))
-l2_b_predict_correct = np.zeros(len(N_array))
-l2_a_stieltjes = np.zeros(len(N_array))
-l2_b_stieltjes = np.zeros(len(N_array))
-l2_a_aPC = np.zeros(len(N_array))
-l2_b_aPC = np.zeros(len(N_array))
-l2_a_hankel_det = np.zeros(len(N_array))
-l2_b_hankel_det = np.zeros(len(N_array))
-l2_a_mod_cheb = np.zeros(len(N_array))
-l2_b_mod_cheb = np.zeros(len(N_array))
-l2_a_lanczos_stable = np.zeros(len(N_array))
-l2_b_lanczos_stable = np.zeros(len(N_array))
-l2_a_lanczos_unstable = np.zeros(len(N_array))
-l2_b_lanczos_unstable = np.zeros(len(N_array))
+l2_predict_correct = np.zeros(len(N_array))
+l2_stieltjes = np.zeros(len(N_array))
+l2_aPC = np.zeros(len(N_array))
+l2_hankel_det = np.zeros(len(N_array))
+l2_mod_cheb = np.zeros(len(N_array))
+l2_lanczos_stable = np.zeros(len(N_array))
+l2_lanczos_unstable = np.zeros(len(N_array))
 
-
-iter_n = np.arange(10)
+iter_n = np.arange(100)
 for k in tqdm(iter_n):
     
     for ind, N in enumerate(N_array):
@@ -109,8 +104,7 @@ for k in tqdm(iter_n):
         ab_predict_correct = predict_correct_discrete(xg, wg, N+1)
         end = time.time()
         t_predict_correct[ind] += (end - start) / len(iter_n)
-        l2_a_predict_correct[ind] += np.linalg.norm(ab_predict_correct[N,0] - ab_true[ind,0])
-        l2_b_predict_correct[ind] += np.linalg.norm(ab_predict_correct[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_predict_correct[ind] += np.linalg.norm(np.array([ab_predict_correct[N,0], ab_predict_correct[N-1,1]]) - ab_true[ind])
 
 
         # Stieltjes
@@ -118,8 +112,7 @@ for k in tqdm(iter_n):
         ab_stieltjes = stieltjes_discrete(xg, wg, N+1)
         end = time.time()
         t_stieltjes[ind] += (end - start) / len(iter_n)
-        l2_a_stieltjes[ind] += np.linalg.norm(ab_stieltjes[N,0] - ab_true[ind,0])
-        l2_b_stieltjes[ind] += np.linalg.norm(ab_stieltjes[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_stieltjes[ind] += np.linalg.norm(np.array([ab_stieltjes[N,0], ab_stieltjes[N-1,1]]) - ab_true[ind])
         
 
         # Arbitrary Polynomial Chaos Expansion
@@ -127,8 +120,7 @@ for k in tqdm(iter_n):
         ab_aPC = aPC_discrete(xg, wg, N+1, m)
         end = time.time()
         t_aPC[ind] += (end - start) / len(iter_n)
-        l2_a_aPC[ind] += np.linalg.norm(ab_aPC[N,0] - ab_true[ind,0])
-        l2_b_aPC[ind] += np.linalg.norm(ab_aPC[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_aPC[ind] += np.linalg.norm(np.array([ab_aPC[N,0], ab_aPC[N-1,1]]) - ab_true[ind])
         
         
         # Hankel Determinant
@@ -136,8 +128,7 @@ for k in tqdm(iter_n):
         ab_hankel_det = hankel_det(N+1, m)
         end = time.time()
         t_hankel_det[ind] += (end - start) / len(iter_n)
-        l2_a_hankel_det[ind] += np.linalg.norm(ab_hankel_det[N,0] - ab_true[ind,0])
-        l2_b_hankel_det[ind] += np.linalg.norm(ab_hankel_det[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_hankel_det[ind] += np.linalg.norm(np.array([ab_hankel_det[N,0], ab_hankel_det[N-1,1]]) - ab_true[ind])
         
     
         # Modified Chebyshev
@@ -151,8 +142,7 @@ for k in tqdm(iter_n):
         ab_mod_cheb = mod_cheb(N+1, mod_mom, J)
         end = time.time()
         t_mod_cheb[ind] += (end - start) / len(iter_n)
-        l2_a_mod_cheb[ind] += np.linalg.norm(ab_mod_cheb[N,0] - ab_true[ind,0])
-        l2_b_mod_cheb[ind] += np.linalg.norm(ab_mod_cheb[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_mod_cheb[ind] += np.linalg.norm(np.array([ab_mod_cheb[N,0], ab_mod_cheb[N-1,1]]) - ab_true[ind])
 
 
         # Stable Lanczos
@@ -160,8 +150,7 @@ for k in tqdm(iter_n):
         ab_lanczos_stable = lanczos_stable(xg, wg, N+1)
         end = time.time()
         t_lanczos_stable[ind] += (end - start) / len(iter_n)
-        l2_a_lanczos_stable[ind] += np.linalg.norm(ab_lanczos_stable[N,0] - ab_true[ind,0])
-        l2_b_lanczos_stable[ind] += np.linalg.norm(ab_lanczos_stable[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_lanczos_stable[ind] += np.linalg.norm(np.array([ab_lanczos_stable[N,0], ab_lanczos_stable[N-1,1]]) - ab_true[ind])
 
 
         # Unstable Lanczos
@@ -169,160 +158,109 @@ for k in tqdm(iter_n):
         ab_lanczos_unstable = lanczos_unstable(xg, wg, N+1)
         end = time.time()
         t_lanczos_unstable[ind] += (end - start) / len(iter_n)
-        l2_a_lanczos_unstable[ind] += np.linalg.norm(ab_lanczos_unstable[N,0] - ab_true[ind,0])
-        l2_b_lanczos_unstable[ind] += np.linalg.norm(ab_lanczos_unstable[N-1,1] - np.sqrt(ab_true[ind,1]))
+        l2_lanczos_unstable[ind] += np.linalg.norm(np.array([ab_lanczos_unstable[N,0], ab_lanczos_unstable[N-1,1]]) - ab_true[ind])
         
 
 """
 N_array = [1, 7, 18, 40] with tol = 1e-12, M = 40,
 one mass at the left end point −1, inside [-1,1]
 
---- l2 error for a_N ---
+--- l2 error ---
 
-l2_a_predict_correct = np.zeros(len(N_array))
-array([3.62279651e-13, 2.79241907e-12, 4.31425728e-14, 7.26090195e-15])
+l2_predict_correct
+array([3.62931322e-12, 3.63379416e-10, 3.02480572e-10, 3.90315660e-10])
 
-l2_a_stieltjes = np.zeros(len(N_array))
-array([3.62557206e-13, 2.79165580e-12, 4.59614985e-14, 6.80011603e-15])
+l2_stieltjes
+array([3.63139473e-12, 3.63371281e-10, 3.02469426e-10, 3.90315700e-10])
 
-l2_a_aPC = np.zeros(len(N_array))
-array([3.62557206e-13, 2.96498937e-12, 2.28531777e-04, 4.83376021e+00])
+l2_aPC
+array([3.63139473e-12, 3.62522850e-10, 1.66676877e-03, 1.69518389e+02])
 
-l2_a_hankel_det = np.zeros(len(N_array))
-array([3.62626595e-13, 5.17239029e-12, 6.71804829e-04,            nan])
+l2_hankel_det
+array([3.62723171e-12, 3.48935880e-10, 3.19515452e-03,            nan])
 
-l2_a_mod_cheb = np.zeros(len(N_array))
-array([3.63181707e-13, 2.78596590e-12, 1.76941795e-13, 2.78865472e-13])
+l2_mod_cheb
+array([3.63070089e-12, 3.63366960e-10, 3.02603477e-10, 3.87410101e-10])
 
-l2_a_lanczos_stable = np.zeros(len(N_array))
-array([3.62279651e-13, 2.79318235e-12, 4.33680869e-14, 5.76795556e-15])
+l2_lanczos_stable
+array([3.62306868e-12, 3.63368880e-10, 3.02474993e-10, 3.90321203e-10])
 
-l2_a_lanczos_unstable = np.zeros(len(N_array))
-array([3.62279651e-13, 2.79318235e-12, 4.38538095e-14, 6.56592836e-15])
-
-
---- l2 error for b_N ---
-
-l2_b_predict_correct = np.zeros(len(N_array))
-array([4.44089210e-15, 3.62299080e-11, 3.02480263e-11, 3.90343313e-11])
-
-l2_b_stieltjes = np.zeros(len(N_array))
-array([4.44089210e-15, 3.62304631e-11, 3.02474712e-11, 3.90343313e-11])
-
-l2_b_aPC = np.zeros(len(N_array))
-array([4.44089210e-15, 3.62310182e-11, 8.32994784e-11, 8.96822559e+00])
-
-l2_b_hankel_det = np.zeros(len(N_array))
-array([4.44089210e-15, 3.87345711e-11, 2.55978125e-04,            nan])
-
-l2_b_mod_cheb = np.zeros(len(N_array))
-array([4.44089210e-15, 3.62271324e-11, 3.01442205e-11, 3.89055455e-11])
-
-l2_b_lanczos_stable = np.zeros(len(N_array))
-array([2.22044605e-15, 3.62293529e-11, 3.02480263e-11, 3.90348864e-11])
-
-l2_b_lanczos_unstable = np.zeros(len(N_array))
-array([2.22044605e-15, 3.62293529e-11, 3.02480263e-11, 3.90354415e-11])
+l2_lanczos_unstable
+array([3.62306868e-12, 3.63368186e-10, 3.02475004e-10, 3.90315681e-10])
 
 
 --- elapsed time ---
 
 t_predict_correct
-array([0.0002382 , 0.00120361, 0.00538137, 0.02240527])
+array([0.00020513, 0.00127097, 0.00540557, 0.02285382])
 
 t_stieltjes
-array([0.00010395, 0.00103319, 0.00508358, 0.02214997])
+array([0.00010636, 0.00107018, 0.00511624, 0.02158549])
 
 t_aPC
-array([0.00018435, 0.00130179, 0.00583503, 0.02387841])
+array([0.00017594, 0.00134418, 0.00570085, 0.02409127])
 
 t_hankel_det
-array([4.08887863e-05, 6.59680367e-04, 2.50706673e-03, 9.87393856e-03])
+array([3.39078903e-05, 6.98084831e-04, 2.43451118e-03, 9.48667765e-03])
 
 t_mod_cheb
-array([8.72373581e-05, 2.75301933e-04, 1.43671036e-03, 6.66136742e-03])
+array([8.10432434e-05, 2.62830257e-04, 1.41269684e-03, 6.62495136e-03])
 
 t_lanczos_stable
-array([0.00017068, 0.00041025, 0.00092874, 0.00192339])
+array([0.00015461, 0.00039131, 0.00093505, 0.00181083])
 
 t_lanczos_unstable
-array([0.00011125, 0.00032773, 0.00074117, 0.00157833])
-
+array([0.0001111 , 0.00033516, 0.00078223, 0.00151457])
 
 
 
 N_array = [1, 7, 18, 40] with tol = 1e-12, M = 40,
 one mass at 2, outside [-1,1]
 
---- l2 error for a_N ---
+--- l2 error ---
 
-l2_a_predict_correct = np.zeros(len(N_array))
-array([2.22222241e-10, 4.45858628e-13, 8.78225444e-14, 2.36890523e-05])
+l2_predict_correct
+array([2.22220020e-09, 5.44056336e-11, 3.80219138e-10, 2.48812425e-04])
 
-l2_a_stieltjes = np.zeros(len(N_array))
-array([2.22222241e-10, 4.39518213e-13, 1.46584134e-15, 2.36444976e-05])
+l2_stieltjes
+array([2.22217800e-09, 5.44016049e-11, 3.80334655e-10, 2.48245648e-04])
 
-l2_a_aPC = np.zeros(len(N_array))
-array([2.22222241e-10, 5.24862220e-10, 3.83092817e+00, 2.86708882e+00])
+l2_aPC
+array([2.22217800e-09, 5.21986254e-09, 3.84495650e+01, 9.25012781e+01])
 
-l2_a_hankel_det = np.zeros(len(N_array))
-array([2.22220020e-10, 4.80686816e-09, 3.66288612e+01, 3.54371637e+02])
+l2_hankel_det
+array([2.22217800e-09, 4.81568826e-08,            nan,            nan])
 
-l2_a_mod_cheb = np.zeros(len(N_array))
-array([2.22220020e-10, 3.50768962e-09, 1.12951181e+01, 1.73075206e+01])
+l2_mod_cheb
+array([2.22220020e-09, 3.51137206e-08, 3.24667579e+02, 1.84279278e+02])
 
-l2_a_lanczos_stable = np.zeros(len(N_array))
-array([2.22220020e-10, 4.47285438e-13, 1.11735165e-14, 8.92725293e-15])
+l2_lanczos_stable
+array([2.22217800e-09, 5.44064504e-11, 3.80340218e-10, 2.10192975e-10])
 
-l2_a_lanczos_unstable = np.zeros(len(N_array))
-array([2.22220020e-10, 4.41317989e-13, 3.28052472e-15, 1.63865639e-14])
-
-
---- l2 error for b_N ---
-
-l2_b_predict_correct = np.zeros(len(N_array))
-array([4.44089210e-15, 5.42232925e-12, 3.80218079e-11, 7.60966030e-06])
-
-l2_b_stieltjes = np.zeros(len(N_array))
-array([4.44089210e-15, 5.42288436e-12, 3.80340204e-11, 7.52651770e-06])
-
-l2_b_aPC = np.zeros(len(N_array))
-array([4.44089210e-15, 5.42454970e-12, 1.10597776e+00, 5.96976009e+00])
-
-l2_b_hankel_det = np.zeros(len(N_array))
-array([4.44089210e-15, 3.07751602e-10,            nan,            nan])
-
-l2_b_mod_cheb = np.zeros(len(N_array))
-array([6.66133815e-15, 1.60770841e-10, 3.04386378e+01, 6.32757883e+00])
-
-l2_b_lanczos_stable = np.zeros(len(N_array))
-array([4.44089210e-15, 5.42343948e-12, 3.80334653e-11, 2.09976481e-11])
-
-l2_b_lanczos_unstable = np.zeros(len(N_array))
-array([4.44089210e-15, 5.42343948e-12, 3.80334653e-11, 2.09976481e-11])
-
+l2_lanczos_unstable
+array([2.22217800e-09, 5.44198583e-11, 3.80329148e-10, 2.10198532e-10])
 
 --- elapsed time ---
 
 t_predict_correct
-array([0.00019901, 0.0012171 , 0.00539913, 0.02222292])
+array([0.00021152, 0.00122257, 0.00531525, 0.02223648])
 
 t_stieltjes
-array([0.00010364, 0.00106914, 0.00491741, 0.02143502])
+array([0.00010446, 0.00105667, 0.00493274, 0.02136513])
 
 t_aPC
-array([0.00017343, 0.00133603, 0.0057421 , 0.02462354])
+array([0.00017639, 0.00129059, 0.00557472, 0.02349263])
 
 t_hankel_det
-array([7.61747360e-05, 6.57892227e-04, 2.54495144e-03, 9.51347351e-03])
+array([3.31783295e-05, 6.71925545e-04, 2.44425058e-03, 9.17667150e-03])
 
 t_mod_cheb
-array([7.88211823e-05, 2.55894661e-04, 1.35555267e-03, 6.41815662e-03])
+array([7.95817375e-05, 2.54862309e-04, 1.34661436e-03, 6.43682957e-03])
 
 t_lanczos_stable
-array([0.00026121, 0.00037844, 0.00088012, 0.00174553])
+array([0.00014481, 0.00039165, 0.00087476, 0.00180043])
 
 t_lanczos_unstable
-array([0.00011108, 0.00032308, 0.00071955, 0.00147495])
+array([0.00011109, 0.00032545, 0.00073615, 0.00151897])
 
 """
