@@ -1,6 +1,6 @@
 import numpy as np
 
-from UncertainSCI.compute_ttr import predict_correct_unbounded, stieltjes_unbounded, \
+from UncertainSCI.ttr.compute_ttr import predict_correct_unbounded, stieltjes_unbounded, \
         aPC_unbounded, hankel_det, mod_cheb, dPI6
 
 from UncertainSCI.utils.compute_mom import compute_freud_mom

@@ -1,8 +1,8 @@
 import numpy as np
 
-from UncertainSCI.compute_ttr import predict_correct_discrete, stieltjes_discrete, \
+from UncertainSCI.ttr.compute_ttr import predict_correct_discrete, stieltjes_discrete, \
         aPC_discrete, hankel_det, mod_cheb, lanczos_stable, lanczos_unstable
-from UncertainSCI.compute_ttr import predict_correct_unbounded
+from UncertainSCI.ttr.compute_ttr import predict_correct_unbounded
 
 from UncertainSCI.opoly1d import gauss_quadrature_driver
 
@@ -14,7 +14,7 @@ from tqdm import tqdm
 import pdb
 
 N_array = [20, 40, 60, 80, 100]
-N_quad = 200
+N_quad = 300
 
 a = 0.
 b = np.inf

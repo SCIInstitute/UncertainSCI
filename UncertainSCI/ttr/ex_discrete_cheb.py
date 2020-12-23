@@ -1,6 +1,6 @@
 import numpy as np
 
-from UncertainSCI.compute_ttr import predict_correct_discrete, stieltjes_discrete, \
+from UncertainSCI.ttr.compute_ttr import predict_correct_discrete, stieltjes_discrete, \
         aPC_discrete, hankel_det, mod_cheb, lanczos_stable, lanczos_unstable
 
 from UncertainSCI.utils.compute_mom import compute_mom_discrete
@@ -45,8 +45,8 @@ def discrete_chebyshev(N):
     return ab
 
 
-# N_array = [37, 38, 39, 40]
-# N_quad = 40
+N_array = [37, 38, 39, 40]
+N_quad = 40
 
 # N_array = [56, 60, 64, 68]
 # N_quad = 80
@@ -54,8 +54,8 @@ def discrete_chebyshev(N):
 # N_array = [82, 89, 96, 103]
 # N_quad = 160
 
-N_array = [82, 89, 96, 103]
-N_quad = 320
+# N_array = [82, 89, 96, 103]
+# N_quad = 320
 
 x = np.arange(N_quad) / N_quad
 w = (1/N_quad) * np.ones(len(x))

@@ -1,6 +1,6 @@
 import numpy as np
 
-from UncertainSCI.compute_ttr import predict_correct_discrete, stieltjes_discrete, \
+from UncertainSCI.ttr.compute_ttr import predict_correct_discrete, stieltjes_discrete, \
         aPC_discrete, hankel_det, mod_cheb, lanczos_stable, lanczos_unstable
 
 from UncertainSCI.utils.compute_mom import compute_mom_discrete
@@ -260,7 +260,7 @@ array([0.00085535, 0.00165571, 0.00264232, 0.00360663, 0.00463569])
 
 
 
-N_array = [20, 40, 60, 80, 100] with tol = 1e-12, N_quad = 300
+N_array = [20, 40, 60, 80, 100] with tol = 1e-12, N_quad = 200
 
 --- l2 error ---
 

@@ -1,5 +1,5 @@
 import numpy as np
-from UncertainSCI.compute_ttr import dPI4, dPI6, hankel_det, mod_cheb
+from UncertainSCI.ttr.compute_ttr import dPI4, dPI6, hankel_det, mod_cheb
 from UncertainSCI.utils.compute_mom import compute_freud_mom
 from UncertainSCI.utils.quad import gq_modification_unbounded_composite
 from UncertainSCI.families import HermitePolynomials
