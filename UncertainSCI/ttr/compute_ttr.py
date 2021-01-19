@@ -1,15 +1,16 @@
 import numpy as np
 import scipy.special as sp
 
-from UncertainSCI.opoly1d import eval_driver, leading_coefficient_driver, gauss_quadrature_driver
+from UncertainSCI.opoly1d import eval_driver, \
+        leading_coefficient_driver, gauss_quadrature_driver
 
 from UncertainSCI.utils.compute_subintervals import compute_subintervals
-from UncertainSCI.utils.quad import gq_modification_composite, gq_modification_unbounded_composite
+from UncertainSCI.utils.quad import gq_modification_composite, \
+        gq_modification_unbounded_composite
 from UncertainSCI.utils.array_unique import array_unique
 
-import pdb
 """
-Predict-Correct Method
+Predictor-corrector method
 """
 def predict_correct_bounded(a, b, weight, N, singularity_list, Nquad=10):
     """ Three-term recurrence coefficients from quadrature
@@ -164,7 +165,7 @@ def predict_correct_unbounded_composite(a, b, weight, N, singularity_list, Nquad
 
 
 """
-Stieltjes Method
+Stieltjes procedure
 """
 def stieltjes_bounded(a, b, weight, N, singularity_list, Nquad=10):
     
@@ -326,237 +327,201 @@ def stieltjes_unbounded_composite(a, b, weight, N, singularity_list, Nquad=10):
 
 
 """
-Arbitrary Polynomial Chaos Expansion Method
+Arbitrary polynomial chaos expansion method
 """
-def compute_coeff(m, k):
+def expansion_coeff(m, n):
     """
-    Return the first k+1 aPC coefficients {c_i}_{i=0}^k of polynomial of degree k
+    Params
+    ______
+    m: numpy array
+    moments wst given measure
+    M = m_0     ... m_n
+        .
+        .
+        m_{n-1} ... m_{2n-1}
+        0       ... 1
+    requires [m_0, ...m_{2n-1}], i.e. len(m) >= 2n
+
+    n: int
+    the highest order of polynomials expansion
+    p_n(x) = \sum_{i=0}^n c_i^(n) x^i
+
+    Returns
+    ------
+    c: numpy array, shape (n+1, )
+    vector of expansion coeffcients for monic polynomials,
+    c = [c_0^(n), ..., c_n^(n)]
     """
-    assert len(m) >= 2*k
+    assert len(m) >= 2*n
+    M = np.zeros([n+1,n+1])
+    for i in range(n):
+        M[i,:] = m[i:i+n+1]
+    M[n,n] = 1.
+    b = np.zeros(n+1,)
+    b[n] = 1
+    c = np.linalg.solve(M, b)
+    return c
 
-    M = np.zeros((k+1,k+1))
-    for i in range(k):
-        M[i,:] = m[i:i+k+1]
-    M[k,k] = 1.
-    b = np.zeros(k+1,)
-    b[k] = 1
-    return np.linalg.solve(M, b)
-
-def peval_aPC(x, k, m):
+def normal_const(m, n, c):
     """
-    Return the evaluation of orthogonal polynomial of degree k, p = \sum_{i=0}^k c_i x^i
+    Params
+    ------
+    m: numpy array
+    moments wst given measure
+    M = m_0     ... m_n
+        .
+        .
+        m_{n-1} ... m_{2n-1}
+        m_n     ... m_{2n} 
+    requires [m_0, ...m_{2n}], i.e. len(m) >= 2n+1
+
+    n: int
+    the highest order of polynomials expansion
+    p_n(x) = \sum_{i=0}^n c_i^(n) x^i
+
+    c: numpy array, shape (n+1)
+    vector of expansion coeffcients for monic polynomials
+    c = [c_0^(n), ..., c_n^(n)]
+
+    Returns
+    ------
+    normal_c: float
+    normalized constant for expansion coefficient vector c
     """
-    c = compute_coeff(m, k)
-    p = 0.
-    for i in range(k+1):
-        p += c[i] * x**i
-    return p
+    assert len(m) >= 2*n+1
+    M = np.zeros([n+1,n+1])
+    for i in range(n+1):
+        M[i,:] = m[i:i+n+1]
+    normal_c = np.sqrt(c.dot(M).dot(c))
+    return normal_c
 
-def normalc_bounded(a, b, weight, k, singularity_list, m, Nquad=10):
-    """
-    Return the first k+1 normalization constants up to the polynomial of degree k
-    nc[0] = \int p_0^2 dmu = \int 1 dmu = b_0^2
-    nc[1] = \int p_1^2 dmu = \int x^2 dmu
-    ...
-    nc[k] = \int p_k^2 dmu
-    """
-    assert a < b
+def aPC(m, N):
+    C = np.zeros([N, N])
+    NC = np.zeros(N,)
+    for i in range(N):
+        c = expansion_coeff(m, i)
+        NC[i] = normal_const(m, i, c)
+        C[0:i+1,i] = expansion_coeff(m, i) / NC[i]
 
-    subintervals = compute_subintervals(a, b, singularity_list)
-
-    nc = np.zeros(k+1,)
-    for i in range(len(nc)):
-        integrand = lambda x: weight(x) * peval_aPC(x, i, m)**2
-        nc[i] = gq_modification_composite(integrand, a, b, i+1+Nquad, subintervals)
-
-    return np.sqrt(nc)
-
-def normalc_discrete(xg, wg, k, m):
-    
-    nc = np.zeros(k+1,)
-    for i in range(len(nc)):
-        integrand = lambda x: peval_aPC(x, i, m)**2
-        nc[i] = np.sum(integrand(xg) * wg)
-    return np.sqrt(nc)
-
-def normalc_unbounded(a, b, weight, k, singularity_list, m, Nquad=10):
-    """
-    Return the first k+1 normalization constants up to the polynomial of degree k
-    """
-    assert a < b
-
-    nc = np.zeros(k+1,)
-    for i in range(len(nc)):
-        integrand = lambda x: weight(x) * peval_aPC(x, i, m)**2
-        nc[i] = gq_modification_unbounded_composite(integrand, a, b, i+1+Nquad, singularity_list)
-
-    return np.sqrt(nc)
-
-def aPC_bounded(a, b, weight, N, singularity_list, m, Nquad=10):
-
-    subintervals = compute_subintervals(a, b, singularity_list)
-    
-    nc = normalc_bounded(a, b, weight, N-1, singularity_list, m, Nquad=10)
-
-    ab = np.zeros([N, 2])
-    ab[0,1] = nc[0]
-
-    for n in range(1, N):
-        integrand = lambda x: weight(x) * x * (peval_aPC(x, n-1, m).flatten() / nc[n-1])**2
-        ab[n,0] = gq_modification_composite(integrand, a, b, n+1+Nquad, subintervals)
-        if n == 1:
-            integrand = lambda x: weight(x) * ( (x - ab[n,0]) * peval_aPC(x, n-1, m).flatten() / nc[n-1] )**2
-        else:
-            integrand = lambda x: weight(x) * ( (x - ab[n,0]) * peval_aPC(x, n-1, m).flatten() / nc[n-1] - ab[n-1,1] * peval_aPC(x, n-2, m).flatten() / nc[n-2] )**2
-        ab[n,1] = np.sqrt( gq_modification_composite(integrand, a, b, n+1+Nquad, subintervals) )
-    
-    return ab
-
-def aPC_unbounded(a, b, weight, N, singularity_list, m, Nquad=10):
-    
-    nc = normalc_unbounded(a, b, weight, N-1, singularity_list, m, Nquad=10)
-
-    ab = np.zeros([N, 2])
-    ab[0,1] = nc[0]
-
-    for n in range(1, N):
-        integrand = lambda x: weight(x) * x * (peval_aPC(x, n-1, m).flatten() / nc[n-1])**2
-        ab[n,0] = gq_modification_unbounded_composite(integrand, a, b, n+1+Nquad, singularity_list)
-        if n == 1:
-            integrand = lambda x: weight(x) * ( (x - ab[n,0]) * peval_aPC(x, n-1, m).flatten() / nc[n-1] )**2
-        else:
-            integrand = lambda x: weight(x) * ( (x - ab[n,0]) * peval_aPC(x, n-1, m).flatten() / nc[n-1] - ab[n-1,1] * peval_aPC(x, n-2, m).flatten() / nc[n-2] )**2
-        ab[n,1] = np.sqrt( gq_modification_unbounded_composite(integrand, a, b, n+1+Nquad, singularity_list) )
-    
-    return ab
-
-def aPC_discrete(xg, wg, N, m):
-
-    nc = normalc_discrete(xg, wg, N-1, m)
-
-    ab = np.zeros([N, 2])
-    ab[0,1] = nc[0]
-
-    for n in range(1, N):
-        integrand = lambda x: x * (peval_aPC(x, n-1, m).flatten() / nc[n-1])**2
-        ab[n,0] = np.sum(integrand(xg) * wg)
-        if n == 1:
-            integrand = lambda x: ( (x - ab[n,0]) * peval_aPC(x, n-1, m).flatten() / nc[n-1] )**2
-        else:
-            integrand = lambda x: ( (x - ab[n,0]) * peval_aPC(x, n-1, m).flatten() / nc[n-1] - ab[n-1,1] * peval_aPC(x, n-2, m).flatten() / nc[n-2] )**2
-        ab[n,1] = np.sqrt( np.sum(integrand(xg) * wg) )
-    
+    ab = np.zeros([N,2])
+    ab[0,1] = NC[0]
+    ab[1,1] = C[0,0] / C[1,1]
+    ab[1,0] = -C[0,1] / C[1,1]
+    for i in range(2, N):
+        ab[i,1] = C[i-1,i-1] / C[i,i]
+        ab[i,0] = (C[i-2,i-1] - ab[i,1] * C[i-1,i]) / C[i-1,i-1]
+        
     return ab
 
 
 
 """
-Hankel Determinant Method (Classic Moment Method)
+Hankel determinants method (Classic moment method)
 """
-def det(mom, n):
+def deter(m, n):
     """
-    compute the Hankel determinant of order n
-    in the moments {m_k}_{k=0}^{2n-2}, i.e.,
-    the first 2n-1 moments are used.
+    compute the Hankel determinant of order n, H_n
+    in the moments m_0, ..., m_{2n-2},
+    i.e. the first 2n-1 moments are used.
     """
-    assert len(mom) >= 2*n-1
+    assert len(m) >= 2*n-1, 'need more moments'
     if n == 0:
         return 1
     elif n == 1:
-        return mom[0]
+        return m[0]
     else:
         A = np.zeros((n,n))
         for i in range(n):
-            A[i,:] = mom[i:i+n]
+            A[i,:] = m[i:i+n]
         assert A.shape == (n,n)
     return np.linalg.det(A)
 
-def det_penul(mom, n):
+def deter_mod(m, n):
     """
-    compute the Hankel determinant of order n
+    compute the Hankel determinant of order n+1, H_{n+1}
     with the penultimate column and the last row removed,
-    in the moments {m_k}_{k=0}^{2n}, i.e.,
-    the first 2n+1 moments are used
+    in the moments m_0, ..., m_{2n},
+    i.e. the first 2n+1 moments are used.
     """
-    assert len(mom) >= 2*n+1
+    assert len(m) >= 2*n+1, 'need more moments'
     if n == 0:
         return 0
     elif n == 1:
-        return mom[1]
+        return m[1]
     else:
         A = np.zeros((n+1,n+1))
         for i in range(n+1):
-            A[i,:] = mom[i:i+n+1]
+            A[i,:] = m[i:i+n+1]
         B = np.delete(A, -1, axis = 0)
         B = np.delete(B, -2, axis = 1)
         assert B.shape == (n,n)
     return np.linalg.det(B)
 
-def hankel_det(N, mom):
-    assert len(mom) >= 2*N-1, 'Need more moments'
+def hankel_deter(N, m):
+    assert len(m) >= 2*N-1, 'need more moments'
     ab = np.zeros([N,2])
-    ab[0,1] = mom[0]
-
+    ab[0,1] = m[0]
     for i in range(1,N):
-        ab[i,0] = det_penul(mom, i) / det(mom, i) \
-                - det_penul(mom, i-1) / det(mom, i-1)
-        ab[i,1] = det(mom, i+1) * det(mom, i-1) / det(mom, i)**2
-    
+        ab[i,0] = deter_mod(m, i) / deter(m, i) \
+                - deter_mod(m, i-1) / deter(m, i-1)
+        ab[i,1] = deter(m, i+1) * deter(m, i-1) / deter(m, i)**2
     ab[:,1] = np.sqrt(ab[:,1])
     return ab
 
 
 
 """
-Modified Chebyshev Method
+Modified Chebyshev Algorithm
 """
-def mod_cheb(N, mod_mom, lbd):
+def mod_cheb(N, mod_m, lbd):
     """ compute the first N recurrence coefficients wrt d\mu
 
     Params:
     d\mu: given measure,
-    mod_mom: the first 2n-1 modified moments {m_k}_{k=0}^{2n-2},
+    mod_m: the first 2N-1 modified moments mod_m_1, ..., mod_m_{2N-2}
              can be computed by quad.gq_modification_composite
     lbd: known measure to be chosen s.t. d\lbd ~ d\mu in some sense
-         compute the first 2n recurrence coefficients {a_k, b_k}_{k=0}^{2n-1}
+         compute the first 2N recurrence coefficients {a_k, b_k}_{k=0}^{2N-1}
 
     """
-    assert len(mod_mom) == 2*N-1, 'Need more modified moments'
+    assert len(mod_m) == 2*N-1, 'Need more modified moments'
 
-    ab_lbd = lbd.recurrence(N = 2*N-1)
-    a, b = ab_lbd[:,0], ab_lbd[:,1]
+    albe = lbd.recurrence(N = 2*N-1)
+    al, be = albe[:,0], albe[:,1]
     
     sigma = np.zeros([N,2*N-1])
-    sigma[0,:] = mod_mom
+    sigma[0,:] = mod_m
 
-    alpha_1 = a[1] + b[1] * (mod_mom[1] / mod_mom[0])
-    for i in range(1, 2*N-2):
-        sigma[1,i] = b[i]*sigma[0,i-1] + (a[i+1]-alpha_1)*sigma[0,i] + b[i+1]*sigma[0,i+1]
+    a_1 = al[1] + be[1] * mod_m[1] / mod_m[0]
+    for k in range(1, 2*N-2):
+        sigma[1,k] = be[k] * sigma[0,k-1] + \
+                (al[k+1] - a_1) * sigma[0,k] + be[k+1] * sigma[0,k+1]
 
-    for j in range(2, N):
-        for k in range(j, 2*N-j-1):
-            sigma[j,k] = b[k]*sigma[j-1,k-1]+\
-                    (a[k+1]-( a[j]+b[j]*sigma[j-1,j]/sigma[j-1,j-1]-b[j-1]*sigma[j-2,j-1]/sigma[j-2,j-2] ))*sigma[j-1,k]+\
-                    b[k+1]*sigma[j-1,k+1]-\
-                    (b[j-1]*sigma[j-1,j-1]/sigma[j-2,j-2])*sigma[j-2,k]
+    for n in range(2, N):
+        for k in range(n, 2*N-n-1):
+            sigma[n,k] = be[k] * sigma[n-1,k-1] + \
+                    (al[k+1] - (al[n] + be[n] * sigma[n-1,n] / sigma[n-1,n-1] - \
+                    be[n-1] * sigma[n-2,n-1] / sigma[n-2,n-2])) * sigma[n-1,k] + \
+                    be[k+1] * sigma[n-1,k+1] - \
+                    (be[n-1] * sigma[n-1,n-1] / sigma[n-2,n-2]) * sigma[n-2,k]
 
     ab = np.zeros([N,2])
-    ab[0,1] = mod_mom[0] * b[0]
-    ab[1,0] = alpha_1
-
+    ab[0,1] = mod_m[0] * be[0]
+    ab[1,0] = a_1
     for j in range(2, N):
-        ab[j,0] = a[j] + b[j]*sigma[j-1,j]/sigma[j-1,j-1] - b[j-1]*sigma[j-2,j-1]/sigma[j-2,j-2]
-        ab[j-1,1] = b[j-1]*sigma[j-1,j-1]/sigma[j-2,j-2]
-    
-    ab[N-1,1] = b[N-1]*sigma[N-1,N-1]/sigma[N-2,N-2]
-    ab[:,1] = np.sqrt(ab[:,1])
+        ab[j,0] = al[j] + be[j] * sigma[j-1,j] / sigma[j-1,j-1] - \
+                be[j-1] * sigma[j-2,j-1] / sigma[j-2,j-2]
 
+        ab[j-1,1] = be[j-1] * sigma[j-1,j-1] / sigma[j-2,j-2]
+    
+    ab[N-1,1] = be[N-1] * sigma[N-1,N-1] / sigma[N-2,N-2]
+    ab[:,1] = np.sqrt(ab[:,1])
     return ab
 
 
 
 """
-Discrete Painleve Equation I Method
+Discrete Painlevé I equation method
 """
 def delta(n):
         return (1 - (-1)**n) / 2
@@ -601,67 +566,10 @@ def dPI6(N, rho = 0.):
 
 
 """
-Lanczos Method
+Stabilized Lanczos algorithm
 """
-
-def lanczos_unstable(x, w, N):
-    """
-    Given length-n vectors x and w, computes the first N three-term recurrence
-    coefficients for an orthogonal polynomial family that is orthogonal with
-    respect to the discrete inner product
-    
-    < f, g > = sum_{j=1}^n f(x(j)) g(x(j)) w(j)
-
-    This code assumes that w has all non-negative entries. The degree-j
-    orthogonal polynomial p_j satisfies a recurrence relation
-    """
-    assert len(x) == len(w)
-    
-    n = len(w) + 1
-    w = np.sqrt(w)
-
-    # Initialize variables
-    qs = np.zeros([n,n])
-    v = np.zeros(n)
-    v[0] = 1.
-    qs[:,0] = v
-
-    a = np.zeros(N)
-    b = np.zeros(N)
-
-    for s in range(N+1):
-        z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
-        # print (z)
-
-        if s > 0:
-            a[s-1] = v.dot(z)
-
-        # single orthogonalization
-        z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
-
-        if s < N:
-            znorm = np.linalg.norm(z)
-            b[s] = znorm**2
-            v = z / znorm
-            qs[:,s+1] = v
-
-    ab = np.zeros([N+1, 2])
-    ab[1:,0] = a
-    ab[0:-1,1] = np.sqrt(b)
-
-    return ab[:-1,:]
-
 def lanczos_stable(x, w, N):
-    """
-    Given length-n vectors x and w, computes the first N three-term recurrence
-    coefficients for an orthogonal polynomial family that is orthogonal with
-    respect to the discrete inner product
     
-    < f, g > = sum_{j=1}^n f(x(j)) g(x(j)) w(j)
-
-    This code assumes that w has all non-negative entries. The degree-j
-    orthogonal polynomial p_j satisfies a recurrence relation
-    """
     assert len(x) == len(w)
     
     n = len(w) + 1
@@ -678,7 +586,6 @@ def lanczos_stable(x, w, N):
 
     for s in range(N+1):
         z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
-        # print (z)
 
         if s > 0:
             a[s-1] = v.dot(z)
@@ -699,72 +606,67 @@ def lanczos_stable(x, w, N):
 
     return ab[:-1,:]
 
+# def lanczos_stable(x, w):
+#
+    # assert len(x) == len(w)
+#
+    # n = len(w) + 1
+    # w = np.sqrt(w)
+#
+    # qs = np.zeros([n,n])
+    # v = np.zeros(n)
+    # v[0] = 1.
+    # qs[:,0] = v
+#
+    # a = np.zeros(n-1)
+    # b = np.zeros(n-1)
+#
+    # for s in range(n):
+        # z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
+#
+        # if s > 0:
+            # a[s-1] = v.dot(z)
+#
+        # z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
+        # z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
+#
+        # if s < n-1:
+            # znorm = np.linalg.norm(z)
+            # b[s] = znorm**2
+            # v = z / znorm
+            # qs[:,s+1] = v
+#
+    # ab = np.zeros([n, 2])
+    # ab[1:,0] = a
+    # ab[0:-1,1] = np.sqrt(b)
+#
+    # return ab[:-1,:]
 
-"""
-def lanczos_stable(x, w):
-    
-    assert len(x) == len(w)
-    
-    n = len(w) + 1
-    w = np.sqrt(w)
 
-    # Initialize variables
-    qs = np.zeros([n,n])
-    v = np.zeros(n)
-    v[0] = 1.
-    qs[:,0] = v
-
-    a = np.zeros(n-1)
-    b = np.zeros(n-1)
-
-    for s in range(n):
-        z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
-        # print (z)
-
-        if s > 0:
-            a[s-1] = v.dot(z)
-
-        # double orthogonalization
-        z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
-        z = z - qs[:,0:s+1].dot( (qs[:,0:s+1].T.dot(z)) )
-
-        if s < n-1:
-            znorm = np.linalg.norm(z)
-            b[s] = znorm**2
-            v = z / znorm
-            qs[:,s+1] = v
-
-    ab = np.zeros([n, 2])
-    ab[1:,0] = a
-    ab[0:-1,1] = np.sqrt(b)
-
-    return ab[:-1,:]
-"""
-
-def lanczos(x, w, N):
-    """
-    Given length-M vector x and w, computes the first N coefficients.
-    consider conditions under which the Lanczos algorithm serves as
-    a discrete approximation to the Stieltjes procedure, i.e. stieltjes_discrete
-
-    Requires M >> N
-    """
-    ab = np.zeros([N+1,2])
-    assert len(x) == len(w), 'x and w should have the same size'
-    assert len(x) >= N, 'size of x should much larger than N'
-    M = len(x)
-    v = np.zeros([M,N])
-    tilde_v = np.zeros([M,N+1])
-    tilde_v[:,0] = np.sqrt(w)
-
-    for i in range(N):
-        ab[i,1] = np.linalg.norm(tilde_v[:,i], None)
-        v[:,i] = tilde_v[:,i] / ab[i,1]
-        ab[i+1,0] = np.sum(x * v[:,i]**2)
-        if i == 0:
-            tilde_v[:,i+1] = (x - ab[i+1,0]) * v[:,i]
-        else:
-            tilde_v[:,i+1] = (x - ab[i+1,0]) * v[:,i] - ab[i,1] * v[:,i-1]
-
-    return ab[:N]
+# def lanczos(x, w, N):
+    # """
+    # Given length-M vector x and w, computes the first N coefficients.
+    # consider conditions under which the Lanczos algorithm serves as
+    # a discrete approximation to the Stieltjes procedure, i.e. stieltjes_discrete
+#
+    # Requires M >> N
+    # """
+    # ab = np.zeros([N+1,2])
+    # assert len(x) == len(w), 'x and w should have the same size'
+    # assert len(x) >= N, 'size of x should much larger than N'
+    # M = len(x)
+    # v = np.zeros([M,N])
+    # tilde_v = np.zeros([M,N+1])
+    # tilde_v[:,0] = np.sqrt(w)
+#
+    # for i in range(N):
+        # ab[i,1] = np.linalg.norm(tilde_v[:,i], None)
+        # v[:,i] = tilde_v[:,i] / ab[i,1]
+        # ab[i+1,0] = np.sum(x * v[:,i]**2)
+        # if i == 0:
+            # tilde_v[:,i+1] = (x - ab[i+1,0]) * v[:,i]
+        # else:
+            # tilde_v[:,i+1] = (x - ab[i+1,0]) * v[:,i] - ab[i,1] * v[:,i-1]
+#
+    # return ab[:N]
 
