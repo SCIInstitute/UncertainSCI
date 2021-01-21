@@ -6,6 +6,7 @@ from UncertainSCI.indexing import MultiIndexSet
 from UncertainSCI.distributions import ProbabilityDistribution
 from UncertainSCI.utils.casting import to_numpy_array
 from UncertainSCI.utils.version import version_lessthan
+from UncertainSCI.utils.linalg import lstsq_loocv_error
 
 
 class PolynomialChaosExpansion():
@@ -147,6 +148,9 @@ class PolynomialChaosExpansion():
             coeffs, residuals = np.linalg.lstsq(V, model_output, rcond=-1)[:2]
         else:
             coeffs, residuals = np.linalg.lstsq(V, model_output, rcond=None)[:2]
+
+        self.accuracy_metrics['loocv'] = lstsq_loocv_error(V, model_output, 1/norms**2)
+        self.accuracy_metrics['residuals'] = residuals
 
         self.coefficients = coeffs
         self.p = samples  # Should get rid of this.

@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.linalg import qr
+from scipy.linalg import qr, qr_delete
 
 
 def greedy_d_optimal(A, p):
@@ -51,10 +51,41 @@ def greedy_d_optimal(A, p):
 
     return P[:p]
 
+def lstsq_loocv_error(A, b, weights):
+    """Computes the leave-one-out cross validation (LOOCV) metric for a
+    least-squares problem.
+
+    Args:
+        A: The M x N design matrix from a least-squares procedure
+        b: The right-hand side array with M rows from a least-squares procedure
+        weights: size-M array with positive entries, indicating pointwise
+            weights in the LOOCV metric.
+    Returns:
+        cv: The sum-of-squares cross-validation metric (scalar, float)
+    """
+
+    M, N = A.shape
+    Q, R, P = qr(A, pivoting=True, mode='economic')
+
+    bdim = len(b.shape)
+
+    if bdim == 1:
+        cv = 0.
+    else:
+        cv = np.zeros(b.shape[1])
+
+    for m in range(M):
+        # Leave out m'th sample and compute residal on m'th point.
+        Qm, Rm = qr_delete(Q, R, m)
+        bm = np.delete(b, m, axis=0)
+
+        if bdim > 1:
+            cv += weights[m]*(b[m,:] - A[m,P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
+        else:
+            cv += weights[m]*(b[m] - A[m,P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
+
+    return np.sqrt(cv/M)
 
 if __name__ == "__main__":
 
-    A = np.random.randn(100, 50)/np.sqrt(50)
-    p = 75
-
-    P = greedy_d_optimal(A, p)
+    pass

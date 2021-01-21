@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy.linalg import qr
 
-from UncertainSCI.utils.linalg import greedy_d_optimal
+from UncertainSCI.utils.linalg import greedy_d_optimal, lstsq_loocv_error
 
 
 class LinalgTestCase(unittest.TestCase):
@@ -47,6 +47,35 @@ class LinalgTestCase(unittest.TestCase):
 
         self.assertEqual(np.linalg.norm(P-P2[:p], ord=np.inf), 0, msg=errstr)
 
+    def test_lstsq_loocv_error(self):
+        """ Leave-one-out cross validation for least-squares. """
+
+        delta = 1e-8
+
+        M = 100
+        N = 50
+        P = 25
+
+        A = np.random.randn(M, N)/np.sqrt(N)
+        b = np.random.randn(M, P)
+        weights = np.random.rand(M)
+
+        M, N = A.shape
+
+        cv = np.zeros(P)
+
+        for m in range(M):
+
+            Am = np.delete(A, m, axis=0)
+            bm = np.delete(b, m, axis=0)
+            xm = np.linalg.lstsq(Am, bm, rcond=None)[0]
+
+            cv += weights[m]* (b[m,:] - A[m,:] @ xm)**2
+
+        cv = np.sqrt(cv/M)
+        cv2 = lstsq_loocv_error(A, b, weights)
+
+        self.assertAlmostEqual(np.linalg.norm(cv - cv2), 0, delta=delta)
 
 if __name__ == "__main__":
 
