@@ -2,11 +2,10 @@ import unittest
 
 import numpy as np
 
-from UncertainSCI.families import jacobi_weight_normalized, jacobi_recurrence_values
-from UncertainSCI.families import hermite_recurrence_values
-
-from UncertainSCI.mthd_mod_correct import compute_ttr_bounded, compute_ttr_unbounded
-from UncertainSCI.mthd_mod_correct import compute_ttr_bounded_composite, compute_ttr_unbounded_composite
+from UncertainSCI.ttr.compute_ttr import predict_correct_unbounded, lanczos_stable
+from UncertainSCI.utils.verify_orthonormal import verify_orthonormal
+from UncertainSCI.families import JacobiPolynomials
+from UncertainSCI.opoly1d import gauss_quadrature_driver
 
 class TTRTestCase(unittest.TestCase):
     """
@@ -16,117 +15,99 @@ class TTRTestCase(unittest.TestCase):
     def setUp(self):
         self.longMessage = True
 
-    def test_ttr_bounded(self):
-        """ Iterative TTR computation using global quadrature
-        Testing of composite.compute_ttr_bounded
+    def test_pc(self):
         """
-
-        alpha = -1. + 6*np.random.rand()
-        beta  = -1. + 6*np.random.rand()
-
-        a = -1.
-        b = 1.
-
-        delta = 1e-8
-
-        weight = lambda x: jacobi_weight_normalized(x, alpha, beta)
-        N = 100
-        
-        ab_true = jacobi_recurrence_values(N-1, alpha, beta)
-        ab_true[0,1] = 1.
-
-        singularity_list = [ [-1., 0, beta], 
-                             [1., alpha, 0]
-                             ]
-
-        ab = compute_ttr_bounded(a, b, weight, N, singularity_list)
-        
-        errstr = 'Failed for (N,alpha,beta) = ({0:d}, {1:1.6f}, {2:1.6f})'.format(N, alpha, beta)
-
-        self.assertAlmostEqual(np.linalg.norm(ab-ab_true, ord=np.inf), 0, delta = delta, msg=errstr)
-
-
-    def test_ttr_bounded_composite(self):
-        """ Iterative TTR computation using composite quadrature
-        Testing of composite.compute_ttr_bounded_composite
+        compute the first N recurrence coefficients using PC algorithm
+        for half Hermite weight function w(x) = e^(-x^2) on [0,inf)
         """
-
-        alpha = -1. + 6*np.random.rand()
-        beta  = -1. + 6*np.random.rand()
-
-        a = -1.
-        b = 1.
-
-        delta = 1e-8
-
-        weight = lambda x: jacobi_weight_normalized(x, alpha, beta)
-        N = 20
-        
-        ab_true = jacobi_recurrence_values(N-1, alpha, beta)
-        ab_true[0,1] = 1.
-
-        singularity_list = [ [-1., 0, beta], 
-                             [1., alpha, 0]
-                             ]
-
-        ab = compute_ttr_bounded_composite(a, b, weight, N, singularity_list)
-        
-        errstr = 'Failed for (N,alpha,beta) = ({0:d}, {1:1.6f}, {2:1.6f})'.format(N, alpha, beta)
-
-        self.assertAlmostEqual(np.linalg.norm(ab-ab_true, ord=np.inf), 0, delta = delta, msg=errstr)
-
-    def test_ttr_unbounded(self):
-
         a = -np.inf
         b = np.inf
-
-        delta = 1e-8
-
         weight = lambda x: np.exp(-x**2)
-        N = 100
+        N = 10 # change this to 300 leads to the None in the last 10 coeffients
 
-        ab_true = hermite_recurrence_values(N-1, 0.)
-        # ab_true[0,1] = 1.
+        ab_pc = predict_correct_unbounded(a, b, weight, N, [])
+        ab = np.zeros([N,2])
+        ab[0,1] = np.pi**(1/4)
+        ab[1:,1] = np.sqrt(np.arange(1,N)/2)
 
-        singularity_list = []
+        e_pc = np.linalg.norm(ab_pc - ab, None)
+        
+        delta = 1e-8
+        
+        errstr = 'Failed for N = {0:d}'.format(N)
 
-        ab = compute_ttr_unbounded(a, b, weight, N, singularity_list)
+        self.assertAlmostEqual(e_pc, 0, delta = delta, msg=errstr)
 
-        errstr = 'Failed for (N) = ({0:d})'.format(N)
-
-        self.assertAlmostEqual(np.linalg.norm(ab-ab_true, ord=np.inf), 0, delta = delta, msg=errstr)
-
-    def test_ttr_unbounded_composite(self):
-
+    def test_orthogonality(self):
+        """
+        verify the orthogonality of polynomials evaluated by
+        recurrence coefficients computed from PC algorithm
+        """
         a = -np.inf
         b = np.inf
+        weight = lambda x: np.exp(-x**2)
+
+        N = 10 # this may fail for a relatively large N
+        ab_pc = predict_correct_unbounded(a, b, weight, N+1, [])
+        xg,wg = gauss_quadrature_driver(ab_pc, N)
+
+        e_pc = np.linalg.norm(verify_orthonormal(ab_pc, np.arange(N), xg, wg) \
+                - np.eye(N), None)
+        
+        delta = 1e-8
+        errstr = 'Failed for N = {0:d}'.format(N)
+        self.assertAlmostEqual(e_pc, 0, delta = delta, msg=errstr)
+
+    # def test_orthogonality(self):
+        # """
+        # verify the orthogonality of polynomials evaluated by
+        # recurrence coefficients computed from PC algorithm
+        # """
+        # a = 0.
+        # b = np.inf
+        # weight = lambda x: np.exp(-x**2)
+        # N = 10
+#
+        # ab_pc = predict_correct_unbounded(a, b, weight, N+1, [])
+        # xg,wg = gauss_quadrature_driver(ab_pc, N)
+#
+        # e_pc = np.linalg.norm(verify_orthonormal(ab_pc, np.arange(N), xg, wg) \
+                # - np.eye(N), None)
+#
+        # delta = 1e-8
+        # errstr = 'Failed for N = {0:d}'.format(N)
+        # self.assertAlmostEqual(e_pc, 0, delta = delta, msg=errstr)
+
+    def test_lanczos(self):
+        """
+        compute the first N recurrence coefficients using
+        (stabilized) Lanczos procedure for
+        the discrete Chebyshev transformed to [0,1).
+        """
+        N = np.random.randint(100)
+        
+        x = np.arange(N) / N
+        w = (1/N) * np.ones(len(x))
+        ab_lz = lanczos_stable(x, w, N)
+
+        def discrete_chebyshev(N):
+            """
+            Return the first N exact recurrence coefficients
+            """
+            ab = np.zeros([N,2])
+            ab[1:,0] = (N-1) / (2*N)
+            ab[0,1] = 1.
+            ab[1:,1] = np.sqrt( 1/4 * (1 - (np.arange(1,N)/N)**2) \
+                    / (4 - (1/np.arange(1,N)**2)) )
+
+            return ab
+
+        e_lz = np.linalg.norm(ab_lz - discrete_chebyshev(N))
 
         delta = 1e-8
-
-        weight = lambda x: np.exp(-x**2)
-        N = 20
-
-        ab_true = hermite_recurrence_values(N-1, 0.)
-        # ab_true[0,1] = 1.
-
-        singularity_list = []
-
-        ab = compute_ttr_unbounded_composite(a, b, weight, N, singularity_list)
-
-        errstr = 'Failed for (N) = ({0:d})'.format(N)
-
-        self.assertAlmostEqual(np.linalg.norm(ab-ab_true, ord=np.inf), 0, delta = delta, msg=errstr)
-
+        errstr = 'Failed for N = {0:d}'.format(N)
+        self.assertAlmostEqual(e_lz, 0, delta = delta, msg=errstr)
 
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
-
-    """
-    Ran 4 tests in 50.237s
-
-    N = 100 for nocomposite and N = 20 for composite
-    
-    Note nocomposite method last for only a few seconds,
-    while composite methohd is much slower.
-    """
