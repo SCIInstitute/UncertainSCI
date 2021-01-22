@@ -25,6 +25,7 @@ class PolynomialChaosExpansion():
     def __init__(self, indices=None, distribution=None):
 
         self.coefficients = None
+        self.accuracy_metrics = {}
         self.indices, self.distribution = indices, distribution
         self.samples = None
 
