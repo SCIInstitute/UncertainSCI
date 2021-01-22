@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from UncertainSCI.ttr.compute_ttr import predict_correct_unbounded, lanczos_stable
+from UncertainSCI.ttr import predict_correct_unbounded, lanczos_stable
 from UncertainSCI.utils.verify_orthonormal import verify_orthonormal
 from UncertainSCI.families import JacobiPolynomials
 from UncertainSCI.opoly1d import gauss_quadrature_driver
