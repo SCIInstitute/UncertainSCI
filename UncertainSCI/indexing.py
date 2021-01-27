@@ -176,7 +176,8 @@ def multi_indices_degree(d, k, p):
 
 def pdjk(d, k):
     j = np.arange(k+1)
-    p = np.exp(np.log(d) + sp.gammaln(k+1) - sp.gammaln(j+1) + sp.gammaln(j+d) - sp.gammaln(k+d+1))
+    p = np.exp(np.log(d) + sp.gammaln(k+1) - sp.gammaln(j+1) +
+               sp.gammaln(j+d) - sp.gammaln(k+d+1))
     assert np.abs(sum(p)-1) < 1e-8
     return p
 
@@ -198,7 +199,8 @@ def sampling_total_degree_indices(N, d, k):
 
     Returns
     ------
-    The output lambdas is an N x d matrix, with each row containing one of these multi-indices
+    The output lambdas is an N x d matrix, with each row containing one of
+    these multi-indices
     """
     lambdas = np.zeros((N, d))
 
@@ -206,8 +208,9 @@ def sampling_total_degree_indices(N, d, k):
 
     for i in range(1, d):
         for n in range(1, N+1):
-            lambdas[n-1, i-1] = discrete_sampling(1, pdjk(d-i, degrees[n-1]),
-                                                  np.arange(degrees[n-1], 0-1e-8, -1))
+            lambdas[n-1, i-1] = \
+                discrete_sampling(1, pdjk(d-i, degrees[n-1]),
+                                  np.arange(degrees[n-1], 0-1e-8, -1))
 
         degrees = degrees - lambdas[:, i-1]
 
@@ -216,14 +219,22 @@ def sampling_total_degree_indices(N, d, k):
     return lambdas
 
 
-class LpSet():
+class MultiIndexSet():
+    def __init__(self, dim=None):
+        self.dim = dim
+        self.indices = np.zeros([0, self.dim])
+        pass
+
+
+class LpSet(MultiIndexSet):
     def __init__(self, dim=1, order=0, p=1):
         assert dim > 0 and order >= 0 and p >= 0
         self.dim = dim
         self.order = order
         self.p = p
+        self.indices = self.get_indices()
 
-    def indices(self):
+    def get_indices(self):
         if self.p < 1:
             lambdas = total_degree_indices(self.dim, self.order)
             norm = (np.sum(lambdas**self.p, axis=1))**(1/self.p)
@@ -247,18 +258,14 @@ class LpSet():
         return lambdas
 
 
-class MultiIndexSet():
-    def __init__(self):
-        pass
-
-
 class TotalDegreeSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
         self.dim, self.order = dim, order
+        self.indices = self.get_indices()
 
-    def indices(self):
+    def get_indices(self):
         return total_degree_indices(self.dim, self.order)
 
 
@@ -267,8 +274,9 @@ class HyperbolicCrossSet(MultiIndexSet):
         assert dim > 0 and order >= 0
 
         self.dim, self.order = dim, order
+        self.indices = self.get_indices()
 
-    def indices(self):
+    def get_indices(self):
         return hyperbolic_cross_indices(self.dim, self.order)
 
 

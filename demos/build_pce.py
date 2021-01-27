@@ -27,7 +27,7 @@ dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
 
 # # Expressivity setup
 order = 5
-indices = TotalDegreeSet(dim=dimension, order=order)
+index_set = TotalDegreeSet(dim=dimension, order=order)
 
 # # Define model:
 #
@@ -62,7 +62,7 @@ model = laplace_ode(left=left, right=right, N=N, diffusion=diffusion)
 
 # # Building the PCE
 # Generate samples first, then manually query model, then give model output to pce.
-pce = PolynomialChaosExpansion(indices, dist)
+pce = PolynomialChaosExpansion(index_set, dist)
 pce.generate_samples()
 
 print('This will query the model {0:d} times'.format(pce.samples.shape[0]))
@@ -73,7 +73,7 @@ for ind in range(pce.samples.shape[0]):
 pce.build(model_output=model_output)
 
 # Alternatively, you can just provide the whole model:
-#  pce = PolynomialChaosExpansion(indices, dist)
+#  pce = PolynomialChaosExpansion(index_set, dist)
 #  pce.generate_samples()
 #  pce.build(model)
 
@@ -82,7 +82,7 @@ parameter_samples = pce.samples
 model_evaluations = pce.model_output
 
 # As a sanity check: you could build a second PCE on the same parameter samples
-#  pce2 = PolynomialChaosExpansion(indices, dist)
+#  pce2 = PolynomialChaosExpansion(index_set, dist)
 #  pce2.build(model, samples=parameter_samples)
 #
 # # pce and pce2 have the same coefficients:

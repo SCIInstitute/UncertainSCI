@@ -22,14 +22,14 @@ class PolynomialChaosExpansion():
         samples: The experimental or sample design in stochastic space.
 
     """
-    def __init__(self, indices=None, distribution=None):
+    def __init__(self, index_set=None, distribution=None):
 
         self.coefficients = None
         self.accuracy_metrics = {}
-        self.indices, self.distribution = indices, distribution
+        self.index_set, self.distribution = index_set, distribution
         self.samples = None
 
-    def set_indices(self, indices):
+    def set_indices(self, index_set):
         """Sets multi-index set for polynomial approximation.
 
         Args:
@@ -37,8 +37,8 @@ class PolynomialChaosExpansion():
         Returns:
             None:
         """
-        if isinstance(indices, MultiIndexSet):
-            self.indices = indices
+        if isinstance(index_set, MultiIndexSet):
+            self.index_set = index_set
         else:
             raise ValueError('Indices must be a MultiIndexSet object')
 
@@ -61,7 +61,7 @@ class PolynomialChaosExpansion():
             raise ValueError('First set distribution with set_distribution')
 
     def check_indices(self):
-        if self.indices is None:
+        if self.index_set is None:
             raise ValueError('First set indices with set_indices')
 
     def generate_samples(self, sample_type='wafp', **sampler_options):
@@ -75,7 +75,7 @@ class PolynomialChaosExpansion():
         self.check_indices()
 
         if sample_type.lower() == 'wafp':
-            p_standard = self.distribution.polys.wafp_sampling(self.indices.indices(), **sampler_options)
+            p_standard = self.distribution.polys.wafp_sampling(self.index_set.get_indices(), **sampler_options)
 
             # Maps to domain
             self.samples = self.distribution.transform_to_standard.mapinv(
@@ -119,7 +119,7 @@ class PolynomialChaosExpansion():
                 pass  # User didn't specify samples now, but did previously
 
         else:
-            if samples.shape[1] != self.indices.indices().shape[1]:
+            if samples.shape[1] != self.index_set.get_indices().shape[1]:
                 raise ValueError('Input parameter samples have wrong dimension')
 
             self.samples = samples
@@ -138,7 +138,7 @@ class PolynomialChaosExpansion():
                 else:
                     model_output[ind, :] = model(self.samples[ind, :])
 
-        V = self.distribution.polys.eval(p_standard, self.indices.indices())
+        V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
 
         # Precondition for stability
         norms = 1/np.sqrt(np.sum(V**2, axis=1))
@@ -228,9 +228,9 @@ class PolynomialChaosExpansion():
                     self.distribution.transform_to_standard.map(p))
 
         if components is None:
-            return np.dot(self.distribution.polys.eval(p_std, self.indices.indices()), self.coefficients)
+            return np.dot(self.distribution.polys.eval(p_std, self.index_set.get_indices()), self.coefficients)
         else:
-            return np.dot(self.distribution.polys.eval(p_std, self.indices.indices()), self.coefficients[:, components])
+            return np.dot(self.distribution.polys.eval(p_std, self.index_set.get_indices()), self.coefficients[:, components])
 
     def quantile(self, q, M=100):
         """
@@ -278,7 +278,7 @@ class PolynomialChaosExpansion():
 
         dim_indices = np.asarray(dim_indices, dtype=int)
 
-        indices = self.indices.indices()
+        indices = self.index_set.get_indices()
         # variance_rows = np.linalg.norm(indices, axis=1) > 0.
 
         # variances = np.sum(self.coefficients[variance_rows,:]**2, axis=0)
@@ -309,7 +309,7 @@ class PolynomialChaosExpansion():
         # # Just making sure
         # assert unique_rows.shape[0] == lambdas.shape[0]
 
-        indices = self.indices.indices()
+        indices = self.index_set.get_indices()
         # variance_rows = np.linalg.norm(indices, axis=1) > 0.
         # assert np.sum(np.invert(variance_rows)) == 1
 

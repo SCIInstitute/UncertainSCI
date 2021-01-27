@@ -19,13 +19,13 @@ dist = ExponentialDistribution(lbd=lbd, loc=loc)
 
 # # Indices setup
 order = 10
-indices = TotalDegreeSet(dim=dimension, order=order)
+index_set = TotalDegreeSet(dim=dimension, order=order)
 
-print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
+print('This will query the model {0:d} times'.format(index_set.get_indices().shape[0] + 10))
 # Why +10? That's the default for PolynomialChaosExpansion.build_pce_wafp
 
 # # Initializes a pce object
-pce = PolynomialChaosExpansion(indices, dist)
+pce = PolynomialChaosExpansion(index_set, dist)
 
 # # Define model
 N = int(1e2)  # Number of degrees of freedom of model
@@ -38,7 +38,7 @@ model = sine_modulation(N=N)
 
 # 1
 # Generate samples and query model in one call:
-pce = PolynomialChaosExpansion(indices, dist)
+pce = PolynomialChaosExpansion(index_set, dist)
 lsq_residuals = pce.build(model)
 
 
@@ -47,7 +47,7 @@ parameter_samples = pce.samples
 model_evaluations = pce.model_output
 
 # And you could build a second PCE on the same parameter samples
-pce2 = PolynomialChaosExpansion(indices, dist)
+pce2 = PolynomialChaosExpansion(index_set, dist)
 pce2.build(model, samples=parameter_samples)
 
 # pce and pce2 have the same coefficients:
