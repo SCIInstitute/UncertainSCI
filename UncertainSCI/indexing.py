@@ -223,7 +223,108 @@ class MultiIndexSet():
     def __init__(self, dim=None):
         self.dim = dim
         self.indices = np.zeros([0, self.dim])
-        pass
+
+    def get_indices(self):
+        return self.indices
+
+    def isamember(self, trial_indices):
+        """
+        Determines if input indices are members of the current index set.
+
+        Args:
+            trial_indices: An :math:`K \\times d` numpy array, where each row
+              corresponds to an index.
+
+        Returns:
+            member: A numpy boolean array of size :math:`K` indicating if the
+              rows of trial_indices are part of the current index set.
+        """
+
+        K, d = trial_indices.shape
+        assert self.dim == d, \
+               "Input index array should have {0:d} columns".format(self.dim)
+
+        M = self.indices.shape[0]
+        member = np.zeros(K, dtype=bool)
+        for m in range(K):
+
+            index = trial_indices[m, :]
+
+            matches = np.ones(M, dtype=bool)
+            for q in range(d):
+                matches[matches] = index[q] == self.indices[matches, q]
+
+            if np.any(matches):
+                member[m] = True
+
+        return member
+
+    def get_margin(self):
+        """
+        Computes the margin of the index set :math:`\\Lambda`. In :math:`d`
+        dimensions, this is defined as the set of indices :math:`\\lambda \\in
+        N_0^d \\backslash \\Lambda` such that
+
+        .. math::
+
+          \\lambda - e_j \\in \\Lambda
+
+        for some :math:`j = 1, \\ldots, d`.
+
+        Returns:
+            margin: A numpy array of size :math:`M \\times d` where each row
+              contains an index in the margin.
+        """
+
+        # Do this in a brute-force manner:
+        # - search for leaves of the current index set as margin candidates
+        # - weed out leaves that are not in the margin
+
+        M, d = self.indices.shape
+        margin = np.zeros([M, d], dtype=self.indices.dtype)
+        row = 0
+
+        for m in range(M):
+            candidates = np.tile(self.indices[m, :], [d, 1]) + np.eye(d)
+            membership_flags = ~self.isamember(candidates)
+            k = np.sum(membership_flags)
+            margin[row:row+k, :] = candidates[membership_flags, :]
+            row += k
+
+        return np.unique(margin[:row, :], axis=0)
+
+    def get_reduced_margin(self):
+        """
+        Computes the reduced margin of the index set :math:`\\Lambda`. In
+        :math:`d` dimensions, this is defined as the set of indices
+        :math:`\\lambda \\in N_0^d \\backslash \\Lambda` such that
+
+        .. math::
+
+          \\lambda - e_j \\in \\Lambda
+
+        for every :math:`j = 1, \\ldots, d` satisfying :math:`\\lambda_j \\neq
+        0`.
+
+        Returns:
+            margin: A numpy array of size :math:`M \\times d` where each row
+              contains an index in the margin.
+        """
+
+        # We'll sequentially test elements in the margin
+
+        margin = self.get_margin()
+        K, d = margin.shape
+        reduced_margin_inds = []
+
+        for k in range(K):
+            candidates = np.tile(margin[k, :], [d, 1]) - np.eye(d)
+            candidates = candidates[~np.any(candidates < 0, axis=1), :]
+
+            if np.all(self.isamember(candidates)):
+                reduced_margin_inds.append(k)
+
+        return margin[reduced_margin_inds, :]
 
 
 class LpSet(MultiIndexSet):
@@ -284,29 +385,27 @@ if __name__ == "__main__":
 
     from matplotlib import pyplot as plt
 
-    d = 1
-    k = 5
-
-    L1 = total_degree_indices(d, k)
-
     d = 2
-    k = 7
+    k = 3
 
-    L2 = total_degree_indices(d, k)
+    I1 = TotalDegreeSet(dim=d, order=k)
+    test11 = I1.isamember(I1.indices+1)
+    m1 = I1.get_margin()
+    rm1 = I1.get_reduced_margin()
 
-    d = 4
-    k = 6
+    I2 = HyperbolicCrossSet(dim=d, order=k+2)
+    test21 = I2.isamember(I2.indices+1)
+    m2 = I2.get_margin()
+    rm2 = I2.get_reduced_margin()
 
-    L4 = total_degree_indices(d, k)
+    plt.subplot(121)
+    plt.plot(I1.indices[:,0], I1.indices[:,1], 'k.')
+    plt.plot(m1[:,0], m1[:,1], 'r+')
+    plt.plot(rm1[:,0], rm1[:,1], 'bx')
 
-    N = L4.shape[0] - 10
-    L42 = total_degree_indices_N(d, N)
+    plt.subplot(122)
+    plt.plot(I2.indices[:,0], I2.indices[:,1], 'k.')
+    plt.plot(m2[:,0], m2[:,1], 'r+')
+    plt.plot(rm2[:,0], rm2[:,1], 'bx')
 
-    err = np.linalg.norm(L42 - L4[:N, :])
-
-    # Hyperbolic cross
-    d, k = 2, 33
-    lambdas = hyperbolic_cross_indices(d, k)
-
-    plt.plot(lambdas[:, 0], lambdas[:, 1], 'r.')
     plt.show()
