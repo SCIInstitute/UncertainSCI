@@ -7,4 +7,6 @@ layout: default
 
 ### User Guide content...
 
-### Tutorials content...
+### Tutorials
+- [Template Tutorial](user_docs/template.html)
+

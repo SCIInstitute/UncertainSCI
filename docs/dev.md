@@ -5,4 +5,6 @@ layout: default
 ---
 
 
-### Developer Documentation content...
+### Developer Documentation
+
+- [How to make Tutorials](dev_docs/HowToTutorial.html)
