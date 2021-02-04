@@ -60,7 +60,10 @@ def hyperbolic_cross_indices(d, k):
 
         possible_indices = np.vstack({tuple(row) for row in possible_indices})
         arow = lambdas.shape[0]
-        lambdas = np.vstack([lambdas, np.zeros([combs.shape[0]*possible_indices.shape[0], d], dtype=int)])
+        lambdas = np.vstack([lambdas,
+                             np.zeros([combs.shape[0]*possible_indices.shape[0],
+                                       d],
+                                      dtype=int)])
 
     # Now for each combination, we put in possible_indices
         for c in range(combs.shape[0]):
@@ -176,7 +179,8 @@ def multi_indices_degree(d, k, p):
 
 def pdjk(d, k):
     j = np.arange(k+1)
-    p = np.exp(np.log(d) + sp.gammaln(k+1) - sp.gammaln(j+1) + sp.gammaln(j+d) - sp.gammaln(k+d+1))
+    p = np.exp(np.log(d) + sp.gammaln(k+1) - sp.gammaln(j+1) +
+               sp.gammaln(j+d) - sp.gammaln(k+d+1))
     assert np.abs(sum(p)-1) < 1e-8
     return p
 
@@ -198,7 +202,8 @@ def sampling_total_degree_indices(N, d, k):
 
     Returns
     ------
-    The output lambdas is an N x d matrix, with each row containing one of these multi-indices
+    The output lambdas is an N x d matrix, with each row containing one of
+    these multi-indices
     """
     lambdas = np.zeros((N, d))
 
@@ -206,8 +211,9 @@ def sampling_total_degree_indices(N, d, k):
 
     for i in range(1, d):
         for n in range(1, N+1):
-            lambdas[n-1, i-1] = discrete_sampling(1, pdjk(d-i, degrees[n-1]),
-                                                  np.arange(degrees[n-1], 0-1e-8, -1))
+            lambdas[n-1, i-1] = \
+                discrete_sampling(1, pdjk(d-i, degrees[n-1]),
+                                  np.arange(degrees[n-1], 0-1e-8, -1))
 
         degrees = degrees - lambdas[:, i-1]
 
@@ -216,14 +222,144 @@ def sampling_total_degree_indices(N, d, k):
     return lambdas
 
 
-class LpSet():
+class MultiIndexSet():
+    def __init__(self, dim=None):
+        self.dim = dim
+        self.indices = np.zeros([0, self.dim])
+        self.adaptive = False
+
+    def get_indices(self):
+        return self.indices
+
+    def size(self):
+        return self.indices.shape[0]
+
+    def isamember(self, trial_indices):
+        """
+        Determines if input indices are members of the current index set.
+
+        Args:
+            trial_indices: An :math:`K \\times d` numpy array, where each row
+              corresponds to an index.
+
+        Returns:
+            member: A numpy boolean array of size :math:`K` indicating if the
+              rows of trial_indices are part of the current index set.
+        """
+
+        K, d = trial_indices.shape
+        assert self.dim == d, \
+               "Input index array should have {0:d} columns".format(self.dim)
+
+        M = self.indices.shape[0]
+        member = np.zeros(K, dtype=bool)
+        for m in range(K):
+
+            index = trial_indices[m, :]
+
+            matches = np.ones(M, dtype=bool)
+            for q in range(d):
+                matches[matches] = index[q] == self.indices[matches, q]
+
+            if np.any(matches):
+                member[m] = True
+
+        return member
+
+    def get_margin(self):
+        """
+        Computes the margin of the index set :math:`\\Lambda`. In :math:`d`
+        dimensions, this is defined as the set of indices :math:`\\lambda \\in
+        N_0^d \\backslash \\Lambda` such that
+
+        .. math::
+
+          \\lambda - e_j \\in \\Lambda
+
+        for some :math:`j = 1, \\ldots, d`.
+
+        Returns:
+            margin: A numpy array of size :math:`M \\times d` where each row
+              contains an index in the margin.
+        """
+
+        # Do this in a brute-force manner:
+        # - search for leaves of the current index set as margin candidates
+        # - weed out leaves that are not in the margin
+
+        M, d = self.indices.shape
+        margin = np.zeros([0, d], dtype=self.indices.dtype)
+
+        for m in range(M):
+            candidates = np.tile(self.indices[m, :], [d, 1]) +\
+                         np.eye(d, dtype=self.indices.dtype)
+            membership_flags = ~self.isamember(candidates)
+            margin = np.unique(
+                      np.append(margin, candidates[membership_flags, :], axis=0),
+                      axis=0)
+
+        return margin
+
+    def get_reduced_margin(self):
+        """
+        Computes the reduced margin of the index set :math:`\\Lambda`. In
+        :math:`d` dimensions, this is defined as the set of indices
+        :math:`\\lambda \\in N_0^d \\backslash \\Lambda` such that
+
+        .. math::
+
+          \\lambda - e_j \\in \\Lambda
+
+        for every :math:`j = 1, \\ldots, d` satisfying :math:`\\lambda_j \\neq
+        0`.
+
+        Returns:
+            margin: A numpy array of size :math:`M \\times d` where each row
+              contains an index in the margin.
+        """
+
+        # We'll sequentially test elements in the margin
+
+        margin = self.get_margin()
+        K, d = margin.shape
+        reduced_margin_inds = []
+
+        for k in range(K):
+            candidates = np.tile(margin[k, :], [d, 1]) - np.eye(d)
+            candidates = candidates[~np.any(candidates < 0, axis=1), :]
+
+            if np.all(self.isamember(candidates)):
+                reduced_margin_inds.append(k)
+
+        return margin[reduced_margin_inds, :]
+
+    def augment(self, indices):
+        """
+        Augments the index set with the given indices.
+        """
+
+        K, d = indices.shape
+        assert d == self.dim, \
+               "Input index array should have {0:d} columns".format(self.dim)
+
+        membership_flags = self.isamember(indices)
+        if np.any(~membership_flags):
+            self.adaptive = True
+            self.indices = np.append(self.indices,
+                                     indices[~membership_flags, :], axis=0)
+
+
+class LpSet(MultiIndexSet):
     def __init__(self, dim=1, order=0, p=1):
         assert dim > 0 and order >= 0 and p >= 0
+
+        super().__init__(dim=dim)
         self.dim = dim
         self.order = order
         self.p = p
+        self.indices = self.get_indices()
 
-    def indices(self):
+    def get_indices(self):
         if self.p < 1:
             lambdas = total_degree_indices(self.dim, self.order)
             norm = (np.sum(lambdas**self.p, axis=1))**(1/self.p)
@@ -247,58 +383,38 @@ class LpSet():
         return lambdas
 
 
-class MultiIndexSet():
-    def __init__(self):
-        pass
-
-
 class TotalDegreeSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
-        self.dim, self.order = dim, order
+        super().__init__(dim=dim)
 
-    def indices(self):
-        return total_degree_indices(self.dim, self.order)
+        self.dim, self.order = dim, order
+        self.indices = self.get_indices()
+
+    def get_indices(self):
+        if self.adaptive:
+            return super().get_indices()
+        else:
+            return total_degree_indices(self.dim, self.order)
 
 
 class HyperbolicCrossSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
-        self.dim, self.order = dim, order
+        super().__init__(dim=dim)
 
-    def indices(self):
-        return hyperbolic_cross_indices(self.dim, self.order)
+        self.dim, self.order = dim, order
+        self.indices = self.get_indices()
+
+    def get_indices(self):
+        if self.adaptive:
+            return super().get_indices()
+        else:
+            return hyperbolic_cross_indices(self.dim, self.order)
 
 
 if __name__ == "__main__":
 
-    from matplotlib import pyplot as plt
-
-    d = 1
-    k = 5
-
-    L1 = total_degree_indices(d, k)
-
-    d = 2
-    k = 7
-
-    L2 = total_degree_indices(d, k)
-
-    d = 4
-    k = 6
-
-    L4 = total_degree_indices(d, k)
-
-    N = L4.shape[0] - 10
-    L42 = total_degree_indices_N(d, N)
-
-    err = np.linalg.norm(L42 - L4[:N, :])
-
-    # Hyperbolic cross
-    d, k = 2, 33
-    lambdas = hyperbolic_cross_indices(d, k)
-
-    plt.plot(lambdas[:, 0], lambdas[:, 1], 'r.')
-    plt.show()
+    pass

@@ -18,14 +18,14 @@ beta = 1.
 # Distribution setup
 dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
 
-# Indices setup
+# Index set setup
 order = 5  # polynomial degree
-indices = TotalDegreeSet(dim=dimension, order=order)
+index_set = TotalDegreeSet(dim=dimension, order=order)
 
-print('This will query the model {0:d} times'.format(indices.indices().shape[0] + 10))
+print('This will query the model {0:d} times'.format(index_set.get_indices().shape[0] + 10))
 
 # Initializes a pce object
-pce = PolynomialChaosExpansion(indices, dist)
+pce = PolynomialChaosExpansion(index_set, dist)
 
 # Define model
 N = 10  # Number of degrees of freedom of model output
