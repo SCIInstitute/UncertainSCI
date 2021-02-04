@@ -10,10 +10,8 @@ layout: default_toc
 </script>
 <link rel="stylesheet" href="css/main.css">
 
-This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering
-(U24EB029012) from the National Institutes of Health.
+This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
 
-&nbsp;
 
 Authors:  
 Jess Tate 
@@ -22,26 +20,29 @@ Jess Tate
 
 *  [Overview](#overview)
 	-  [Software Requirements](#software-requirements)
-*  [Files Needed for a New Tutorials](#files-needed-for-a-new-tutorials)
-	- [Overview of Files Needed for each Module](#overview-of-files-needed-for-each-module)
-	- [2.2 Module Configuration File](#22-module-configuration-file)
-	- [2.3 Module Source Code](#23-module-source-code)
-		+ [2.3.1 Module Header File](#231-module-header-file)
-		+ [2.3.2 Module Code File](#232-module-code-file)
-	- [2.4 Module UI Code](#24-module-ui-code)
-		+ [2.4.1 Module Design File](#241-module-design-file)
-		+ [2.4.2 Module Dialog Header](#242-module-dialog-header)
-		+ [2.4.3 Module Dialog Code](#243-module-dialog-code)
-	- [2.5 Algorithm Code](#25-algorithm-code)
-		+ [2.5.1 Module Algorithm Header](#251-module-algorithm-header)
-		+ [2.5.2 Module Algorithm Code](#252-module-algorithm-code)
-*  [3 Example: Simple Module Without UI](#example-simple-module-without-ui)
-	- [3.1 Module Config File](#31-module-config-file)
-	- [3.2 Module Header File](#32-module-header-file)
-	- [3.3 Module Source Code](#33-module-source-code)
-	- [3.4 Building and Testing](#34-building-and-testing)
-*  [8 Documenting the New Module](#documenting-the-new-module) -->
-
+*  [Files Needed for a New Tutorial](#files-needed-for-a-new-tutorial)
+	-  [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)
+	-  [Markdown File](#markdown-file)
+	-  [Added Figures](#added-figures)
+       -  [Additional Files](#additional-files)
+       -  [Linking to New Tutorial](#linking-to-new-tutorial)
+*  [Testing Documentation](#testing-documentation)
+       - [Testing Locally](#testing-locally)
+            + [Installing Jekyll](#installing-jekyll)
+            + [Building Documentation](#building-documentation)
+       - [Testing on a Fork](#testing-on-a-fork)
+* [Adding Content](#adding-content)
+       - [Figures](#figures)
+       - [Math](#math)
+       - [Citations](#citations)
+       - [Snippets](#snippets)
+       - [Links](#links)
+       -[Referencing Sphynx](#referencing-sphynx)
+* [Content Guide](#content-guide)
+* [Supplemental Materials](#supplemental-materials)
+       - [Example Scripts](#example-scripts)
+       - [Movies](#movies)
+       - [Datasets](#datasets)
 
 ### Overview
 
@@ -52,7 +53,7 @@ Jess Tate
 To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../specs.html)
 
 ##### Dependencies and Development Tools
-UncertainSCI uses Github Pages to host tutorial documentation.   This platform converts markdown files to html for webview using Jekyll.  Testing the new documentation may require building the web pages locally for viewing.  Instructions for this process can be found on the [Github Help pages](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll).
+UncertainSCI uses Github Pages to host tutorial documentation.   This platform converts markdown files to html for webview using Jekyll.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Ruby, from whcih Bundler and Jekyll can be installed.  Ruby can be installed through [many channels](https://www.ruby-lang.org/en/documentation/installation/).  Ruby helps control the appropriate versions of the additional dependencies, including Jekyll and Bundler.  See the [testing section](#installing-jekyll) for detailed instructions.   
 
 ##### Creating Your UncertainSCI Fork
 With your own github account, go to the [UncertainSCI github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
@@ -97,13 +98,13 @@ Please see the [github help page](https://help.github.com) for more information.
 
 **This chapter will describe the files need to create a Tutorial for UncertainSCI.**
 
-**Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)
+**Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)**
 
 #### Overview of Files Needed for a Tutorial
 To make a new tutorial, a markdown file is required for the content of the tutorial.  Other files, such as images, may also be included.  In addtion to the new files for the tutorial, a link to the new tutorial should be added to the *User Documents* file.  
 
 #### Markdown File
-The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/user_docs/` directory.  There is a [template file](../user_doc/template.md) that can be used, or an existing tutorial like this one can be used.  Markdown files must have a header and should look something like:
+The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/user_docs/` directory.  There is a [template file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/user_docs/template.md) that can be used, or an existing tutorial like this one can be used.  Markdown files must have a header and should look something like:
 ```
 ---
 title: Tutorial Title
@@ -161,28 +162,131 @@ For the new tutorial to be visible on the [user documentation page](../user.html
 
 **This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local jekyll build or using the online build on a fork of UncertainSCI.**
 
-**Scope: [Testing Documentation](#Testing-Documentation) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing on a fork)**
+**Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing on a fork)**
 
-#### Installing  Jekyll
+#### Testing Locally
+Testing the documentation locally involves building and running a jekyll server with the documentation on your local machine.  These instructions are adapted from [Github's help page](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll).
 
-#### Building Documentation
+##### Installing Jekyll
+To install the jekyll, make sure that [Ruby is instialled](https://www.ruby-lang.org/en/documentation/installation/).  We will use Ruby to install [Bundler](https://bundler.io) and [Jekyll](https://jekyllrb.com/docs/).  In a terminal window, enter the following command:
+```
+gem install bundler
+```
+Next, navigate to the docs folder of your local clone of the UncertainSCI repo.  
+```
+cd UncertainSCI/docs
+```
+You can use bundler to install jekyll and all the subsequent dependencies to run the local jekyll server.  Just run:
+```
+bundle install
+```
+This will install the dependencies specified in the `Gemfile` and `Gemfile.lock` files. This should be all that that is required to run a jekyll server locally to test the documentation pages. It is worth noting that `bundle install` should also reinstall the dependencies if they happen to change between local builds, yet the other steps do not need to be repeated as often.   Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions
+
+##### Building Documentation
+Once Ruby, Bunlder, Jekyll, and all the dependencies are [installed properly](#installing-jekyll), the Jekyll server can be launched with the following command:
+```
+bundle exec jekyll serve
+```
+You should see a sequence of text indicating that the server is running, similar to:
+```
+Configuration file: /Users/test/UncertainSCI/docs/_config.yml
+            Source: .
+       Destination: ./_site
+ Incremental build: disabled. Enable with --incremental
+      Generating... 
+                    done in 0.505 seconds.
+ Auto-regeneration: enabled for '.'
+    Server address: http://127.0.0.1:9001/UncertainSCI/
+  Server running... press ctrl-c to stop.
+  ```
+This indicates that the server built correctly and the documentation page can be view by entering the server address into a browser, in this case `http://127.0.0.1:9001/UncertainSCI/`.  You should be able to see the UncertainSCI docs page, from which you can navigate to the new tutorial via the browser links.  The address of the new tutorial page will be the same as the location of the Markdown file, with the `.md` ending replaced with `.html`, e.g., `http://127.0.0.1:9001/UncertainSCI/user_docs/[tutorial_name].html`.  The server should regenerate pages when markdown files are changed, allowing you to view the changes quickly by refreshing the browser. For more information, see the [Github help page](https://docs.github.com/en/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll)
+
+If the server does not start correctly, and you see errors in the output after the command `bundle exec jekyll serve`, it is likely that some of the dependencies were not installed correctly, particularly if the error is `bundler: failed to load command: jekyll...`.  First, run `bundle install` again.  if the error persists, you can try [updating your Ruby gems](https://rubygems.org/pages/download):
+```
+gem update --system
+```
+Or by running:
+```
+bundle update
+```
+One final check would be the versions of Ruby and Bundler that are running, which may also need upgrading.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have questions.  
 
 #### Testing on a Fork
-
+In addition to building and testing the documentation pages locally, they can also be tested and viewed using a [fork of the UncertainSCI repo](#creating-your-uncertainsci-fork).  Once the fork is created, you will be able to see the documentation page for master branch of the fork by visiting the page `http://[yourgithubaccount].github.io/UncertainSCI/`.  Changes and new tutorials can be pushed to the master branch of your fork and preview before [making a pull request.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).  To view and compare to the main documentation page, visit [`http://sciinstitute.github.io/UncertainSCI/`](http://sciinstitute.github.io/UncertainSCI/).  
 
 ### Adding Content
 
-**In this chapter...**
+**This chapter provides some examples of how to add some types of content that may be needed for a tutorial.  For general Markdown info, see [here](https://www.markdownguide.org/basic-syntax/) and [here](https://guides.github.com/features/mastering-markdown/).**
 
-**Scope: [Duplicate the Previous Module](#41-duplicate-the-previous-module) - [Creating a Custom UI](#42-creating-a-custom-ui) - [Connecting UI to the Module](#43-connecting-ui-to-the-module) - [Adding an Input Port](#44-adding-an-input-port) - [Finished Code](#45-finished-code)**
+**Scope: [Adding Content](#adding-content) - [Figures](#figures) - [Math](#math) - [Citations](#citations) - [Snippets](#snippets) - [Links](#links) - [Referencing Sphynx](#referencing-sphynx)**
 
 #### Figures
+Figures can be added fairly easily in Markdown, with a simple call to the location:
+```
+![Alt text](../assets/images/carousel_images/sample.png "Title")
+```
+![UncertainSCI example image](../assets/images/carousel_images/sample.png "example markdown")
+
+However, using a bit of html allows us to <a href="#example">reference the figure</a> easier:
+```
+<figure id="example">
+<img src="../assets/images/carousel_images/sample.png" alt="UncertainSCI example image">
+<figcaption>Example for including an image in tutorial.</figcaption>
+</figure>
+```
+And to reference:
+```
+<a href="#example">reference the figure</a>
+```
+<figure id="example">
+<img src="../assets/images/carousel_images/sample.png" alt="UncertainSCI example image">
+<figcaption>Example for including an image in tutorial.</figcaption>
+</figure>
+
 #### Math
+Math equations can be used in Markdown using [MathJax](http://docs.mathjax.org/en/latest/basic/mathematics.html).  Mathjax will convert LaTex format:
+```
+$$ \frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity} $$
+```
+$$ \frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity} $$
+It can also use MathJax specific tags:
+```
+\\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
+```
+\\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
+
+
 #### Citations
+Citations in Markdown uses [Pandoc](https://pandoc.org).  The citations can stored in bibtex format
+
+TODO.
+
+
 #### Snippets
+
 #### Links
+Including links in Markdown is simple, just use `<>` or `[]()`.  For example, an internal link for section [Adding Content](#adding-content) is :
+```
+[Adding Content](#adding-content)
+```
+When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special caracters omited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [User Documentation](../users.html) is:
+```
+[User Documentation](../users.html)
+```
+Links to other websites can include the full URL.  Using `<>` will show the URL, `[]()` will hide it with other text.  
+```
+<https://www.markdownguide.org>
+[Markdown](https://www.markdownguide.org)
+```
+<https://www.markdownguide.org>
+[Markdown](https://www.markdownguide.org)
+
+
 #### Referencing Sphynx
 
+TODO
+
+To link the UncertainSCI API generated using Sphynx, Use this syntax: [:ref:`pce`](../pce.rst).  This should work but isn't yet.  
 
 ### Content Guide
 
