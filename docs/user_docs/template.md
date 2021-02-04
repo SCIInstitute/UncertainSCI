@@ -1,6 +1,6 @@
 ---
 title: template for tutorial
-category: developer documentation
+category: user documentation
 tags: tutorial, contribute
 layout: default_toc
 ---
@@ -10,8 +10,7 @@ layout: default_toc
 </script>
 <link rel="stylesheet" href="css/main.css">
 
-This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering
-(U24EB029012) from the National Institutes of Health.
+This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
 
 Authors:  
 Smart people here

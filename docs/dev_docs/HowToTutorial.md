@@ -45,10 +45,11 @@ Jess Tate
 
 ### Overview
 
-**This tutorial demonstrates how to use markdown to create new tutorials for UcertainSCI.  It will walk through all the files needed and the basic structure needed expected for tutorials.  Knowledge of Markdown, Github, Github pages, and Python will facilitate **
+**This tutorial demonstrates how to use markdown to create new tutorials for UcertainSCI.  It will walk through all the files needed and the basic structure needed expected for tutorials.  Knowledge of Markdown, Github, Github pages, and Python will be useful. If you have questions, [please ask](https://github.com/SCIInstitute/UncertainSCI/discussions).**
+
 #### Software requirements
 ##### UncertainSCI
-To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.
+To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../specs.html)
 
 ##### Dependencies and Development Tools
 UncertainSCI uses Github Pages to host tutorial documentation.   This platform converts markdown files to html for webview using Jekyll.  Testing the new documentation may require building the web pages locally for viewing.  Instructions for this process can be found on the [Github Help pages](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll).
@@ -102,23 +103,71 @@ Please see the [github help page](https://help.github.com) for more information.
 To make a new tutorial, a markdown file is required for the content of the tutorial.  Other files, such as images, may also be included.  In addtion to the new files for the tutorial, a link to the new tutorial should be added to the *User Documents* file.  
 
 #### Markdown File
-The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/user_docs/` directory.
+The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/user_docs/` directory.  There is a [template file](../user_doc/template.md) that can be used, or an existing tutorial like this one can be used.  Markdown files must have a header and should look something like:
+```
+---
+title: Tutorial Title
+category: user documentation
+tags: tutorial, etc.
+layout: default_toc
+---
+```
+The file should also include a call to the style sheet soon after the header:
+```
+<link rel="stylesheet" href="css/main.css">
+```
+If using math equations in a latex, a call to the mathjax server is required at this point too:
+```
+<script type="text/javascript" async
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
+</script>
+```
+That is all that is needed to make the file appear properly.  Next start with the content of the tutorial, starting with the acknowledgement and the list of authors.
+```
+This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
+
+Authors:  
+Smart people here
+```
+A table of contents can be added at the beginning of the document, yet there should also be an interactive menu on the sidebar.
+```
+### Contents
+
+*  [Overview](#overview)
+        -  [Software Requirements](#software-requirements)
+*  [Chapter Name](#chapter-name)
+        - [Overview of Chapter](#overview-of-chapter)
+        - [Section](#section)
+            - [Subsection](#section)
+```
+A mini table of contents can be added to the begining of each section.  The one for this section looks like this:
+```
+**Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)
+```
+For examples on how to added different content, such as figures, equations, etc., refer to the [content section](#adding-content) as well as the [Content Guide](#content-guide).
 
 #### Added Figures
 
+Most tutorials require a number of screenshots and other images.  Figures and images should be added in a folder for each tutorial in the  `UncertainSCI/docs/user_docs/` folder. The figure folder should be named after the tutorial, for example, the images in this tutorial are in a folder called `HowToTutorial_figures`.  Instructions on how to use the images and figures are found [here](#figures)
+
 #### Additional Files
+Additional files added to the `user_docs` folder should be minimized as much as possible.  Example scripts should be located in the `UncertainSCI/examples` directory and example data will, generally, need seperate hosting. However, if one or two files are needed, they may be added to the  `UncertainSCI/docs/user_docs/` with a consistent naming scheme.  Bibtex file with a matching name should be added in  `UncertainSCI/docs/user_docs/`, yet if multiple additional files are needed, they should placed in a new folder indicating the tutorial: `UncertainSCI/docs/user_docs/[tutorial name]_files`.  
 
 #### Linking to New Tutorial
 
+For the new tutorial to be visible on the [user documentation page](../user.html), add a link to the [`UncertainSCI/docs/user.md`](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/user.md) file.  
 
 ### Testing Documentation
-**This chapter describes how to...**
-**Scope: [Testing Documentation](#Testing-Documentation) **
-#### Installing Jekyll
+
+**This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local jekyll build or using the online build on a fork of UncertainSCI.**
+
+**Scope: [Testing Documentation](#Testing-Documentation) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing on a fork)**
+
+#### Installing  Jekyll
 
 #### Building Documentation
 
-#### Other Strategies
+#### Testing on a Fork
 
 
 ### Adding Content
@@ -137,9 +186,11 @@ The main file needed for a new tutorial is a markdown file.  The file should hav
 
 ### Content Guide
 
-
+TODO
 
 ### Supplemental Materials
+
+TODO
 
 #### Example Scripts
 #### Movies
