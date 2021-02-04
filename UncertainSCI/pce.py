@@ -17,8 +17,10 @@ class PolynomialChaosExpansion():
     Attributes:
     -----------
         coefficients: A numpy array of polynomial chaos expansion coefficients.
-        indices: A MultiIndexSet instance specifying the polynomial approximation space.
-        distribution: A ProbabilityDistribution instance indicating the distribution of the random variable.
+        indices: A MultiIndexSet instance specifying the polynomial
+          approximation space.
+        distribution: A ProbabilityDistribution instance indicating the
+          distribution of the random variable.
         samples: The experimental or sample design in stochastic space.
 
     """
@@ -33,7 +35,8 @@ class PolynomialChaosExpansion():
         """Sets multi-index set for polynomial approximation.
 
         Args:
-            indices: A MultiIndexSet instance specifying the polynomial approximation space.
+            indices: A MultiIndexSet instance specifying the polynomial
+              approximation space.
         Returns:
             None:
         """
@@ -46,7 +49,8 @@ class PolynomialChaosExpansion():
         """Sets type of probability distribution of random variable.
 
         Args:
-            distribution: A ProbabilityDistribution instance specifying the distribution of the random variable.
+            distribution: A ProbabilityDistribution instance specifying the
+              distribution of the random variable.
         Returns:
             None:
         """
@@ -64,26 +68,44 @@ class PolynomialChaosExpansion():
         if self.index_set is None:
             raise ValueError('First set indices with set_indices')
 
-    def generate_samples(self, sample_type='wafp', **sampler_options):
+    def generate_samples(self, new_samples=None, sample_type='wafp',
+                         **sampler_options):
         """Generates sample/experimental design for use in PCE construction.
 
         Args:
-            sample_type: A string indicating the type of random sampling to use. Currently only 'wafp' is supported.
+            sample_type: A string indicating the type of random sampling to
+             use. Currently only 'wafp' is supported.
         """
 
         self.check_distribution()
         self.check_indices()
 
         if sample_type.lower() == 'wafp':
-            p_standard = self.distribution.polys.wafp_sampling(self.index_set.get_indices(), **sampler_options)
+            if new_samples is None:
+                p_standard = self.distribution.polys.wafp_sampling(
+                               self.index_set.get_indices(), **sampler_options)
+                # Maps to domain
+                self.samples = self.distribution.transform_to_standard.mapinv(
+                                   self.distribution.transform_standard_dist_to_poly.mapinv(p_standard))
 
-            # Maps to domain
-            self.samples = self.distribution.transform_to_standard.mapinv(
-                               self.distribution.transform_standard_dist_to_poly.mapinv(p_standard))
+            else:  # Add new_samples random samples
+                x = self.distribution.transform_standard_dist_to_poly.map(
+                        self.distribution.transform_to_standard.map(
+                            self.samples))
+
+                x = self.distribution.polys.wafp_sampling_restart(
+                        self.index_set.get_indices(), x, new_samples,
+                        **sampler_options)
+
+                self.samples = self.distribution.transform_to_standard.mapinv(
+                                   self.distribution.transform_standard_dist_to_poly.mapinv(x))
+
         else:
-            raise ValueError("Unsupported sample type '{0}' for input sample_type".format(sample_type))
+            raise ValueError("Unsupported sample type '{0}' for input\
+                              sample_type".format(sample_type))
 
-    def build_pce_wafp(self, model=None, model_output=None, samples=None, **sampler_options):
+    def build_pce_wafp(self, model=None, model_output=None, samples=None,
+                       **sampler_options):
         """Computes PCE coefficients.
 
         Uses a weighted approximate Fekete point design to compute a
@@ -114,7 +136,7 @@ class PolynomialChaosExpansion():
         if samples is None:
 
             if self.samples is None:
-                self.generate_samples('wafp', **sampler_options)
+                self.generate_samples(sample_type='wafp', **sampler_options)
             else:
                 pass  # User didn't specify samples now, but did previously
 
@@ -124,10 +146,12 @@ class PolynomialChaosExpansion():
 
             self.samples = samples
 
-        p_standard = self.distribution.transform_standard_dist_to_poly.map(
-                    self.distribution.transform_to_standard.map(self.samples))
-
         if model_output is None:
+
+            if model is None:
+                raise ValueError('Must input argument "model"')
+            else:
+                self.model = model
 
             for ind in range(self.samples.shape[0]):
                 if model_output is None:
@@ -138,26 +162,234 @@ class PolynomialChaosExpansion():
                 else:
                     model_output[ind, :] = model(self.samples[ind, :])
 
-        V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
+        self.model_output = model_output
+
+        return self.build_pce_wlsq()
+
+    def build_pce_wlsq(self):
+        """
+        Performs a (weighted) least squares PCE surrogate using saved samples
+        and model output.
+        """
+
+        p_standard = self.distribution.transform_standard_dist_to_poly.map(
+                    self.distribution.transform_to_standard.map(self.samples))
+
+        V = self.distribution.polys.eval(p_standard,
+                                         self.index_set.get_indices())
 
         # Precondition for stability
         norms = 1/np.sqrt(np.sum(V**2, axis=1))
         V = np.multiply(V.T, norms).T
-        model_output = np.multiply(model_output.T, norms).T
+        model_output = np.multiply(self.model_output.T, norms).T
 
         if version_lessthan(np, '1.14.0'):
             coeffs, residuals = np.linalg.lstsq(V, model_output, rcond=-1)[:2]
         else:
             coeffs, residuals = np.linalg.lstsq(V, model_output, rcond=None)[:2]
 
-        self.accuracy_metrics['loocv'] = lstsq_loocv_error(V, model_output, 1/norms**2)
+        self.accuracy_metrics['loocv'] = lstsq_loocv_error(V, model_output,
+                                                           1/norms**2)
         self.accuracy_metrics['residuals'] = residuals
 
         self.coefficients = coeffs
-        self.p = samples  # Should get rid of this.
-        self.model_output = np.multiply(model_output.T, 1/norms).T
+        self.p = self.samples  # Should get rid of this.
 
         return residuals
+
+    def identify_bulk(self, delta=0.5):
+        """
+        Performs (adaptive) bulk chasing for refining polynomial spaces.
+        Returns the indices associated with a delta-bulk of a OMP-type
+        indicator.
+        """
+
+        assert 0 < delta <= 1
+        indtol = 1e-12
+
+        rmargin = self.index_set.get_reduced_margin()
+        indicators = np.zeros(rmargin.shape[0])
+
+        p_standard = self.distribution.transform_standard_dist_to_poly.map(
+                    self.distribution.transform_to_standard.map(self.samples))
+
+        # Vandermonde-like matrices for current and margin indices
+        V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
+        Vmargin = self.distribution.polys.eval(p_standard, rmargin)
+
+        Vnorms = np.sum(V**2, axis=1)
+
+        residuals = ((V @ self.coefficients) - self.model_output)
+
+        # OMP-style computation of indicator functions
+        for m in range(rmargin.shape[0]):
+            norms = 1/Vnorms + Vmargin[:, m]**2
+            indicators[m] = np.linalg.norm((Vmargin[:, m]*norms).T @ residuals)**2
+
+        if np.sum(indicators) <= indtol:
+            print('Current residual error too small: Not adding indices')
+            return
+        else:
+            indicators /= np.sum(indicators)
+
+        # Sort by indicator, and return top indicators that contribute to the
+        # fraction delta of unity
+        sorted_indices = np.argsort(indicators)[::-1]
+        sorted_cumulative_indicators = np.cumsum(indicators[sorted_indices])
+
+        bulk_size = np.argmax(sorted_cumulative_indicators >= delta) + 1
+
+        return rmargin[sorted_indices[:bulk_size], :]
+
+    def augment_samples_idist(self, K, weights=None, fast_sampler=True):
+        """
+        Augments random samples from induced distribution. Typically done via
+        an adaptive refinement procedure. As such some inputs can be given to
+        customize how the samples are drawn in the context of adaptivity:
+
+          K: how many samples to add (required)
+          weights: a discrete probability distribution on
+              self.index_set.get_indices() that describes how the induced
+              distrubtion is sampled. Default is uniform.
+        """
+
+        return self.distribution.polys.idist_mixture_sampling(K,
+                                                              self.index_set.get_indices(),
+                                                              weights=weights,
+                                                              fast_sampler=fast_sampler)
+
+    def adapt_expressivity(self, max_new_samples=10, **chase_bulk_options):
+        """
+        Adapts the PCE approximation by increasing expressivity.
+        (Intended to combat residual error.)
+        """
+
+        Mold = self.samples.shape[0]
+        while self.samples.shape[0] < max_new_samples + Mold:
+            samples_left = max_new_samples + Mold - self.samples.shape[0]
+            self.chase_bulk(max_new_samples=samples_left, **chase_bulk_options)
+
+    def adapt_robustness(self, max_new_samples=10, verbosity=1):
+        """
+        Adapts the PCE approximation by increasing robustness.
+        (Intended to combat cross-validation error.)
+        """
+
+        # Just add new samples
+        Mold = self.samples.shape[0]
+        self.generate_samples(new_samples=max_new_samples)
+
+        # Resample model
+        self.model_output = np.vstack((self.model_output,
+            np.zeros([max_new_samples, self.model_output.shape[1]])))
+        for ind in range(Mold, Mold+max_new_samples):
+            self.model_output[ind, :] = self.model(self.samples[ind, :])
+
+        old_accuracy = self.accuracy_metrics.copy()
+        self.build_pce_wlsq()
+
+        KK = np.sqrt(self.model_output.shape[1])
+        if verbosity > 0:
+            errstr = "new samples: {0:6d}\n  \
+                      old residual: {1:1.3e},  old loocv: {2:1.3e}\n  \
+                      new residual: {3:1.3e},  new loocv: {4:1.3e}\
+                      ".format(max_new_samples,
+                               np.linalg.norm(old_accuracy['residuals']/KK),
+                               np.linalg.norm(old_accuracy['loocv']/KK),
+                               np.linalg.norm(self.accuracy_metrics['residuals']/KK),
+                               np.linalg.norm(self.accuracy_metrics['loocv'])/KK)
+            print(errstr)
+
+    def chase_bulk(self, delta=0.5, max_new_samples=None, max_new_indices=None,
+                   add_rule=None, mult_rule=None, verbosity=1):
+        """
+        Performs adaptive bulk chasing, which (i) adds the most "important"
+        indices to the polynomial index set, (ii) takes more samples, (iii)
+        updates the PCE approximation, including statistics and error metrics.
+
+        Args:
+            max_new_samples (int): Maximum number of new samples to add.
+                Defaults to None.
+            max_new_indices (int): Maximum number of new PCE indices to add.
+                Defaults to None.
+            add_rule (int): Specifies number of samples added as a function
+                of number of added indices. Nsamples = Nindices + add_rule.
+                Defaults to None.
+            mult_rule (float): Specifies number of samples added as a function
+                of number of added indices. Nsamples = int(Nindices * add_rule).
+                Defaults to None.
+        """
+
+        if (max_new_samples is not None) and (max_new_indices is not None):
+            assert False, "Cannot specify both new sample and new indices max"
+
+        if (add_rule is not None) and (mult_rule is not None):
+            assert False, "Cannot specify both an additive and multiplicative rule"
+
+        if (add_rule is None) and (mult_rule is None):
+            add_rule = 1
+
+        if add_rule is not None:
+            samplefun = lambda Nindices: int(Nindices + add_rule)
+        if mult_rule is not None:
+            samplefun = lambda Nindices: int(Nindices * mult_rule)
+
+        indices = self.identify_bulk(delta=delta)
+
+        # Determine number of indices we augment by
+        if max_new_samples is not None:   # Limited by sample count
+            assert max_new_samples > 0
+            Nindices = len(indices)
+
+            while samplefun(Nindices) > max_new_samples:
+                Nindices -= 1
+
+            # Require at least 1 index to be added.
+            Nindices = max(1, Nindices)
+
+        elif max_new_indices is not None:  # Limited by number of indices
+            Nindices = max_new_indices
+
+        else:  # No limits: take all indices
+            Nindices = len(indices)
+
+        assert Nindices > 0
+
+        L = self.index_set.size()
+        weights = np.zeros(L + Nindices)
+
+        # Assign 50% weight to new indices
+        weights[:L] = 0.5 / L
+        weights[L:] = 0.5 / Nindices
+
+        # Add indices to index set
+        self.index_set.augment(indices[:Nindices, :])
+
+        # Add new samples
+        Mold = self.samples.shape[0]
+        Nsamples = samplefun(Nindices)
+
+        self.generate_samples(new_samples=Nsamples, weights=weights)
+
+        # Resample model
+        self.model_output = np.vstack((self.model_output, np.zeros([Nsamples, self.model_output.shape[1]])))
+        for ind in range(Mold, Mold+Nsamples):
+            self.model_output[ind, :] = self.model(self.samples[ind, :])
+
+        old_accuracy = self.accuracy_metrics.copy()
+        self.build_pce_wlsq()
+
+        KK = np.sqrt(self.model_output.shape[1])
+        if verbosity > 0:
+            errstr = "new indices: {0:6d},   new samples: {1:6d}\n  \
+                      old residual: {2:1.3e},  old loocv: {3:1.3e}\n  \
+                      new residual: {4:1.3e},  new loocv: {5:1.3e}\
+                      ".format(Nindices, Nsamples,
+                               np.linalg.norm(old_accuracy['residuals']/KK),
+                               np.linalg.norm(old_accuracy['loocv']/KK),
+                               np.linalg.norm(self.accuracy_metrics['residuals']/KK),
+                               np.linalg.norm(self.accuracy_metrics['loocv'])/KK)
+            print(errstr)
 
     def build(self, model=None, model_output=None, **options):
         """Builds PCE from sampling and approximation settings.

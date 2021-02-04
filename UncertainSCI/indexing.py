@@ -60,7 +60,10 @@ def hyperbolic_cross_indices(d, k):
 
         possible_indices = np.vstack({tuple(row) for row in possible_indices})
         arow = lambdas.shape[0]
-        lambdas = np.vstack([lambdas, np.zeros([combs.shape[0]*possible_indices.shape[0], d], dtype=int)])
+        lambdas = np.vstack([lambdas,
+                             np.zeros([combs.shape[0]*possible_indices.shape[0],
+                                       d],
+                                      dtype=int)])
 
     # Now for each combination, we put in possible_indices
         for c in range(combs.shape[0]):
@@ -223,9 +226,13 @@ class MultiIndexSet():
     def __init__(self, dim=None):
         self.dim = dim
         self.indices = np.zeros([0, self.dim])
+        self.adaptive = False
 
     def get_indices(self):
         return self.indices
+
+    def size(self):
+        return self.indices.shape[0]
 
     def isamember(self, trial_indices):
         """
@@ -281,17 +288,17 @@ class MultiIndexSet():
         # - weed out leaves that are not in the margin
 
         M, d = self.indices.shape
-        margin = np.zeros([M, d], dtype=self.indices.dtype)
-        row = 0
+        margin = np.zeros([0, d], dtype=self.indices.dtype)
 
         for m in range(M):
-            candidates = np.tile(self.indices[m, :], [d, 1]) + np.eye(d)
+            candidates = np.tile(self.indices[m, :], [d, 1]) +\
+                         np.eye(d, dtype=self.indices.dtype)
             membership_flags = ~self.isamember(candidates)
-            k = np.sum(membership_flags)
-            margin[row:row+k, :] = candidates[membership_flags, :]
-            row += k
+            margin = np.unique(
+                      np.append(margin, candidates[membership_flags, :], axis=0),
+                      axis=0)
 
-        return np.unique(margin[:row, :], axis=0)
+        return margin
 
     def get_reduced_margin(self):
         """
@@ -326,10 +333,27 @@ class MultiIndexSet():
 
         return margin[reduced_margin_inds, :]
 
+    def augment(self, indices):
+        """
+        Augments the index set with the given indices.
+        """
+
+        K, d = indices.shape
+        assert d == self.dim, \
+               "Input index array should have {0:d} columns".format(self.dim)
+
+        membership_flags = self.isamember(indices)
+        if np.any(~membership_flags):
+            self.adaptive = True
+            self.indices = np.append(self.indices,
+                                     indices[~membership_flags, :], axis=0)
+
 
 class LpSet(MultiIndexSet):
     def __init__(self, dim=1, order=0, p=1):
         assert dim > 0 and order >= 0 and p >= 0
+
+        super().__init__(dim=dim)
         self.dim = dim
         self.order = order
         self.p = p
@@ -363,49 +387,34 @@ class TotalDegreeSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
+        super().__init__(dim=dim)
+
         self.dim, self.order = dim, order
         self.indices = self.get_indices()
 
     def get_indices(self):
-        return total_degree_indices(self.dim, self.order)
+        if self.adaptive:
+            return super().get_indices()
+        else:
+            return total_degree_indices(self.dim, self.order)
 
 
 class HyperbolicCrossSet(MultiIndexSet):
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
+        super().__init__(dim=dim)
+
         self.dim, self.order = dim, order
         self.indices = self.get_indices()
 
     def get_indices(self):
-        return hyperbolic_cross_indices(self.dim, self.order)
+        if self.adaptive:
+            return super().get_indices()
+        else:
+            return hyperbolic_cross_indices(self.dim, self.order)
 
 
 if __name__ == "__main__":
 
-    from matplotlib import pyplot as plt
-
-    d = 2
-    k = 3
-
-    I1 = TotalDegreeSet(dim=d, order=k)
-    test11 = I1.isamember(I1.indices+1)
-    m1 = I1.get_margin()
-    rm1 = I1.get_reduced_margin()
-
-    I2 = HyperbolicCrossSet(dim=d, order=k+2)
-    test21 = I2.isamember(I2.indices+1)
-    m2 = I2.get_margin()
-    rm2 = I2.get_reduced_margin()
-
-    plt.subplot(121)
-    plt.plot(I1.indices[:,0], I1.indices[:,1], 'k.')
-    plt.plot(m1[:,0], m1[:,1], 'r+')
-    plt.plot(rm1[:,0], rm1[:,1], 'bx')
-
-    plt.subplot(122)
-    plt.plot(I2.indices[:,0], I2.indices[:,1], 'k.')
-    plt.plot(m2[:,0], m2[:,1], 'r+')
-    plt.plot(rm2[:,0], rm2[:,1], 'bx')
-
-    plt.show()
+    pass
