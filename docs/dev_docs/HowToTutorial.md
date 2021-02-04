@@ -162,7 +162,7 @@ For the new tutorial to be visible on the [user documentation page](../user.html
 
 **This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local Jekyll build or using the online build on a fork of UncertainSCI.**
 
-**Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing on a fork)**
+**Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing-on-a-fork)**
 
 #### Testing Locally
 Testing the documentation locally involves building and running a jekyll server with the documentation on your local machine.  These instructions are adapted from [Github's help page](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll).
