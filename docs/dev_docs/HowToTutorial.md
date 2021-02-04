@@ -53,10 +53,10 @@ Jess Tate
 To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../specs.html)
 
 ##### Dependencies and Development Tools
-UncertainSCI uses Github Pages to host tutorial documentation.   This platform converts markdown files to html for webview using Jekyll.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Ruby, from whcih Bundler and Jekyll can be installed.  Ruby can be installed through [many channels](https://www.ruby-lang.org/en/documentation/installation/).  Ruby helps control the appropriate versions of the additional dependencies, including Jekyll and Bundler.  See the [testing section](#installing-jekyll) for detailed instructions.   
+UncertainSCI uses Github Pages to host tutorial documentation.   This platform converts markdown files to html for web viewing using Jekyll.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Ruby, from whcih Bundler and Jekyll can be installed.  Ruby can be installed through [many channels](https://www.ruby-lang.org/en/documentation/installation/).  Ruby helps control the appropriate versions of the additional dependencies, including Jekyll and Bundler.  See the [testing section](#installing-jekyll) for detailed instructions.   
 
 ##### Creating Your UncertainSCI Fork
-With your own github account, go to the [UncertainSCI github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
+With your own github account, go to the [UncertainSCI Github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
 
 ```
 $git clone https://github.com/[yourgithubaccount]/UncertainSCI.git
@@ -90,7 +90,7 @@ It is a good practice to create a new branch in your fork for every module you w
 $git checkout -b [branch_name]
 ```
 
-Please see the [github help page](https://help.github.com) for more information.
+Please see the [Github help page](https://help.github.com) for more information.
 
 
 
@@ -101,7 +101,7 @@ Please see the [github help page](https://help.github.com) for more information.
 **Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)**
 
 #### Overview of Files Needed for a Tutorial
-To make a new tutorial, a markdown file is required for the content of the tutorial.  Other files, such as images, may also be included.  In addtion to the new files for the tutorial, a link to the new tutorial should be added to the *User Documents* file.  
+To make a new tutorial, a markdown file is required for the content of the tutorial.  Other files, such as images, may also be included.  In addition to the new files for the tutorial, a link to the new tutorial should be added to the *User Documents* file.  
 
 #### Markdown File
 The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/user_docs/` directory.  There is a [template file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/user_docs/template.md) that can be used, or an existing tutorial like this one can be used.  Markdown files must have a header and should look something like:
@@ -141,7 +141,7 @@ A table of contents can be added at the beginning of the document, yet there sho
         - [Section](#section)
             - [Subsection](#section)
 ```
-A mini table of contents can be added to the begining of each section.  The one for this section looks like this:
+A mini table of contents can be added to the beginning of each section.  The one for this section looks like this:
 ```
 **Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)
 ```
@@ -152,7 +152,7 @@ For examples on how to added different content, such as figures, equations, etc.
 Most tutorials require a number of screenshots and other images.  Figures and images should be added in a folder for each tutorial in the  `UncertainSCI/docs/user_docs/` folder. The figure folder should be named after the tutorial, for example, the images in this tutorial are in a folder called `HowToTutorial_figures`.  Instructions on how to use the images and figures are found [here](#figures)
 
 #### Additional Files
-Additional files added to the `user_docs` folder should be minimized as much as possible.  Example scripts should be located in the `UncertainSCI/examples` directory and example data will, generally, need seperate hosting. However, if one or two files are needed, they may be added to the  `UncertainSCI/docs/user_docs/` with a consistent naming scheme.  Bibtex file with a matching name should be added in  `UncertainSCI/docs/user_docs/`, yet if multiple additional files are needed, they should placed in a new folder indicating the tutorial: `UncertainSCI/docs/user_docs/[tutorial name]_files`.  
+Additional files added to the `user_docs` folder should be minimized as much as possible.  Example scripts should be located in the `UncertainSCI/examples` directory and example data will, generally, need separate hosting. However, if one or two files are needed, they may be added to the  `UncertainSCI/docs/user_docs/` with a consistent naming scheme.  Bibtex file with a matching name should be added in  `UncertainSCI/docs/user_docs/`, yet if multiple additional files are needed, they should placed in a new folder indicating the tutorial: `UncertainSCI/docs/user_docs/[tutorial name]_files`.  
 
 #### Linking to New Tutorial
 
@@ -160,7 +160,7 @@ For the new tutorial to be visible on the [user documentation page](../user.html
 
 ### Testing Documentation
 
-**This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local jekyll build or using the online build on a fork of UncertainSCI.**
+**This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local Jekyll build or using the online build on a fork of UncertainSCI.**
 
 **Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing on a fork)**
 
@@ -168,7 +168,7 @@ For the new tutorial to be visible on the [user documentation page](../user.html
 Testing the documentation locally involves building and running a jekyll server with the documentation on your local machine.  These instructions are adapted from [Github's help page](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll).
 
 ##### Installing Jekyll
-To install the jekyll, make sure that [Ruby is instialled](https://www.ruby-lang.org/en/documentation/installation/).  We will use Ruby to install [Bundler](https://bundler.io) and [Jekyll](https://jekyllrb.com/docs/).  In a terminal window, enter the following command:
+To install the Jekyll, make sure that [Ruby is installed](https://www.ruby-lang.org/en/documentation/installation/).  We will use Ruby to install [Bundler](https://bundler.io) and [Jekyll](https://jekyllrb.com/docs/).  In a terminal window, enter the following command:
 ```
 gem install bundler
 ```
@@ -176,7 +176,7 @@ Next, navigate to the docs folder of your local clone of the UncertainSCI repo.
 ```
 cd UncertainSCI/docs
 ```
-You can use bundler to install jekyll and all the subsequent dependencies to run the local jekyll server.  Just run:
+You can use bundler to install Jekyll and all the subsequent dependencies to run the local Jekyll server.  Just run:
 ```
 bundle install
 ```
@@ -257,7 +257,7 @@ It can also use MathJax specific tags:
 
 
 #### Citations
-Citations in Markdown uses [Pandoc](https://pandoc.org).  The citations can stored in bibtex format
+Citations in Markdown uses [Pandoc](https://pandoc.org).  The citations can stored in Bibtex format
 
 TODO.
 
@@ -269,7 +269,7 @@ Including links in Markdown is simple, just use `<>` or `[]()`.  For example, an
 ```
 [Adding Content](#adding-content)
 ```
-When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special caracters omited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [User Documentation](../users.html) is:
+When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special characters ommited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [User Documentation](../users.html) is:
 ```
 [User Documentation](../users.html)
 ```
