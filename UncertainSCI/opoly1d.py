@@ -82,6 +82,12 @@ def eval_driver(x, n, d, ab):
     else:
         return preturn
 
+def leading_coefficient_driver(N, ab):
+    """
+    Returns the leading coefficients for the first N polynomial basis elements.
+    """
+    assert N > 0
+    return np.cumprod(1 / ab[:N, 1])
 
 def ratio_driver(x, n, d, ab):
     """
@@ -343,7 +349,7 @@ def linear_modification(alphbet, x0):
     bcorrect = alphbet[1:, 1] * r
     bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
     ab[:, 1] = alphbet[:-1, 1] * np.sqrt(bcorrect)
-
+    
     return ab
 
 
