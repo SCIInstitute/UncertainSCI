@@ -25,17 +25,19 @@ class LinalgTestCase(unittest.TestCase):
         Ntotalpivots = np.random.randint(Nstartpivots+1, M)
         A = np.random.randn(M, N)/np.sqrt(M)
 
-        print('({0:d}, {1:d}, {2:d}, {3:d})'.format(M, N, Nstartpivots, Ntotalpivots))
+        print(('({0:d}, {1:d}, '
+               '{2:d}, {3:d})').format(M, N, Nstartpivots, Ntotalpivots))
 
         _, _, pivots = qr(A, pivoting=True)
 
-        pivots_computed = mgs_pivot_restart(A, p=Ntotalpivots, 
+        pivots_computed = mgs_pivot_restart(A, p=Ntotalpivots,
                                             pstart=pivots[:Nstartpivots])
 
         errstr = 'Failed for (M,N,Nstartpivots,Ntotalpivots) = ({0:d}, {1:d}, \
                   {2:d}, {3:d})'.format(M, N, Nstartpivots, Ntotalpivots)
 
-        self.assertEqual(np.linalg.norm(pivots[:Ntotalpivots]-pivots_computed[:Ntotalpivots]), 0, msg=errstr)
+        self.assertEqual(np.linalg.norm(pivots[:Ntotalpivots] -
+                                        pivots_computed[:Ntotalpivots]), 0, msg=errstr)
 
     def test_greedy_d_optimal(self):
         """ Greedy D-optimal designs. """
@@ -80,12 +82,6 @@ class LinalgTestCase(unittest.TestCase):
 
         A = np.random.randn(M, N)/np.sqrt(N)
 
-        # Number of points to add to the rows of A on restart
-        K = 50
-
-        # Number of additional points to compute on restart
-        k = 10
-
         P = greedy_d_optimal(A, p)
 
         _, P2 = qr(A.T, pivoting=True, mode='r')
@@ -108,7 +104,6 @@ class LinalgTestCase(unittest.TestCase):
         errstr = 'Failed for (N,M,p) = ({0:d}, {1:d}, {2:d})'.format(N, M, p)
 
         self.assertEqual(np.linalg.norm(P-P2[:p], ord=np.inf), 0, msg=errstr)
-
 
     def test_lstsq_loocv_error(self):
         """ Leave-one-out cross validation for least-squares. """
@@ -133,12 +128,13 @@ class LinalgTestCase(unittest.TestCase):
             bm = np.delete(b, m, axis=0)
             xm = np.linalg.lstsq(Am, bm, rcond=None)[0]
 
-            cv += weights[m]* (b[m,:] - A[m,:] @ xm)**2
+            cv += weights[m] * (b[m, :] - A[m, :] @ xm)**2
 
         cv = np.sqrt(cv/M)
         cv2 = lstsq_loocv_error(A, b, weights)
 
         self.assertAlmostEqual(np.linalg.norm(cv - cv2), 0, delta=delta)
+
 
 if __name__ == "__main__":
 
