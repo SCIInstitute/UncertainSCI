@@ -58,7 +58,8 @@ class PolynomialChaosExpansion():
         if isinstance(distribution, ProbabilityDistribution):
             self.distribution = distribution
         else:
-            raise ValueError('Distribution must be a ProbabilityDistribution object')
+            raise ValueError(('Distribution must be a ProbabilityDistribution'
+                              'object'))
 
     def check_distribution(self):
         if self.distribution is None:
@@ -124,9 +125,10 @@ class PolynomialChaosExpansion():
             samples: A numpy.ndarray containing a specific sample design. This
               array should satisfy self.dim == samples.shape[1].
         Returns:
-            numpy.ndarray: A vector containing a weighted sum-of-squares residual
-              for the PCE construction. The size of this vector equals the size
-              of the output from the model function.
+            numpy.ndarray: A vector containing a weighted sum-of-squares
+              residual for the PCE construction. The size of this vector equals
+              the size of the output from the model function.
+
         """
 
         self.check_distribution()
@@ -264,10 +266,23 @@ class PolynomialChaosExpansion():
         (Intended to combat residual error.)
         """
 
+        from numpy.linalg import norm
+
         Mold = self.samples.shape[0]
+        indices = []
+        sample_count = []
+        KK = self.accuracy_metrics['residuals'].size
+        residuals = [norm(self.accuracy_metrics['residuals'])/np.sqrt(KK), ]
+        loocv = [norm(self.accuracy_metrics['loocv'])/np.sqrt(KK), ]
         while self.samples.shape[0] < max_new_samples + Mold:
             samples_left = max_new_samples + Mold - self.samples.shape[0]
-            self.chase_bulk(max_new_samples=samples_left, **chase_bulk_options)
+            a, b = self.chase_bulk(max_new_samples=samples_left, **chase_bulk_options)
+            indices.append(self.index_set.get_indices()[-a:, :])
+            sample_count.append(b)
+            residuals.append(norm(self.accuracy_metrics['residuals'])/np.sqrt(KK))
+            loocv.append(norm(self.accuracy_metrics['loocv'])/np.sqrt(KK))
+
+        return residuals, loocv, indices, sample_count
 
     def adapt_robustness(self, max_new_samples=10, verbosity=1):
         """
@@ -281,7 +296,7 @@ class PolynomialChaosExpansion():
 
         # Resample model
         self.model_output = np.vstack((self.model_output,
-            np.zeros([max_new_samples, self.model_output.shape[1]])))
+                    np.zeros([max_new_samples, self.model_output.shape[1]])))
         for ind in range(Mold, Mold+max_new_samples):
             self.model_output[ind, :] = self.model(self.samples[ind, :])
 
@@ -323,16 +338,14 @@ class PolynomialChaosExpansion():
         if (max_new_samples is not None) and (max_new_indices is not None):
             assert False, "Cannot specify both new sample and new indices max"
 
-        if (add_rule is not None) and (mult_rule is not None):
-            assert False, "Cannot specify both an additive and multiplicative rule"
-
-        if (add_rule is None) and (mult_rule is None):
-            add_rule = 1
-
-        if add_rule is not None:
+        if (add_rule is not None) and (mult_rule is None):
             samplefun = lambda Nindices: int(Nindices + add_rule)
-        if mult_rule is not None:
+        elif (add_rule is None) and (mult_rule is not None):
             samplefun = lambda Nindices: int(Nindices * mult_rule)
+        elif (add_rule is None) and (mult_rule is None):
+            samplefun = lambda Nindices: int(Nindices + 1)
+        else:
+            assert False, "Cannot specify both an additive and multiplicative rule"
 
         indices = self.identify_bulk(delta=delta)
 
@@ -372,7 +385,8 @@ class PolynomialChaosExpansion():
         self.generate_samples(new_samples=Nsamples, weights=weights)
 
         # Resample model
-        self.model_output = np.vstack((self.model_output, np.zeros([Nsamples, self.model_output.shape[1]])))
+        self.model_output = np.vstack((self.model_output,
+                                       np.zeros([Nsamples, self.model_output.shape[1]])))
         for ind in range(Mold, Mold+Nsamples):
             self.model_output[ind, :] = self.model(self.samples[ind, :])
 
@@ -381,15 +395,17 @@ class PolynomialChaosExpansion():
 
         KK = np.sqrt(self.model_output.shape[1])
         if verbosity > 0:
-            errstr = "new indices: {0:6d},   new samples: {1:6d}\n  \
-                      old residual: {2:1.3e},  old loocv: {3:1.3e}\n  \
-                      new residual: {4:1.3e},  new loocv: {5:1.3e}\
-                      ".format(Nindices, Nsamples,
+            errstr = ('new indices: {0:6d},   new samples: {1:6d}\n'
+                      'old residual: {2:1.3e},  old loocv: {3:1.3e}\n'
+                      'new residual: {4:1.3e},  new loocv: {5:1.3e}'
+                      ).format(Nindices, Nsamples,
                                np.linalg.norm(old_accuracy['residuals']/KK),
                                np.linalg.norm(old_accuracy['loocv']/KK),
                                np.linalg.norm(self.accuracy_metrics['residuals']/KK),
                                np.linalg.norm(self.accuracy_metrics['loocv'])/KK)
             print(errstr)
+
+        return Nindices, Nsamples
 
     def build(self, model=None, model_output=None, **options):
         """Builds PCE from sampling and approximation settings.
@@ -460,9 +476,11 @@ class PolynomialChaosExpansion():
                     self.distribution.transform_to_standard.map(p))
 
         if components is None:
-            return np.dot(self.distribution.polys.eval(p_std, self.index_set.get_indices()), self.coefficients)
+            return np.dot(self.distribution.polys.eval(p_std, 
+                                                       self.index_set.get_indices()), self.coefficients)
         else:
-            return np.dot(self.distribution.polys.eval(p_std, self.index_set.get_indices()), self.coefficients[:, components])
+            return np.dot(self.distribution.polys.eval(p_std, 
+                                                       self.index_set.get_indices()), self.coefficients[:, components])
 
     def quantile(self, q, M=100):
         """
