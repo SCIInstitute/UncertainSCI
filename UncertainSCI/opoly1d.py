@@ -353,6 +353,68 @@ def linear_modification(alphbet, x0):
     return ab
 
 
+def derivative_expansion_driver(ab, s, N, K):
+    """
+    Computes the coefficients 
+
+    .. math::
+
+      \\sigma^{(s)}_{n,k} = \\left\\langle p_n^{(s)}, p_k \\right\\rangle,
+
+    where :math:`p_n^{(s)}` is the :math:`s`th derivative of the 
+    degree-:math:`k` orthonormal polynomial :math:`p_k`. These are,
+    equivalently, expansion coefficients of :math:`p_n^{(s)}` in the basis
+    :math:`\\{p_k\\}_k`.
+
+    Args:
+        ab: The recurrence coefficients for the family. An Mx2 numpy array,
+          where M must be at least max(N+1, K+1).
+        s: The integer order of the derivative. Must be non-negative.
+        N: Computes coefficients for :math:`n \\leq N`
+        K: Computes coefficients for :math:`k \\leq K`.
+    Returns:
+        C: (N+1) x (K+1) numpy array containing coefficients.
+    """
+
+    assert ab.shape[1] == 2
+
+    M = ab.shape[0]
+    NK = max(N, K)
+
+    assert M >= NK+1
+
+    if s==0:
+        return np.eye(NK+1)[:(N+1), :(K+1)]
+    if N < s:
+        return np.zeros([N+1, K+1])
+
+    # s=0 coefficients
+    Cp = np.eye(NK+1)
+    C = np.zeros([NK+1, NK+1])
+
+    # Iterate over values of s
+    for q in range(1, s+1):
+
+        # Explicit starting value
+        C[q,0] = np.exp(gammaln(q+1) - np.sum(np.log(ab[1:(q+1), 1])))
+
+        for n in range(q+1, N+1):
+            # k=0 is special
+            C[n, 0] = q*Cp[n-1, 0] + (ab[1, 0] - ab[n, 0])*C[n-1, 0] - \
+                     ab[n-1, 1]*C[n-2, 0] + ab[1, 1]*C[n-1, 1]
+            C[n, 0] /= ab[n, 1]
+
+            for k in range(1, n-q+1):
+                C[n, k] = q*Cp[n-1, k] + (ab[k+1, 0] - ab[n, 0])*C[n-1, k] - \
+                          ab[n-1, 1]*C[n-2, k] + ab[k+1, 1]*C[n-1, k+1] + \
+                          ab[k, 1]*C[n-1, k-1]
+                C[n, k] /= ab[n, 1]
+
+        Cp = C.copy()
+        C = np.zeros([NK+1, NK+1])
+
+    return Cp[:(N+1),:(K+1)]
+
 class OrthogonalPolynomialBasis1D:
     def __init__(self, recurrence=[], probability_measure=True):
         self.probability_measure = probability_measure
@@ -841,17 +903,54 @@ class OrthogonalPolynomialBasis1D:
         p = self.eval(x, range(k))
         return np.sqrt(float(k) / np.sum(p**2, axis=1))
 
+    def derivative_expansion(self, s, N, K=None):
+        """
+        Computes the coefficients 
+
+        .. math::
+
+          \\sigma^{(s)}_{n,k} = \\left\\langle p_n^{(s)}, p_k \\right\\rangle,
+
+        where :math:`p_n^{(s)}` is the :math:`s`th derivative of the 
+        degree-:math:`k` orthonormal polynomial :math:`p_k`. These are,
+        equivalently, expansion coefficients of :math:`p_n^{(s)}` in the basis
+        :math:`\\{p_k\\}_k`.
+
+        Args:
+            s: The integer order of the derivative. Must be non-negative.
+            N: Computes coefficients for :math:`n \\leq N`
+            K: Computes coefficients for :math:`k \\leq K` (optional). If not
+              given, is set to N.
+        Returns:
+            C: (N+1) x (K+1) numpy array containing coefficients.
+        """
+
+
+        if K is None:
+            K = N
+
+        assert N > -1 and K > -1 
+
+        ab = self.recurrence(max(N,K))
+        return derivative_expansion_driver(ab, s, N, K=K)
+
 
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
+
+    import pdb
     from families import JacobiPolynomials
 
     J = JacobiPolynomials()
-    N = 100
-    k = 15
+    N = 10
+    K = 10
+    s = 3
+    ab = J.recurrence(max(N,K))
 
-    x, w = J.gauss_quadrature(N)
-    V = J.eval(x, range(k))
+    x, w = J.gauss_quadrature(2*N)
+    Vd = J.eval(x, range(N+1), d=s)
+    V = J.eval(x, range(K+1))
 
-    plt.plot(x, V[:, :k])
-    plt.show()
+    C = J.derivative_expansion(s, N, K)
+
+    C2 = Vd.T @ np.diag(w) @ V
+    C2[np.abs(C2)<1e-8] = 0
