@@ -41,7 +41,8 @@ class PCETestCase(unittest.TestCase):
 
         lsq_residuals = pce.build(mymodel, fast_sampler=False)
         reserror = np.linalg.norm(lsq_residuals)
-        msg = "Failed for (M, alpha, beta)=({0:d}, {1:1.6f}, {2:1.6f})".format(M, alpha, beta)
+        msg = 'Failed for (M, alpha, beta)=({0:d}, '\
+              '{1:1.6f}, {2:1.6f})'.format(M, alpha, beta)
         delta = 1e-10
         self.assertAlmostEqual(reserror, 0, delta=delta, msg=msg)
 
@@ -80,23 +81,26 @@ class PCETestCase(unittest.TestCase):
         S1 = pce.global_derivative_sensitivity(range(dim))
 
         x, w = dist.polys.tensor_gauss_quadrature(order)
-        
+
         S2 = S1.copy()
 
         # Take derivative along dimension q and integrate
         for q in range(dim):
-            derivative = [0,]*dim
+            derivative = [0, ]*dim
             derivative[q] = 1
 
-            S2[q,:] = w.T @ (dist.polys.eval(x, indices, derivative) @ pce.coefficients)
+            S2[q, :] = w.T @ (dist.polys.eval(x, indices, derivative) @
+                              pce.coefficients)
 
         # The map jacobian for all these is 2
         S2 *= 2
 
         err = np.linalg.norm(S1-S2, ord='fro')/np.sqrt(S2.size)
         delta = 1e-8
-        msg = "Failed for (alpha, beta)=({0:1.6f}, {1:1.6f})".format(alpha, beta)
+        msg = "Failed for (alpha, beta)=({0:1.6f}, {1:1.6f})".\
+              format(alpha, beta)
         self.assertAlmostEqual(err, 0, delta=delta, msg=msg)
+
 
 if __name__ == "__main__":
 

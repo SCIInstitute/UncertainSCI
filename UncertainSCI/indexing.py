@@ -250,12 +250,12 @@ class MultiIndexSet():
         if dim is None:
             return np.max(self.get_indices())
         else:
-            return np.max(self.get_indices()[:,dim])
+            return np.max(self.get_indices()[:, dim])
 
     def zero_indices(self, dim_indices=None):
         """
         Identifies indices in the index set whose entries in the dimensions
-        dim_indices are 0. 
+        dim_indices are 0.
 
         Args:
             dim_list: list-like iterable containing dimension indices.
@@ -264,7 +264,7 @@ class MultiIndexSet():
               set satisfy the conditions.
         """
 
-        assert all([0<=dim<=self.dim-1 for dim in dim_indices])
+        assert all([0 <= dim <= self.dim-1 for dim in dim_indices])
 
         if dim_indices is None:
             return self.get_indices()

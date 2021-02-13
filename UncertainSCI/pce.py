@@ -87,7 +87,9 @@ class PolynomialChaosExpansion():
                                self.index_set.get_indices(), **sampler_options)
                 # Maps to domain
                 self.samples = self.distribution.transform_to_standard.mapinv(
-                                   self.distribution.transform_standard_dist_to_poly.mapinv(p_standard))
+                                    self.distribution.
+                                    transform_standard_dist_to_poly.
+                                    mapinv(p_standard))
 
             else:  # Add new_samples random samples
                 x = self.distribution.transform_standard_dist_to_poly.map(
@@ -99,7 +101,9 @@ class PolynomialChaosExpansion():
                         **sampler_options)
 
                 self.samples = self.distribution.transform_to_standard.mapinv(
-                                   self.distribution.transform_standard_dist_to_poly.mapinv(x))
+                                   self.distribution.
+                                        transform_standard_dist_to_poly.
+                                        mapinv(x))
 
         else:
             raise ValueError("Unsupported sample type '{0}' for input\
@@ -144,7 +148,8 @@ class PolynomialChaosExpansion():
 
         else:
             if samples.shape[1] != self.index_set.get_indices().shape[1]:
-                raise ValueError('Input parameter samples have wrong dimension')
+                raise ValueError('Input parameter samples'
+                                 ' have wrong dimension')
 
             self.samples = samples
 
@@ -296,7 +301,7 @@ class PolynomialChaosExpansion():
 
         # Resample model
         self.model_output = np.vstack((self.model_output,
-                    np.zeros([max_new_samples, self.model_output.shape[1]])))
+                      np.zeros([max_new_samples, self.model_output.shape[1]])))
         for ind in range(Mold, Mold+max_new_samples):
             self.model_output[ind, :] = self.model(self.samples[ind, :])
 
@@ -345,7 +350,8 @@ class PolynomialChaosExpansion():
         elif (add_rule is None) and (mult_rule is None):
             samplefun = lambda Nindices: int(Nindices + 1)
         else:
-            assert False, "Cannot specify both an additive and multiplicative rule"
+            assert False, 'Cannot specify both an '\
+                          'additive and multiplicative rule'
 
         indices = self.identify_bulk(delta=delta)
 
@@ -476,11 +482,15 @@ class PolynomialChaosExpansion():
                     self.distribution.transform_to_standard.map(p))
 
         if components is None:
-            return np.dot(self.distribution.polys.eval(p_std, 
-                                                       self.index_set.get_indices()), self.coefficients)
+            return np.dot(self.distribution.polys.eval(p_std,
+                                                       self.index_set.
+                                                            get_indices()),
+                                                       self.coefficients)
         else:
-            return np.dot(self.distribution.polys.eval(p_std, 
-                                                       self.index_set.get_indices()), self.coefficients[:, components])
+            return np.dot(self.distribution.polys.eval(p_std,
+                                                       self.index_set.
+                                                            get_indices()),
+                                                       self.coefficients[:, components])
 
     def quantile(self, q, M=100):
         """
@@ -607,7 +617,7 @@ class PolynomialChaosExpansion():
         """
 
         indices = self.index_set.get_indices()
-        assert all([0<=dim<=self.distribution.dim-1 for dim in dim_list])
+        assert all([0 <= dim <= self.distribution.dim-1 for dim in dim_list])
 
         D = len(dim_list)
 
@@ -615,16 +625,17 @@ class PolynomialChaosExpansion():
 
         all_dims = range(self.distribution.dim)
 
-        # TODO: make map compositions default in PCE 
+        # TODO: make map compositions default in PCE
         composed_map = self.distribution.transform_standard_dist_to_poly.compose(
                          self.distribution.transform_to_standard)
 
         # Precompute derivative expansion matrices
         M = self.index_set.max_univariate_degree()
-        Cs = [None,]*self.distribution.dim
+        Cs = [None, ]*self.distribution.dim
         for q in range(self.distribution.dim):
-            Cs[q] = self.distribution.polys.get_univariate_derivative_expansion(
-                q, 1, M, 0)
+            Cs[q] = self.distribution.\
+                         polys.\
+                         get_univariate_derivative_expansion(q, 1, M, 0)
 
         for ind, dim in enumerate(dim_list):
             # Rows of indices whose non-column-dim entries are 0 contribute
@@ -633,12 +644,14 @@ class PolynomialChaosExpansion():
 
             b0 = 1.
             for val in notdim:
-                b0 *= self.distribution.polys.get_univariate_recurrence(0, val)[0, 1]
+                b0 *= self.distribution.polys.\
+                                        get_univariate_recurrence(0, val)[0, 1]
 
             for q in range(self.distribution.dim):
-                S[ind,:] += (composed_map.A[q, dim] * \
-                              Cs[q][indices[flags,dim]].T @ self.coefficients[flags,:]).flatten()
+                S[ind, :] += (composed_map.A[q, dim] *
+                              Cs[q][indices[flags, dim]].T @
+                              self.coefficients[flags, :]).flatten()
 
-            S[ind,:] *= b0
+            S[ind, :] *= b0
 
         return S

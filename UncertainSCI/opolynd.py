@@ -77,7 +77,7 @@ class TensorialPolynomials:
                                          equal self.dim"
 
         if d is None:
-            d = [0,]*dim
+            d = [0, ]*dim
 
         assert len(d) == dim, 'Derivative order must be a list-type ' \
                               'with length equal to dimension.'
@@ -93,13 +93,14 @@ class TensorialPolynomials:
 
         return p
 
-    def idist_mixture_sampling(self, M, Lambdas, weights=None, fast_sampler=True):
+    def idist_mixture_sampling(self, M, Lambdas, weights=None,
+                               fast_sampler=True):
         """
-        Performs tensorial inverse transform sampling from an additive mixture of
-        tensorial induced distributions, generating M samples
+        Performs tensorial inverse transform sampling from an additive mixture
+        of tensorial induced distributions, generating M samples
 
-        The measure this samples from is the order-Lambdas induced measure, which
-        is an additive mixture of tensorial measures
+        The measure this samples from is the order-Lambdas induced measure,
+        which is an additive mixture of tensorial measures
 
         Each tensorial measure is defined a row of Lambdas
 
@@ -195,7 +196,8 @@ class TensorialPolynomials:
         return x[P, :]
 
     def wafp_sampling_restart(self, indices, samples, Nnewsamples,
-                              weights=None, sampler='idist', fast_sampler=True):
+                              weights=None, sampler='idist',
+                              fast_sampler=True):
         """
         Computes Nnewsamples from a "restarted" WAFP procedure, from which the
         input samples are already prescribed.
@@ -239,7 +241,7 @@ class TensorialPolynomials:
         """ Tensorial Gaussian quadrature
 
         Generates a self.dim-dimensional tensorial rule constructed from the
-        univariate Gaussian quadrature rules from each polynomial family. 
+        univariate Gaussian quadrature rules from each polynomial family.
 
         Args:
             N: If given as an integer, specifies an equal number of points in
@@ -253,12 +255,12 @@ class TensorialPolynomials:
         """
 
         try:
-            tmp = iter(N)
-        except:
-            N = [N,]*self.dim
+            iter(N)
+        except Exception:
+            N = [N, ]*self.dim
 
-        xs = [None,]*self.dim
-        ws = [None,]*self.dim
+        xs = [None, ]*self.dim
+        ws = [None, ]*self.dim
 
         for q in range(self.dim):
             if self.isotropic:
