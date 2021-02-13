@@ -59,31 +59,37 @@ class TensorialPolynomials:
         else:
             raise TypeError('Unrecognized type for input polys1d')
 
-    def eval(self, x, lambdas):
+    def eval(self, x, lambdas, d=None):
         """
         Evaluates tensorial orthonormal polynomials.
         """
 
         try:
-            M, d = x.shape
+            M, dim = x.shape
         except Exception:
-            d = x.size
+            dim = x.size
             M = 1
-            x = np.reshape(x, (M, d))
+            x = np.reshape(x, (M, dim))
 
-        N, d2 = lambdas.shape
+        N, dim2 = lambdas.shape
 
-        assert d == d2 == self.dim, "Dimension 0 of both x and lambdas must \
-                                     equal self.dim"
+        assert dim == dim2 == self.dim, "Dimension 0 of both x and lambdas must \
+                                         equal self.dim"
+
+        if d is None:
+            d = [0,]*dim
+
+        assert len(d) == dim, 'Derivative order must be a list-type ' \
+                              'with length equal to dimension.'
 
         p = np.ones([M, N])
 
         if self.isotropic:
             for qd in range(self.dim):
-                p = p * self.polys1d.eval(x[:, qd], lambdas[:, qd])
+                p = p * self.polys1d.eval(x[:, qd], lambdas[:, qd], d[qd])
         else:
             for qd in range(self.dim):
-                p = p * self.polys1d[qd].eval(x[:, qd], lambdas[:, qd])
+                p = p * self.polys1d[qd].eval(x[:, qd], lambdas[:, qd], d[qd])
 
         return p
 
@@ -228,6 +234,94 @@ class TensorialPolynomials:
             samples = np.vstack((samples, x[P[-1]-Mold-q, :]))
 
         return samples
+
+    def tensor_gauss_quadrature(self, N):
+        """ Tensorial Gaussian quadrature
+
+        Generates a self.dim-dimensional tensorial rule constructed from the
+        univariate Gaussian quadrature rules from each polynomial family. 
+
+        Args:
+            N: If given as an integer, specifies an equal number of points in
+              each dimension. If a size-len(self.dim) iterable of integers,
+              specifies the number of points in each separate dimension.
+        Returns:
+            x: A shape-(K x self.dim) numpy array, where each row corresponds
+              to a quadrature node.
+            w: A size-K numpy array containing corresponding quadrature
+              weights.
+        """
+
+        try:
+            tmp = iter(N)
+        except:
+            N = [N,]*self.dim
+
+        xs = [None,]*self.dim
+        ws = [None,]*self.dim
+
+        for q in range(self.dim):
+            if self.isotropic:
+                xs[q], ws[q] = self.polys1d.gauss_quadrature(N[q])
+            else:
+                xs[q], ws[q] = self.polys1d[q].gauss_quadrature(N[q])
+
+        X = np.meshgrid(*xs)
+        W = np.meshgrid(*ws)
+
+        x = np.zeros([X[0].size, self.dim])
+        w = np.ones(X[0].size)
+
+        for q in range(self.dim):
+            x[:, q] = X[q].flatten()
+            w *= W[q].flatten()
+
+        return x, w
+
+    def get_univariate_recurrence(self, N, dim):
+        """ Returns univariate three-term recurrence coefficient
+
+        Returns the first N+1 recurrence coefficients for the family in
+        dimension dim.
+
+        Args:
+            N: Integer, determining the maximum index of the coefficients
+                desired.
+            dim: Integer, the dimension index, satisfying 0 <= dim < self.dim
+        Returns:
+            ab: A shape-(N+1 x 2) numpy array containing the coefficients.
+        """
+
+        assert dim < self.dim, 'Requested dimension index larger' \
+                               'than allowed.'
+
+        if self.isotropic:
+            return self.polys1d.recurrence(N)
+        else:
+            return self.polys1d[dim].recurrence(N)
+
+    def get_univariate_derivative_expansion(self, dim, s, N, K=None):
+        """ Returns univariate derivative expansion coefficients
+
+        Returns the (N+1) x (K+1) s-th derivative expansion array associated to
+        the given dimension dim.
+
+        Args:
+            dim: Integer, the dimension index, satisfying 0 <= dim < self.dim
+            s: The integer order of the derivative. Must be non-negative.
+            N: Computes coefficients for :math:`n \\leq N`
+            K: Computes coefficients for :math:`k \\leq K` (optional). If not
+              given, is set to N.
+        Returns:
+            C: (N+1) x (K+1) numpy array containing coefficients.
+        """
+        assert dim < self.dim, 'Requested dimension index larger' \
+                               'than allowed.'
+
+        if self.isotropic:
+            return self.polys1d.derivative_expansion(s, N, K=K)
+        else:
+            return self.polys1d[dim].derivative_expansion(s, N, K=K)
 
 
 if __name__ == "__main__":

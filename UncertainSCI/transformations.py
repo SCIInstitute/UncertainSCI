@@ -76,3 +76,35 @@ class AffineTransform:
 
         else:
             return self.Ainv.dot(x.T).T + self.binv
+
+    def jacobian_determinant(self):
+        """ Returns the Jacobian determinant of the map.
+
+        Args:
+            None
+        Returns:
+            jacdet: positive float, the absolute value of the map determinant
+        """
+
+        if isinstance(self.A, sprs.spmatrix):
+            return np.abs(np.linalg.det(self.A.todense()))
+        else:
+            return np.abs(np.linalg.det(self.A))
+
+    def compose(self, other):
+        """ Returns composition of two AffineTransform's
+
+        Args:
+            other: An AffineTransform instance where the domain and range are
+              the same dimension as for self.
+       Returns:
+            composition: AffineTransform instance, corresponding to the map
+              self :math:`\circ` other
+        """
+
+        A1 = np.asarray(self.A.todense())
+        A2 = np.asarray(other.A.todense())
+
+        assert A1.shape[0] == A2.shape[0]
+
+        return AffineTransform(A=(A1 @ A2), b=(A1 @ other.b + self.b))

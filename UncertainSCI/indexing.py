@@ -234,6 +234,45 @@ class MultiIndexSet():
     def size(self):
         return self.indices.shape[0]
 
+    def max_univariate_degree(self, dim=None):
+        """
+        Returns the maximum index value along a given dimension. If no
+        dimension is specified, returns the maximum degree across all
+        dimensions.
+
+        Args:
+            dim: A dimension integer taking values between 0 and self.dim-1,
+              optional.
+        Returns:
+            deg: Maximum index value (integer).
+        """
+
+        if dim is None:
+            return np.max(self.get_indices())
+        else:
+            return np.max(self.get_indices()[:,dim])
+
+    def zero_indices(self, dim_indices=None):
+        """
+        Identifies indices in the index set whose entries in the dimensions
+        dim_indices are 0. 
+
+        Args:
+            dim_list: list-like iterable containing dimension indices.
+        Returns:
+            flags: A boolean numpy vector indicating which indices in the index
+              set satisfy the conditions.
+        """
+
+        assert all([0<=dim<=self.dim-1 for dim in dim_indices])
+
+        if dim_indices is None:
+            return self.get_indices()
+
+        indices = self.get_indices()
+
+        return np.linalg.norm(indices[:, dim_indices], axis=1) == 0
+
     def isamember(self, trial_indices):
         """
         Determines if input indices are members of the current index set.
