@@ -55,3 +55,34 @@ class IndexingTestCase(unittest.TestCase):
         err = max(err1, err2)
 
         self.assertAlmostEqual(err, 0, delta=delta)
+
+    def test_zero_indices(self):
+        """ Detection of indices that are zero. """
+
+        dim = 3
+        order = 4
+
+        # Total degree set
+        indset = indexing.TotalDegreeSet(dim=dim, order=order)
+
+        exact_set_1 = [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0], [0, 4, 0]]
+        exact_set_1 = np.lexsort(np.array(exact_set_1), axis=0)
+
+        set_1 = indset.get_indices()[indset.zero_indices([0, 2]), :]
+        set_1 = np.lexsort(np.array(set_1), axis=0)
+
+        exact_set_2 = [[0, 0, 0], [1, 0, 0], [0, 0, 1], [2, 0, 0], [1, 0, 1],
+                       [0, 0, 2], [3, 0, 0], [2, 0, 1], [1, 0, 2], [0, 0, 3],
+                       [4, 0, 0], [3, 0, 1], [2, 0, 2], [1, 0, 3], [0, 0, 4]]
+
+        exact_set_2 = np.lexsort(np.array(exact_set_2), axis=0)
+
+        set_2 = indset.get_indices()[indset.zero_indices([1, ]), :]
+        set_2 = np.lexsort(np.array(set_2), axis=0)
+
+        delta = 1e-12
+        err1 = np.linalg.norm(exact_set_1 - set_1)
+        self.assertAlmostEqual(err1, 0, delta=delta)
+
+        err2 = np.linalg.norm(exact_set_2 - set_2)
+        self.assertAlmostEqual(err2, 0, delta=delta)

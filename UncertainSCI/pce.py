@@ -87,7 +87,9 @@ class PolynomialChaosExpansion():
                                self.index_set.get_indices(), **sampler_options)
                 # Maps to domain
                 self.samples = self.distribution.transform_to_standard.mapinv(
-                                   self.distribution.transform_standard_dist_to_poly.mapinv(p_standard))
+                                    self.distribution.
+                                    transform_standard_dist_to_poly.
+                                    mapinv(p_standard))
 
             else:  # Add new_samples random samples
                 x = self.distribution.transform_standard_dist_to_poly.map(
@@ -99,7 +101,9 @@ class PolynomialChaosExpansion():
                         **sampler_options)
 
                 self.samples = self.distribution.transform_to_standard.mapinv(
-                                   self.distribution.transform_standard_dist_to_poly.mapinv(x))
+                                   self.distribution.
+                                        transform_standard_dist_to_poly.
+                                        mapinv(x))
 
         else:
             raise ValueError("Unsupported sample type '{0}' for input\
@@ -144,7 +148,8 @@ class PolynomialChaosExpansion():
 
         else:
             if samples.shape[1] != self.index_set.get_indices().shape[1]:
-                raise ValueError('Input parameter samples have wrong dimension')
+                raise ValueError('Input parameter samples'
+                                 ' have wrong dimension')
 
             self.samples = samples
 
@@ -296,7 +301,7 @@ class PolynomialChaosExpansion():
 
         # Resample model
         self.model_output = np.vstack((self.model_output,
-                    np.zeros([max_new_samples, self.model_output.shape[1]])))
+                      np.zeros([max_new_samples, self.model_output.shape[1]])))
         for ind in range(Mold, Mold+max_new_samples):
             self.model_output[ind, :] = self.model(self.samples[ind, :])
 
@@ -345,7 +350,8 @@ class PolynomialChaosExpansion():
         elif (add_rule is None) and (mult_rule is None):
             samplefun = lambda Nindices: int(Nindices + 1)
         else:
-            assert False, "Cannot specify both an additive and multiplicative rule"
+            assert False, 'Cannot specify both an '\
+                          'additive and multiplicative rule'
 
         indices = self.identify_bulk(delta=delta)
 
@@ -476,11 +482,15 @@ class PolynomialChaosExpansion():
                     self.distribution.transform_to_standard.map(p))
 
         if components is None:
-            return np.dot(self.distribution.polys.eval(p_std, 
-                                                       self.index_set.get_indices()), self.coefficients)
+            return np.dot(self.distribution.polys.eval(p_std,
+                                                       self.index_set.
+                                                            get_indices()),
+                                                       self.coefficients)
         else:
-            return np.dot(self.distribution.polys.eval(p_std, 
-                                                       self.index_set.get_indices()), self.coefficients[:, components])
+            return np.dot(self.distribution.polys.eval(p_std,
+                                                       self.index_set.
+                                                            get_indices()),
+                                                       self.coefficients[:, components])
 
     def quantile(self, q, M=100):
         """
@@ -579,3 +589,69 @@ class PolynomialChaosExpansion():
                                                         axis=0) / variance[~zerovar]
 
         return global_sensitivities
+
+    def global_derivative_sensitivity(self, dim_list):
+        """
+        Computes global derivative-based sensitivity indices. For a
+        PCE with respect to a :math:`d`-dimensional random variable :math:`Z`,
+        then this senstivity index along dimension :math:`i` is defined as
+
+        .. math::
+
+          S_i \\coloneqq E \\left[ p(Z) \\right] = \\int p(z) \\omega(z) d z,
+
+        where :math:`E[\\cdot]` it expectation operator, :math:`p` is the PCE
+        emulator, and :math:`\\omega` is the probability density function for
+        the random variable :math:`Z`.
+
+        These sensitivity indices measure the average rate-of-change of the PCE
+        response with respect to dimension :math:`i`.
+
+        Args:
+            dim_lists: A list-type iterable with D entries, containing
+              dimensional indices in 0-based indexing. All entries must be
+              between 0 and self.distribution.dim.
+        Returns:
+            S: DxK array, where each row corresponds to the sensitivity index
+              :math:`S_i` across all K features of the PCE model.
+        """
+
+        indices = self.index_set.get_indices()
+        assert all([0 <= dim <= self.distribution.dim-1 for dim in dim_list])
+
+        D = len(dim_list)
+
+        S = np.zeros([D, self.coefficients.shape[1]])
+
+        all_dims = range(self.distribution.dim)
+
+        # TODO: make map compositions default in PCE
+        composed_map = self.distribution.transform_standard_dist_to_poly.compose(
+                         self.distribution.transform_to_standard)
+
+        # Precompute derivative expansion matrices
+        M = self.index_set.max_univariate_degree()
+        Cs = [None, ]*self.distribution.dim
+        for q in range(self.distribution.dim):
+            Cs[q] = self.distribution.\
+                         polys.\
+                         get_univariate_derivative_expansion(q, 1, M, 0)
+
+        for ind, dim in enumerate(dim_list):
+            # Rows of indices whose non-column-dim entries are 0 contribute
+            notdim = [val for val in all_dims if val != dim]
+            flags = self.index_set.zero_indices(notdim)
+
+            b0 = 1.
+            for val in notdim:
+                b0 *= self.distribution.polys.\
+                                        get_univariate_recurrence(0, val)[0, 1]
+
+            for q in range(self.distribution.dim):
+                S[ind, :] += (composed_map.A[q, dim] *
+                              Cs[q][indices[flags, dim]].T @
+                              self.coefficients[flags, :]).flatten()
+
+            S[ind, :] *= b0
+
+        return S

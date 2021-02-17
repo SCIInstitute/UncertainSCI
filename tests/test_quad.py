@@ -51,7 +51,7 @@ class QuadTestCase(unittest.TestCase):
         beta  = -1. + 6*np.random.rand()
         J = JacobiPolynomials(alpha=alpha,beta=beta)
 
-        delta = 1e-8
+        delta = 5e-6
         N = 10
 
         G = np.zeros([N,N])
