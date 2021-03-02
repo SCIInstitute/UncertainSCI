@@ -46,7 +46,7 @@ Jess Tate
 
 ### Overview
 
-**This tutorial demonstrates how to use markdown to create new tutorials for UcertainSCI.  It will walk through all the files needed and the basic structure needed expected for tutorials.  Knowledge of Markdown, Github, Github pages, and Python will be useful. If you have questions, [please ask](https://github.com/SCIInstitute/UncertainSCI/discussions).**
+**This tutorial demonstrates how to use markdown to create new tutorials for UncertainSCI.  It will walk through all the files needed and the basic structure needed expected for tutorials.  Knowledge of Markdown, Github, Github pages, and Python will be useful. If you have questions, [please ask](https://github.com/SCIInstitute/UncertainSCI/discussions).**
 
 #### Software requirements
 ##### UncertainSCI
@@ -299,5 +299,4 @@ TODO
 #### Example Scripts
 #### Movies
 #### Datasets
-
 
