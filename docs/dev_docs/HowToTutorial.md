@@ -23,7 +23,7 @@ Jess Tate
 To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../specs.html)
 
 #### Dependencies and Development Tools
-UncertainSCI uses Read the Docs and Sphinx to host tutorial documentation.   This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, sphinx, and other packages in the [requirement.txt file]()
+UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, Recommonmark, and other packages in the [`docs/requirements.txt` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/requirements.txt).  More information can be found  in [the walkthorugh]( ) and on the [Sphinx documentation](https://www.sphinx-doc.org/en/master/index.html).
 
 #### Creating Your UncertainSCI Fork
 With your own github account, go to the [UncertainSCI Github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
@@ -74,115 +74,95 @@ Please see the [Github help page](https://help.github.com) for more information.
 To make a new tutorial, a markdown file is required for the content of the tutorial.  Other files, such as images, may also be included.  In addition to the new files for the tutorial, a link to the new tutorial should be added to the *User Documents* file.  
 
 ### Markdown File
-The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/user_docs/` directory.  There is a [template file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/user_docs/template.md) that can be used, or an existing tutorial like this one can be used.  Markdown files must have a header and should look something like:
-```
----
-title: Tutorial Title
-category: user documentation
-tags: tutorial, etc.
-layout: default_toc
----
-```
-The file should also include a call to the style sheet soon after the header:
-```
-<link rel="stylesheet" href="css/main.css">
-```
-If using math equations in a latex, a call to the mathjax server is required at this point too:
+The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/tutorials/` directory.  There is a [template file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/template.md) that can be used, or an existing tutorial like this one can be used. 
+
+If using math equations in a latex, a call to the mathjax server is required at the begining of the document:
 ```
 <script type="text/javascript" async
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
 </script>
 ```
-That is all that is needed to make the file appear properly.  Next start with the content of the tutorial, starting with the acknowledgement and the list of authors.
-```
-This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
 
-Authors:  
-Smart people here
+Sphinx will build the menu and table of contents from the header names, and the document will be formated correctly if the proper markdown headings levels are used.  For instance, the Document title should be the first content:
 ```
-A table of contents can be added at the beginning of the document, yet there should also be an interactive menu on the sidebar.
+# Title
 ```
-### Contents
+Then the chaper headings:
+```
+## Overview
+## Chapter The First
+## ETC.
+```
 
-*  [Overview](#overview)
-        -  [Software Requirements](#software-requirements)
-*  [Chapter Name](#chapter-name)
-        - [Overview of Chapter](#overview-of-chapter)
-        - [Section](#section)
-            - [Subsection](#section)
-```
 A mini table of contents can be added to the beginning of each section.  The one for this section looks like this:
 ```
 **Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)
 ```
 For examples on how to added different content, such as figures, equations, etc., refer to the [content section](#adding-content) as well as the [Content Guide](#content-guide).
 
+An important part of the document is to acknowledge the authors and funding sources.  Include text similar to this after the document title:
+```
+This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
+
+Authors:  
+Smart people here
+```
+
+
+Chapters and sections will appear in the table of contents with the page titles.   Once the file is [added to the `docs/tutorial/index.rst` file](#linking-to-new-tutorial)
+
 ### Added Figures
 
 Most tutorials require a number of screenshots and other images.  Figures and images should be added in a folder for each tutorial in the  `UncertainSCI/docs/user_docs/` folder. The figure folder should be named after the tutorial, for example, the images in this tutorial are in a folder called `HowToTutorial_figures`.  Instructions on how to use the images and figures are found [here](#figures)
 
 ### Additional Files
-Additional files added to the `user_docs` folder should be minimized as much as possible.  Example scripts should be located in the `UncertainSCI/examples` directory and example data will, generally, need separate hosting. However, if one or two files are needed, they may be added to the  `UncertainSCI/docs/user_docs/` with a consistent naming scheme.  Bibtex file with a matching name should be added in  `UncertainSCI/docs/user_docs/`, yet if multiple additional files are needed, they should placed in a new folder indicating the tutorial: `UncertainSCI/docs/user_docs/[tutorial name]_files`.  
+Additional files added to the `tutorials` folder should be minimized as much as possible.  Example scripts should be located in the `UncertainSCI/examples` directory and example data will, generally, need separate hosting. However, if one or two files are needed, they may be added to the  `UncertainSCI/docs/tutorials/` with a consistent naming scheme.  Bibtex file with a matching name should be added in  `UncertainSCI/docs/tutorials/`, yet if multiple additional files are needed, they should placed in a new folder indicating the tutorial: `UncertainSCI/docs/tutorials/[tutorial name]_files`.  
 
 ### Linking to New Tutorial
 
-For the new tutorial to be visible on the [user documentation page](../user.html), add a link to the [`UncertainSCI/docs/user.md`](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/user.md) file.  
+For the new tutorial to be visible on the [user documentation page](../tutorials/index.html), add the filename to the list in the  [`UncertainSCI/docs/tutorials/index.rst` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/index.rst).  
 
 ## Testing Documentation
 
-**This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local Jekyll build or using the online build on a fork of UncertainSCI.**
+**This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local Sphinx build or using the online build on Read the Docs.**
 
-**Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Jekyll](#installing-jekyll) - [Building Documentation](#building-documentation) - [Testing on a Fork](#testing-on-a-fork)**
+**Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Sphinx](#installing-sphinx) - [Building Documentation](#building-documentation) - [Testing Online](#testing-online)**
 
 ### Testing Locally
-Testing the documentation locally involves building and running a jekyll server with the documentation on your local machine.  These instructions are adapted from [Github's help page](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll).
+Testing the documentation locally involves building documentation website on your local machine using Sphinx and Recommonmark.  These instructions are adapted from [Read the Docs' help page](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html).
 
-#### Installing Jekyll
-To install the Jekyll, make sure that [Ruby is installed](https://www.ruby-lang.org/en/documentation/installation/).  We will use Ruby to install [Bundler](https://bundler.io) and [Jekyll](https://jekyllrb.com/docs/).  In a terminal window, enter the following command:
+#### Installing Shpinx
+To install the Sphinx, make sure that a relatively recent version of Python 3. Installing sphinx and other dependencies is easiest with [pip](https://pip.pypa.io/en/stable/installing/), just run 
 ```
-gem install bundler
+pip install -r requirements.txt
 ```
-Next, navigate to the docs folder of your local clone of the UncertainSCI repo.  
-```
-cd UncertainSCI/docs
-```
-You can use bundler to install Jekyll and all the subsequent dependencies to run the local Jekyll server.  Just run:
-```
-bundle install
-```
-This will install the dependencies specified in the `Gemfile` and `Gemfile.lock` files. This should be all that that is required to run a jekyll server locally to test the documentation pages. It is worth noting that `bundle install` should also reinstall the dependencies if they happen to change between local builds, yet the other steps do not need to be repeated as often.   Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions
+in the `UncertainSCI/docs` folder and the relavent python dependencies, including Sphinx, will be installed.  
+
+Alternatively, the dependencies listed in [`UncertainSCI/docs/requirements.txt` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/requirements.txt) could be installed seperately.  
+
+Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
 #### Building Documentation
-Once Ruby, Bunlder, Jekyll, and all the dependencies are [installed properly](#installing-jekyll), the Jekyll server can be launched with the following command:
-```
-bundle exec jekyll serve
-```
-You should see a sequence of text indicating that the server is running, similar to:
-```
-Configuration file: /Users/test/UncertainSCI/docs/_config.yml
-            Source: .
-       Destination: ./_site
- Incremental build: disabled. Enable with --incremental
-      Generating... 
-                    done in 0.505 seconds.
- Auto-regeneration: enabled for '.'
-    Server address: http://127.0.0.1:9001/UncertainSCI/
-  Server running... press ctrl-c to stop.
-  ```
-This indicates that the server built correctly and the documentation page can be view by entering the server address into a browser, in this case `http://127.0.0.1:9001/UncertainSCI/`.  You should be able to see the UncertainSCI docs page, from which you can navigate to the new tutorial via the browser links.  The address of the new tutorial page will be the same as the location of the Markdown file, with the `.md` ending replaced with `.html`, e.g., `http://127.0.0.1:9001/UncertainSCI/user_docs/[tutorial_name].html`.  The server should regenerate pages when markdown files are changed, allowing you to view the changes quickly by refreshing the browser. For more information, see the [Github help page](https://docs.github.com/en/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll)
 
-If the server does not start correctly, and you see errors in the output after the command `bundle exec jekyll serve`, it is likely that some of the dependencies were not installed correctly, particularly if the error is `bundler: failed to load command: jekyll...`.  First, run `bundle install` again.  if the error persists, you can try [updating your Ruby gems](https://rubygems.org/pages/download):
+Once the relavent python packages are installed properly, such as with pip, building the documentation pages is as simple as running
 ```
-gem update --system
+make html
 ```
-Or by running:
-```
-bundle update
-```
-One final check would be the versions of Ruby and Bundler that are running, which may also need upgrading.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have questions.  
+in the `UncertainSCI/docs` folder.   A script will run and, assuming no errors, the html pages will be generated within the `UncertainSCI/docs/_build/` folder.  Any of the html files can be tested by opening it in a browser.  
 
-### Testing on a Fork
-In addition to building and testing the documentation pages locally, they can also be tested and viewed using a [fork of the UncertainSCI repo](#creating-your-uncertainsci-fork).  Once the fork is created, you will be able to see the documentation page for master branch of the fork by visiting the page `http://[yourgithubaccount].github.io/UncertainSCI/`.  Changes and new tutorials can be pushed to the master branch of your fork and preview before [making a pull request.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).  To view and compare to the main documentation page, visit [`http://sciinstitute.github.io/UncertainSCI/`](http://sciinstitute.github.io/UncertainSCI/).  
+
+
+### Testing Online
+In addition to building and testing the documentation pages locally, they can also be tested online with Read the Docs.  Any branch of a github repo can be built one the [Read the Docs page](https://readthedocs.org/projects/uncertainsci/).  Online builds can only be triggered deirectly on the readthe docs by those who have access. However, every pull request to the UncertainSCI repo will trigger an online build that can be viewed by anyone. 
+
+<figure id="autobuild">
+<img src="HowToTutorial/autobuild.png" alt="Pull request autobuild">
+<figcaption>Documentation autobuild on a Github Pull Request.</figcaption>
+</figure>
+
+[making a pull request.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
+
+viewed using a [fork of the UncertainSCI repo](#creating-your-uncertainsci-fork).  Once the fork is created, you will be able to see the documentation page for master branch of the fork by visiting the page `http://[yourgithubaccount].github.io/UncertainSCI/`.  Changes and new tutorials can be pushed to the master branch of your fork and preview before   To view and compare to the main documentation page, visit [`http://sciinstitute.github.io/UncertainSCI/`](http://sciinstitute.github.io/UncertainSCI/).  
 
 ### Adding Content
 
