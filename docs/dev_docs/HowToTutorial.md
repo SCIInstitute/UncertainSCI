@@ -154,11 +154,12 @@ in the `UncertainSCI/docs` folder.   A script will run and, assuming no errors, 
 
 ### Testing Online
 In addition to building and testing the documentation pages locally, they can also be tested online with Read the Docs.  Any branch of a github repo can be built one the [Read the Docs page](https://readthedocs.org/projects/uncertainsci/).  Online builds can only be triggered deirectly on the readthe docs by those who have access. However, every pull request to the UncertainSCI repo will trigger an online build that can be viewed by anyone. 
-
 <figure id="autobuild">
-<img src="HowToTutorial/autobuild.png" alt="Pull request autobuild">
+<img src="HowToTutorial_figures/autobuild.png" alt="Pull request autobuild">
 <figcaption>Documentation autobuild on a Github Pull Request.</figcaption>
 </figure>
+Just click on the details link <a href="#autobuild">shown</a>.  
+
 
 [making a pull request.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
