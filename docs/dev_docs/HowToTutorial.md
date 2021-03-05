@@ -154,18 +154,12 @@ in the `UncertainSCI/docs` folder.   A script will run and, assuming no errors, 
 
 ### Testing Online
 In addition to building and testing the documentation pages locally, they can also be tested online with Read the Docs.  Any branch of a github repo can be built one the [Read the Docs page](https://readthedocs.org/projects/uncertainsci/).  Online builds can only be triggered deirectly on the readthe docs by those who have access. However, every pull request to the UncertainSCI repo will trigger an online build that can be viewed by anyone. 
-<figure id="autobuild">
-<img src="HowToTutorial_figures/autobuild.png" alt="Pull request autobuild">
-<figcaption>Documentation autobuild on a Github Pull Request.</figcaption>
-</figure>
-Just click on the details link <a href="#autobuild">shown</a>.  
+![Documentation autobuild on a Github Pull Request](HowToTutorial_figures/autobuild.png "Pull request autobuild")
+The documentation page can be viewd by clicking on the details link, shown in the image.  [Pull requests](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) are required when submitting contributions to UncertainSCI.
 
+Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
-[making a pull request.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
-
-viewed using a [fork of the UncertainSCI repo](#creating-your-uncertainsci-fork).  Once the fork is created, you will be able to see the documentation page for master branch of the fork by visiting the page `http://[yourgithubaccount].github.io/UncertainSCI/`.  Changes and new tutorials can be pushed to the master branch of your fork and preview before   To view and compare to the main documentation page, visit [`http://sciinstitute.github.io/UncertainSCI/`](http://sciinstitute.github.io/UncertainSCI/).  
-
-### Adding Content
+## Adding Content
 
 **This chapter provides some examples of how to add some types of content that may be needed for a tutorial.  For general Markdown info, see [here](https://www.markdownguide.org/basic-syntax/) and [here](https://guides.github.com/features/mastering-markdown/).**
 
@@ -185,7 +179,7 @@ However, using a bit of html allows us to <a href="#example">reference the figur
 <figcaption>Example for including an image in tutorial.</figcaption>
 </figure>
 ```
-And to reference:
+And to reference (not working with Sphinx):
 ```
 <a href="#example">reference the figure</a>
 ```
