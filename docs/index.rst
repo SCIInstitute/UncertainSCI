@@ -5,13 +5,12 @@ Welcome to UncertainSCI's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   about
    install
    support
-   pce
-   spaces
-   distributions
-   polynomials
-   demos
+   tutorials/index
+   dev_docs/index
+   api_docs/index
 
 Getting Started
 ===============

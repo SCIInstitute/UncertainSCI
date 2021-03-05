@@ -103,19 +103,19 @@ Finally, we can also compute quantiles (level sets of the cumulative distributio
 
 The remainder of ``build_pce.py`` contains (a) simulations that compare PCE against methods using (much more expensive) Monte Carlo sampling, and (b) for visualizing the output. In particular, the following images are shown by running ``build_pce.py``. **Note**: The procedures are randomized so that the output figures shown here may slightly vary with respect to results generated on a local machine.
 
-.. figure:: _static/buildpce-meanstdev.png
+.. figure:: ../_static/buildpce-meanstdev.png
     :width: 400px
     :align: center
 
     Graphical output from ``demos/build_pce.py`` showing the predicted mean and standard deviation as a function of the spatial variable :math:`x`, along with a comparison against Monte Carlo methods.
 
-.. figure:: _static/buildpce-mccomparison.png
+.. figure:: ../_static/buildpce-mccomparison.png
     :width: 700px
     :align: center
 
     Graphical output from ``demos/build_pce.py`` compared PCE output with medians and quantile bands against results from a more expensive Monte Carlo simulation.
 
-.. figure:: _static/buildpce-sensitivity.png
+.. figure:: ../_static/buildpce-sensitivity.png
     :width: 400px
     :align: center
 
