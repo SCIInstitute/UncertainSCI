@@ -111,7 +111,7 @@ Additional files added to the `tutorials` folder should be minimized as much as 
 
 ### Linking to New Tutorial
 
-For the new tutorial to be visible on the [user documentation page](../tutorials/index.html), add the filename to the list in the  [`UncertainSCI/docs/tutorials/index.rst` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/index.rst).  
+For the new tutorial to be visible on the [tutorials page](../tutorials/index.html#tutorials), add the filename to the list in the  [`UncertainSCI/docs/tutorials/index.rst` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/index.rst).  
 
 ## Testing Documentation
 
@@ -201,9 +201,9 @@ Including links in Markdown is simple, just use `<>` or `[]()`.  For example, an
 ```
 [Adding Content](#adding-content)
 ```
-When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special characters ommited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [User Documentation](../users.html) is:
+When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special characters ommited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [Demos](../tutorials/demos.html#demos) is:
 ```
-[User Documentation](../users.html)
+[Demos](../tutorials/demos.html#demos)
 ```
 Links to other websites can include the full URL.  Using `<>` will show the URL, `[]()` will hide it with other text.  
 ```
@@ -218,7 +218,7 @@ Links to other websites can include the full URL.  Using `<>` will show the URL,
 
 TODO
 
-To link the UncertainSCI API generated using Sphynx, Use this syntax: [:ref:`pce`](../pce.rst).  This should work but isn't yet.  
+To link the UncertainSCI API generated using Sphynx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
 
 ## Content Guide
 
