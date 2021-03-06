@@ -77,7 +77,7 @@ External link: <https://www.markdownguide.org>, or [Markdown](https://www.markdo
 ### Referencing Sphynx
 TODO
 
-To link the UncertainSCI API generated using Sphynx, Use this syntax: [:ref:`pce`](../pce.rst)
+To link the UncertainSCI API generated using Sphynx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions)
 
 
 
