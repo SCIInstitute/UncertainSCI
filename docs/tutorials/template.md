@@ -15,8 +15,6 @@ Smart people here
 
 ** Overview of the document **
 
-**Scope: [Software Requirements](#software-requirements)
-
 ### Software Requirements
 
 #### Overview Subsection
@@ -25,8 +23,6 @@ Smart people here
 ## Chapter Name
 
 ** Overview text for the Chapter.  In this case there will be examples of several types of content**
-
-**Scope: [Section](#section)  - [Figures](#figures)  - [Math](#math)  - [Citations](#citations) - [Snippets](#snippets) - [Links](#links) - [Referencing Sphynx](#referencing-sphynx)
 
 ### Section
 Example section with subsection.  
@@ -42,10 +38,7 @@ Example Subsection.  These can go to 6 `#`'s.  Subsections are optional for  tab
 
 ### Figures
 
-<figure id="example">
-<img src="../assets/images/carousel_images/sample.png" alt="UncertainSCI example image">
-<figcaption>Example for including an image in tutorial.</figcaption>
-</figure>
+![Example for including an image in tutorial.](../_static/UncertainSCI.png "UncertainSCI example image")
 
 ### Math
 Math equations use [MathJax](http://docs.mathjax.org/en/latest/basic/mathematics.html). This requires the inclusion of this near the beginning of the document: 

@@ -20,10 +20,10 @@ Jess Tate
 
 ### Software requirements
 #### UncertainSCI
-To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../specs.html)
+To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../user_docs/getting_started.html#system-requirements)
 
 #### Dependencies and Development Tools
-UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, Recommonmark, and other packages in the [`docs/requirements.txt` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/requirements.txt).  More information can be found  in [the walkthorugh]( ) and on the [Sphinx documentation](https://www.sphinx-doc.org/en/master/index.html).
+UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, Recommonmark, and other packages in the [`docs/requirements.txt` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/requirements.txt).  More information can be found  in [the walkthorugh]( ) and on the [Sphinx documentation](https://www.sphinx-doc.org).
 
 #### Creating Your UncertainSCI Fork
 With your own github account, go to the [UncertainSCI Github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
@@ -68,8 +68,6 @@ Please see the [Github help page](https://help.github.com) for more information.
 
 **This chapter will describe the files need to create a Tutorial for UncertainSCI.**
 
-**Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)**
-
 ### Overview of Files Needed for a Tutorial
 To make a new tutorial, a markdown file is required for the content of the tutorial.  Other files, such as images, may also be included.  In addition to the new files for the tutorial, a link to the new tutorial should be added to the *User Documents* file.  
 
@@ -94,12 +92,6 @@ Then the chaper headings:
 ## ETC.
 ```
 
-A mini table of contents can be added to the beginning of each section.  The one for this section looks like this:
-```
-**Scope: [Overview of Files Needed for a Tutorial](#overview-of-files-needed-for-a-tutorial)  - [Markdown file](#markdown-file) - [Added Figures](#added-figures) - [Additional Files](#additional-files) - [Linking to New Tutorial](#linking-to-new-tutorial)
-```
-For examples on how to added different content, such as figures, equations, etc., refer to the [content section](#adding-content) as well as the [Content Guide](#content-guide).
-
 An important part of the document is to acknowledge the authors and funding sources.  Include text similar to this after the document title:
 ```
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
@@ -107,7 +99,6 @@ This project was supported by grants from the National Institute of Biomedical I
 Authors:  
 Smart people here
 ```
-
 
 Chapters and sections will appear in the table of contents with the page titles.   Once the file is [added to the `docs/tutorial/index.rst` file](#linking-to-new-tutorial)
 
@@ -125,8 +116,6 @@ For the new tutorial to be visible on the [user documentation page](../tutorials
 ## Testing Documentation
 
 **This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local Sphinx build or using the online build on Read the Docs.**
-
-**Scope: [Testing Documentation](#Testing-Documentation) - [Testing Locally](#testing-locally) - [Installing Sphinx](#installing-sphinx) - [Building Documentation](#building-documentation) - [Testing Online](#testing-online)**
 
 ### Testing Locally
 Testing the documentation locally involves building documentation website on your local machine using Sphinx and Recommonmark.  These instructions are adapted from [Read the Docs' help page](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html).
@@ -162,8 +151,6 @@ Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you ha
 ## Adding Content
 
 **This chapter provides some examples of how to add some types of content that may be needed for a tutorial.  For general Markdown info, see [here](https://www.markdownguide.org/basic-syntax/) and [here](https://guides.github.com/features/mastering-markdown/).**
-
-**Scope: [Adding Content](#adding-content) - [Figures](#figures) - [Math](#math) - [Citations](#citations) - [Snippets](#snippets) - [Links](#links) - [Referencing Sphynx](#referencing-sphynx)**
 
 ### Figures
 Figures can be added fairly easily in Markdown, with a simple call to the location:
