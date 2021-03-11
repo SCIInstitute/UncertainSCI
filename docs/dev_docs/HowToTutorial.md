@@ -155,14 +155,14 @@ Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you ha
 ### Figures
 Figures can be added fairly easily in Markdown, with a simple call to the location:
 ```
-![Alt text](../assets/images/carousel_images/sample.png "Title")
+![Alt text](../_static/UncertainSCI.png "Title")
 ```
-![UncertainSCI example image](../assets/images/carousel_images/sample.png "example markdown")
+![UncertainSCI example image](../_static/UncertainSCI.png "example markdown")
 
 However, using a bit of html allows us to <a href="#example">reference the figure</a> easier:
 ```
 <figure id="example">
-<img src="../assets/images/carousel_images/sample.png" alt="UncertainSCI example image">
+<img src="../_static/UncertainSCI.png" alt="UncertainSCI example image">
 <figcaption>Example for including an image in tutorial.</figcaption>
 </figure>
 ```
@@ -171,7 +171,7 @@ And to reference (not working with Sphinx):
 <a href="#example">reference the figure</a>
 ```
 <figure id="example">
-<img src="../assets/images/carousel_images/sample.png" alt="UncertainSCI example image">
+<img src="../_static/UncertainSCI.png" alt="UncertainSCI example image">
 <figcaption>Example for including an image in tutorial.</figcaption>
 </figure>
 
