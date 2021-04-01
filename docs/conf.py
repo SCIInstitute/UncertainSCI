@@ -64,11 +64,11 @@ language = 'python'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
+# html_theme = 'alabaster'
 
 #html_theme = 'groundwork'
 
-#html_style = 'css/main.css'
+# html_style = '/css/main.css'
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
@@ -82,4 +82,17 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_css_files = ['css/main.css']
+
 html_title = project
+
+html_logo = '_static/logo.png'
+
+html_theme_options = {
+    'logo_only': True
+    # 'style_nav_header_background': '#df3f3f'
+}
+
+html_sidebars = {
+    "**": ["localtoc.html"]
+}
