@@ -8,6 +8,9 @@ Welcome to UncertainSCI's documentation!
 
 `UncertainSCI source code <https://github.com/SCIInstitute/UncertainSCI>`_ 
 
+Citation
+================
+See :cite:t:`JDT:Bur2020` for more PCE info
 
 
 About UncertainSCI
@@ -35,6 +38,11 @@ Acknowledgements
 ================
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
+
+
+Bibliography
+==============
+.. bibliography::
 
 Indices and Tables
 ==================

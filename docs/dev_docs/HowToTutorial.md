@@ -189,6 +189,19 @@ It can also use MathJax specific tags:
 
 
 ### Citations
+
+Since we are using Sphinx to build the documentation, we can use its citation manager, sphinxcontrib-bibtex.  We will provide some exmples here, but for more information, refer to the [sphinxcontrib-bibtex documentation](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).  
+
+Citations to include in the UncertainSCI docs can be included in the `UncertainSCI/docs/UncertainSCI.bib` file.  For the keys, please use the convention: Initials of the contributor, colon, first three letters of the author (with apropriate capitalization), and the year.  For example `JDT:Bur2020`.  For multiple citations from the same author in the same year, lowercase letters can be appended to the key: `JDT:Bur2020a`.  
+
+After the reference has been added to `UncertainSCI/docs/UncertainSCI.bib`, the final step is to include the command in the appropriate place.  See  <cite data-cite="JDT:Bur2020">Burk *etal.*</cite>  
+
+```
+{cite}`JDT:Bur2020a`
+```
+
+
+
 Citations in Markdown uses [Pandoc](https://pandoc.org).  The citations can stored in Bibtex format
 
 TODO.
@@ -214,11 +227,10 @@ Links to other websites can include the full URL.  Using `<>` will show the URL,
 [Markdown](https://www.markdownguide.org)
 
 
-### Referencing Sphynx
+### Referencing Sphinx
 
-TODO
 
-To link the UncertainSCI API generated using Sphynx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
+To link the UncertainSCI API generated using Sphinx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
 
 ## Content Guide
 
@@ -226,9 +238,39 @@ TODO
 
 ## Supplemental Materials
 
-TODO
+Some things to consider including with the tutorial.  
 
 ### Example Scripts
+
+Example scripts should be located in the  `UncertainSCI/demos/` directory.  Consider using one of the existing demos as a template and try to follow the coding standards outlined in the [contribution guide](contribute.html).  
+
 ### Movies
+
+Movies should be stored in a serperate place.  We host most of ours on youtube or vimeo.  
+
+#### Youtube
+
+Get the imbed link from the youtube video.  This can be found by pressing the share button. 
+
+#### Vimeo
+
+Get the imbed link from the vimeo video.  This can be found by pressing the share button.  There are more options if for some users who own the video.  More info [here.](https://vimeo.zendesk.com/hc/en-us/articles/224969968-Embedding-videos-overview)
+
+With the embed link, just include the html into the markdown file.  
+
+```
+<iframe title="vimeo-player" src="https://player.vimeo.com/video/279319572" width="640" height="360" frameborder="0" allowfullscreen></iframe>
+```
+
+<iframe title="vimeo-player" src="https://player.vimeo.com/video/279319572" width="640" height="360" frameborder="0" allowfullscreen></iframe>
+
+
 ### Datasets
 
+Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
+
+
+## Bibliography
+
+```{bibliography}
+```
