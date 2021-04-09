@@ -7,4 +7,5 @@ sphinx-markdown-tables
 sphinx-notfound-page
 sphinx_rtd_theme
 sphinxcontrib-bibtex
+sphinx-markdown-tables
 

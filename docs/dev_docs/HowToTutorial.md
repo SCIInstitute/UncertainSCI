@@ -216,6 +216,23 @@ Links to other websites can include the full URL.  Using `<>` will show the URL,
 <https://www.markdownguide.org>
 [Markdown](https://www.markdownguide.org)
 
+### Tables
+
+Tables can be used with normal markdown syntax with the [sphinx-markdown-tables](https://github.com/ryanfox/sphinx-markdown-tables) package
+
+```
+| Syntax      | Description |
+| ----------- | ----------- |
+| Header      | Title       |
+| Paragraph   | Text        |
+```
+
+| Syntax      | Description |
+| ----------- | ----------- |
+| Header      | Title       |
+| Paragraph   | Text        |
+
+
 
 ### Referencing Sphynx
 

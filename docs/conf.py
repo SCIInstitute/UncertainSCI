@@ -34,7 +34,8 @@ extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.napoleon',
         'recommonmark',
-        'sphinxcontrib.bibtex'
+        'sphinxcontrib.bibtex',
+        'sphinx_markdown_tables'
 ]
 
 # Path for bibtex files
