@@ -86,10 +86,10 @@ class TensorialPolynomials:
 
         if self.isotropic:
             for qd in range(self.dim):
-                p = p * self.polys1d.eval(x[:, qd], lambdas[:, qd], d[qd])
+                p = p * self.polys1d.eval(x[:, qd], lambdas[:, qd], d=d[qd])
         else:
             for qd in range(self.dim):
-                p = p * self.polys1d[qd].eval(x[:, qd], lambdas[:, qd], d[qd])
+                p = p * self.polys1d[qd].eval(x[:, qd], lambdas[:, qd], d=d[qd])
 
         return p
 
