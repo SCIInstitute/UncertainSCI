@@ -187,9 +187,12 @@ It can also use MathJax specific tags:
 ```
 \\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
 
+inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\) 
+
 
 ### Citations
-Citations in Markdown uses [Pandoc](https://pandoc.org).  The citations can stored in Bibtex format
+
+Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  Another option may be [Myst](https://myst-parser.readthedocs.io/en/latest/)
 
 TODO.
 
