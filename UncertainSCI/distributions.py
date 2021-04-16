@@ -655,6 +655,119 @@ class BetaDistribution(ProbabilityDistribution):
 
         return self.transform_to_standard.mapinv(p)
 
+    def mean(self):
+        """
+        Returns the mean of the distribution.
+        """
+
+        mu = np.zeros(self.dim)
+        for i in range(self.dim):
+            mu[i] = self.alpha[i]/(self.alpha[i] + self.beta[i])
+
+        # Affine map to appropriate interval
+        mu = np.reshape(mu, [1, self.dim])
+        return self.transform_to_standard.mapinv(mu).flatten()
+
+    def cov(self):
+        """
+        Returns the (auto-)covariance matrix of the distribution.
+        """
+
+        sigma = np.eye(self.dim)
+        for i in range(self.dim):
+            num = self.alpha[i]*self.beta[i]
+            den = (self.alpha[i]+self.beta[i])**2 * \
+                  (self.alpha[i]+self.beta[i]+1)
+            sigma[i,i] = num/den
+
+        # Need to get scaling part of the affine transform, so need
+        # non-homogeneous term b.
+        zero = np.zeros([1, self.dim])
+        b = self.transform_to_standard.mapinv(zero)
+        bmat = np.tile(b, [self.dim, 1])
+
+        # Multiply on right by scaling matrix
+        sigma = self.transform_to_standard.mapinv(sigma) - bmat
+
+        # Multiply on left by scaling matrix
+        sigma = (self.transform_to_standard.mapinv(sigma.T) - bmat).T
+
+        return sigma
+
+    def stdev(self):
+        """
+        Returns the standard deviation of the distribution, if the distribution
+        is one-dimensional. Raises an error if called for a multivariate
+        distribution.
+        """
+
+        if self.dim == 1:
+            return np.sqrt(self.cov()[0,0])
+        else:
+            raise TypeError("Can only compute standard deviations for scalar\
+                             random variables.")
+
+    def pdf(self, x):
+        """
+        Evaluates the probability density function (pdf) of the distribution at
+        the input locations x.
+        """
+
+        # Evaluate in standard space 
+        x = self.transform_to_standard.map(x)
+        density = np.ones(x.shape[0])
+        for i in range(self.dim):
+            density *= x[:,i]**(self.alpha[i]-1) * \
+                       (1 - x[:,i])**(self.beta[i]-1)
+            density /= sp.special.beta(self.alpha[i], self.beta[i])
+
+        # Scale based on determinant of map
+        density *= self.transform_to_standard.jacobian_determinant()
+
+        return density
+
+class UniformDistribution(BetaDistribution):
+    """.. _uniform_distribution:
+
+    Constructs a (continuous) uniform distribution object; supports
+    multivariate distributions through tensorization. In one dimension, uniform
+    distributions have support on the real interval [0,1], with probability
+    density function,
+
+    .. math::
+
+      w(y) := 1, \\hskip 20pt y \\in (0,1),
+
+    To generate this distribution on a general compact interval :math:`[a,b]`,
+    set the domain parameter below. Alternatively, the mean :math:`\\mu` and
+    standard deviation :math:`\\sigma` can be input, in which case the support
+    interval :math:`[a,b]` is determined.
+
+    This class supports tensorization: multidimensional distributions
+    corresopnding to independent one-dimensional marginal distributions are
+    supported. In the case of identically distributed marginals, the `dim`
+    parameter can be set to the appropriate dimension. In case of non-identical
+    marginals, an array or iterable can be input for :math:`\\alpha, \\beta,
+    \\mu, \\sigma`.
+
+    Parameters:
+        mean (float or iterable of floats, optional): Mean of the distribution.
+        Defaults to None.
+        stdev (float or iterable of floats, optional): Standard deviation of
+        the distribution. Defaults to None.
+        dim (int, optional): Dimension of the distribution. Defaults to None.
+        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact
+        hypercube that is the support of the distribution. Defaults to None
+
+    Attributes:
+        dim (int): Dimension of the distribution.
+        polys (:class:`JacobiPolynomials` or list thereof):
+    """
+
+    def __init__(self, mean=None, stdev=None, dim=None, domain=None):
+
+        super().__init__(alpha=1., beta=1., mean=mean, stdev=stdev, 
+                         dim=dim, domain=domain)
 
 class DiscreteUniformDistribution(ProbabilityDistribution):
     def __init__(self, n=None, domain=None, dim=None):
