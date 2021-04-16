@@ -33,8 +33,13 @@ release = '0.01'
 extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.napoleon',
-        'recommonmark'
+        'recommonmark',
+        'sphinxcontrib.bibtex',
+        'sphinx_markdown_tables'
 ]
+
+# Path for bibtex files
+bibtex_bibfiles = ['references.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

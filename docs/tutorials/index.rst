@@ -6,5 +6,7 @@ Tutorials
    :caption: Contents:
 
    demos
+   models
+   parameters
    template
 

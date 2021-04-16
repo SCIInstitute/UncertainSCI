@@ -8,6 +8,55 @@ from scipy import sparse
 from scipy.sparse import linalg as splinalg
 import scipy.optimize
 
+def ishigami_function(a, b):
+    """
+    Returns the Ishigami function,
+
+    .. math::
+
+      f(p) = (1 + b*p_3^4) \\sin p_1 + a \\sin^2 p_2,
+
+    where :math:`p = (p_1, p_2, p_3)` are random parameters that are all
+    uniformly distributed over :math:`[-\\pi, \\pi]`: :math:`p_i \\sim
+    \\mathcal{U}([-\\pi, \\pi])`.
+    """
+
+    def f(p):
+        return np.sin(p[0]) * (1 + b*p[2]**4) + a*np.sin(p[1])**2
+
+    return f
+
+def borehole_function():
+    """
+    Returns the Borehole function,
+
+    .. math::
+
+      f(p) = g_1(p) / (g_2(p) * g_3(p)),
+      g_1(p) = 2\\pi p_3 * (p_4 - p_6) 
+      g_2(p) = log(p_2/p_1)
+      g_3(p) = 1 + 2*p_7*p_3/(g_2(p) * p_1^2 * p_8) + p_3/p_5
+
+    where the 8-dimensional parameters :math:`p` are
+
+      p = (p_1, p_2, p_3, p_4, p_5, p_6, p_7, p_8)
+        = (r_w, r,   T_u, H_u, T_l, H_l, L,   K_w)
+    """
+
+    def g1(p):
+        return 2*np.pi*p[2]*(p[3] - p[5])
+
+    def g2(p):
+        return np.log(p[1]/p[0])
+
+    def g3(p, g2val):
+        return 1 + 2*p[6]*p[2]/(g2val * p[0]**2 * p[7]) + p[2]/p[4]
+
+    def f(p):
+        g2val = g2(p)
+        return g1(p)/(g2val * g3(p,g2val))
+
+    return f
 
 def taylor_frequency(p):
     """
