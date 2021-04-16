@@ -97,9 +97,4 @@ html_logo = '_static/UncertainSCI.png'
 
 html_theme_options = {
     'logo_only': True
-    # 'style_nav_header_background': '#df3f3f'
-}
-
-html_sidebars = {
-    "**": ["localtoc.html"]
 }
