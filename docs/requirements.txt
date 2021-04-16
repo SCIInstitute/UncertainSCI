@@ -7,4 +7,4 @@ sphinx-markdown-tables
 sphinx-notfound-page
 sphinx_rtd_theme
 sphinxcontrib-bibtex
-myst-parser
+sphinx-markdown-tables

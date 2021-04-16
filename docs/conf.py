@@ -35,10 +35,12 @@ extensions = [
         'sphinx.ext.napoleon',
         'recommonmark',
         'sphinxcontrib.bibtex',
+        'sphinx_markdown_tables'
 ]
 
-bibtex_bibfiles = ['UncertainSCI.bib']
-bibtex_default_style = 'unsrt'
+# Path for bibtex files
+bibtex_bibfiles = ['references.bib']
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

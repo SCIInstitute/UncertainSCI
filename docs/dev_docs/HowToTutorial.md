@@ -187,8 +187,13 @@ It can also use MathJax specific tags:
 ```
 \\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
 
+inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\) 
+
 
 ### Citations
+
+Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  Another option may be [Myst](https://myst-parser.readthedocs.io/en/latest/)
+
 
 Since we are using Sphinx to build the documentation, we can use its citation manager, sphinxcontrib-bibtex.  We will provide some exmples here, but for more information, refer to the [sphinxcontrib-bibtex documentation](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).  
 
@@ -200,9 +205,6 @@ After the reference has been added to `UncertainSCI/docs/UncertainSCI.bib`, the 
 {cite}`JDT:Bur2020a`
 ```
 
-
-
-Citations in Markdown uses [Pandoc](https://pandoc.org).  The citations can stored in Bibtex format
 
 TODO.
 
@@ -225,6 +227,23 @@ Links to other websites can include the full URL.  Using `<>` will show the URL,
 ```
 <https://www.markdownguide.org>
 [Markdown](https://www.markdownguide.org)
+
+### Tables
+
+Tables can be used with normal markdown syntax with the [sphinx-markdown-tables](https://github.com/ryanfox/sphinx-markdown-tables) package
+
+```
+| Syntax      | Description |
+| ----------- | ----------- |
+| Header      | Title       |
+| Paragraph   | Text        |
+```
+
+| Syntax      | Description |
+| ----------- | ----------- |
+| Header      | Title       |
+| Paragraph   | Text        |
+
 
 
 ### Referencing Sphinx
