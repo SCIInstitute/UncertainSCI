@@ -348,7 +348,7 @@ class PolynomialChaosExpansion():
         elif (add_rule is None) and (mult_rule is not None):
             samplefun = lambda Nindices: int(Nindices * mult_rule)
         elif (add_rule is None) and (mult_rule is None):
-            samplefun = lambda Nindices: int(Nindices + 1)
+            samplefun = lambda Nindices: int(Nindices + 2)
         else:
             assert False, 'Cannot specify both an '\
                           'additive and multiplicative rule'
