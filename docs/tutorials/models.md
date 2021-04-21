@@ -26,7 +26,7 @@ f(\mathbf{p}) &= \left( 1 + b p_3^4 \right) \sin p_1 + a \sin^2 p_2, & \mathbf{p
 Because this function has an explicit ANOVA decomposition, its partial variances are explicitly computable. If each parameters \\(p_i\\) is modeled as uniform random variable over \\([-\pi, \pi]\\), i.e., \\(p_i \sim \mathcal{U}\left([-\pi, \pi]\right)\\), then the variances are given by,
 
 \begin{align}
-  \mathrm{Mean}[f(\mathbf{p})] &= a\pi,  \\\\
+  \mathrm{Mean}[f(\mathbf{p})] &= \frac{a}{2},  \\\\
   \mathrm{Var}[f(\mathbf{p})] &= \frac{1}{2} + \frac{a^2}{8} + \pi^4 b \left( \frac{1}{5} + \frac{\pi^4 b}{18} \right), \\\\
   \mathrm{Var}\_1 [f(\mathbf{p})] &= \frac{1}{2} \left( 1 + b \frac{\pi^4}{5}\right)^2, \\\\
   \mathrm{Var}\_2 [f(\mathbf{p})] &= \frac{a^2}{8}, \\\\

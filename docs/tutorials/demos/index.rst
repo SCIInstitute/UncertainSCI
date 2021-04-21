@@ -1,12 +1,9 @@
-Tutorials
+Demos
 ========================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   demos/index
-   models
-   parameters
-   template
-
+   simple_boxplots
+   pce_statistics
