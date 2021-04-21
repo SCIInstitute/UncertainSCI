@@ -201,15 +201,31 @@ Citations to include in the UncertainSCI docs can be included in the `UncertainS
 
 After the reference has been added to `UncertainSCI/docs/UncertainSCI.bib`, the final step is to include the command in the appropriate place.  See  <cite data-cite="JDT:Bur2020">Burk *etal.*</cite>  
 
-```
-{cite}`JDT:Bur2020a`
+try this
+```eval_rst
+:cite:t:`JDT:Bur2020a`
 ```
 
+try this one
+```:cite:t:`JDT:Bur2020`
+```
 
 TODO.
 
 
 ### Snippets
+
+Basic markdown ``some snippet``
+
+```
+def function():
+    return True
+```
+
+```python
+def function():
+    return True
+```
 
 ### Links
 Including links in Markdown is simple, just use `<>` or `[]()`.  For example, an internal link for section [Adding Content](#adding-content) is :
@@ -244,6 +260,16 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 | Header      | Title       |
 | Paragraph   | Text        |
 
+
+```eval_rst
++------------+------------+-----------+ 
+| Header 1   | Header 2   | Header 3  | 
++============+============+===========+ 
+| body row 1 | column 2   | column 3  | 
++------------+------------+-----------+ 
+| body row 2 | Cells may span columns.| 
++------------+------------+-----------+ 
+```
 
 
 ### Referencing Sphinx

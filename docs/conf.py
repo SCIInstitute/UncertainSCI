@@ -14,12 +14,17 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
 
+import recommonmark
+from recommonmark.transform import AutoStructify
+
 
 # -- Project information -----------------------------------------------------
 
 project = 'UncertainSCI'
 copyright = '2020, The Scientific Computing and Imaging Institute at the University of Utah'
 author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sumientra Rampersad, Lindsay Rupp, Jess Tate, Dan White'
+
+github_doc_root = 'https://github.com/SCIInstitute/UncertainSCI/tree/master/docs'
 
 # The full version, including alpha/beta/rc tags
 release = '0.01'
@@ -89,3 +94,15 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 html_static_path = ['_static']
 
 html_title = project
+
+
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+        #'url_resolver': lambda url: github_doc_root + url,
+        'auto_toc_tree_section': 'Contents',
+        'enable_math': False,
+        'enable_inline_math': False,
+        'enable_eval_rst': True,
+        'enable_auto_doc_ref': True,
+    }, True)
+    app.add_transform(AutoStructify)
