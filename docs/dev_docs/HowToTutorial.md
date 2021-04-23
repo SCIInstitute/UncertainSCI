@@ -207,7 +207,26 @@ try this
 ```
 
 try this one
-```:cite:t:`JDT:Bur2020`
+```eval_rst
+:cite:p:`JDT:Bur2020`
+```
+
+and this
+```eval_rst
+put some text here and cite it :cite:t:`JDT:Bur2020`.  
+```
+
+and this
+`eval_rst :cite:t:`JDT:Bur2020``
+
+and this
+`eval_rst :cite:p:`JDT:Bur2020``
+
+add a bibliography section
+
+#### Bibliography
+```eval_rst
+.. bibliography::
 ```
 
 TODO.
