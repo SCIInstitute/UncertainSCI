@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;1,400&family=Staatliches&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600&family=Patua+One&display=swap');
 
 body {
   font-family: 'Fira Sans', sans-serif !important;
-  font-size: 16px;
 }
 
-h1, h2, h3, h4, h5, h6, .caption-text {
-  font-family: 'Staatliches', cursive;
+h1, h2, h3, h4, h5, h6, .toctree-wrapper .caption .caption-text {
+  font-family: 'Patua One', cursive;
+  font-size: 2.2rem;
 }
 
 .wy-menu-vertical header, .wy-menu-vertical p.caption {
@@ -14,11 +14,11 @@ h1, h2, h3, h4, h5, h6, .caption-text {
 }
 
 .wy-nav-content-wrap {
-  background: #f5f5f5
+  background: #e2e7e9
 }
 
 .wy-nav-content {
-  background: #fff
+  background: #f1f3f4;
 }
 
 .wy-nav-side {
