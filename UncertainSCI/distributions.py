@@ -2,7 +2,8 @@ import numpy as np
 import scipy as sp
 from scipy import sparse as sprs
 
-from UncertainSCI.families import JacobiPolynomials, HermitePolynomials, LaguerrePolynomials
+from UncertainSCI.families import JacobiPolynomials, \
+        HermitePolynomials, LaguerrePolynomials
 from UncertainSCI.families import DiscreteChebyshevPolynomials
 from UncertainSCI.opolynd import TensorialPolynomials
 from UncertainSCI.transformations import AffineTransform
@@ -32,7 +33,8 @@ class NormalDistribution(ProbabilityDistribution):
 
         # Construct affine map transformations
 
-        # Low-level routines use Hermite Polynomials with weight function exp(-x**2)
+        # Low-level routines use Hermite Polynomials
+        # with weight function exp(-x**2)
         # instead of standard normal weight function exp(-x**2/2)
         # I.e. x ----> sqrt(2) * x
 
@@ -40,9 +42,9 @@ class NormalDistribution(ProbabilityDistribution):
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
-        # user says: X ~ exp( -(x - mu).T cov^{-1} (x - mu)/2 )      (mean=mu, cov = cov)
-        # want: Z ~ exp( -(x - 0).T eye (x - 0)/2 )     (mean = 0, cov = eye)
-        # I.e. X = KZ + mu, Z = K^{-1}(X - mu), where cov = KK.T, K = cov^{1/2}
+        # user says: X ~ exp( -(x - mu).T cov^{-1} (x - mu)/2 )
+        # want: Z ~ exp( -(x - 0).T eye (x - 0)/2 )
+        # I.e. X = KZ + mu, Z = K^{-1}(X - mu), cov = KK.T, K = cov^{1/2}
         # I.e. x ---> cov^{-1/2} * (x + mu) = cov^{-1/2} *x + cov^{-1/2}*mu
         # Opt1: cov = U Lamb U.T, U unitary
         #       cov^{1/2} = U sqrt(Lamb) U.T
@@ -68,7 +70,7 @@ class NormalDistribution(ProbabilityDistribution):
         # Construct 1D polynomial families
         Hs = []
         for qd in range(self.dim):
-            Hs.append(HermitePolynomials())  # modify for different mean,cov paras?
+            Hs.append(HermitePolynomials())  # modify for different mean, cov?
         self.polys = TensorialPolynomials(polys1d=Hs)
 
         self.indices = None
@@ -104,11 +106,13 @@ class NormalDistribution(ProbabilityDistribution):
 
             if meaniter:
                 if len(mean) > 1 and cov.shape[0] > 1:
-                    assert len(mean) == cov.shape[0], "Mean and cov parameter inputs must be of the same size"
+                    assert len(mean) == cov.shape[0], "Mean and cov parameter \
+                            inputs must be of the same size"
                     try:
                         np.linalg.cholesky(cov)
                     except ValueError:
-                        print('Covariance must be symmetric, positive definite')
+                        print('Covariance must be symmetric and \
+                                positive definite')
 
 #                elif len(mean) == 1 and cov.shape[0] == 1:
 #                    pass
@@ -129,7 +133,8 @@ class NormalDistribution(ProbabilityDistribution):
 
     def _detect_dimension(self, mean, cov, dim):
         """
-        Parses user-given inputs to determine the dimension of the distribution.
+        Parses user-given inputs to determine \
+                the dimension of the distribution.
 
         Mean and cov are iterables.
 
@@ -144,13 +149,16 @@ class NormalDistribution(ProbabilityDistribution):
 
         if len(mean) > 1 or cov.shape[0] > 1:  # Case 1:
             if len(mean) != cov.shape[0]:
-                raise ValueError('Input parameters mean and cov must be the same dimension')
+                raise ValueError('Input parameters mean and cov must \
+                        be the same dimension')
 
             if (dim is not None) and (dim != 1) and (dim != len(mean)):
-                raise ValueError('Mean parameter list must have size consistent with input dim')
+                raise ValueError('Mean parameter list must \
+                        have size consistent with input dim')
 
             if (dim is not None) and (dim != 1) and (dim != cov.shape[0]):
-                raise ValueError('Cov parameter array must have size consistance with input dim')
+                raise ValueError('Cov parameter array must \
+                        have size consistance with input dim')
 
             self.dim = len(mean)
             self.mean = mean
@@ -174,15 +182,66 @@ class NormalDistribution(ProbabilityDistribution):
 
         return self.transform_to_standard.mapinv(p)
 
+    # def means(self):
+        # """
+        # Returns the mean of the distribution
+        # """
+#
+        # mu = np.zeros(self.dim, )
+        # mu = np.reshape(mu, [1, self.dim])
+        # return self.transform_to_standard.mapinv(mu).flatten()
+#
+    # def covariance(self):
+        # """
+        # Returns the (auto-)covariance matrix of the distribution.
+        # """
+#
+        # sigma = np.eye(self.dim,)
+        # zero = np.zeros([1, self.dim])
+        # b = self.transform_to_standard.mapinv(zero)
+        # bmat = np.tile(b, [self.dim, 1])
+        # sigma = self.transform_to_standard.mapinv(sigma) - bmat
+        # sigma = (self.transform_to_standard.mapinv(sigma.T) - bmat).T
+#
+        # return sigma
+
+    def stdev(self):
+        """
+        Returns the standard deviation of the distribution, if the
+        distribution is one-dimensional. Raises an error if called
+        for a multivariate distribution.
+        """
+
+        if self.dim == 1:
+            return np.sqrt(self.cov()[0, 0])
+        else:
+            raise TypeError("Can only compute standard deviations for scalar\
+                             random variables.")
+
+    def pdf(self, x):
+        """
+        Evaluates the probability density function (pdf) of the distribution at
+        the input locations x.
+        """
+        # density = multivariate_normal.pdf(x, mean=self.mean, cov=self.cov)
+        x = self.transform_to_standard.map(x)
+        density = np.ones(x.shape[0])
+        for i in range(self.dim):
+            density *= (2*np.pi)**(-1/2) * np.exp(-1/2 * x[:, i]**2)
+        density *= self.transform_to_standard.jacobian_determinant()
+        return density
+
 
 class ExponentialDistribution(ProbabilityDistribution):
 
-    def __init__(self, flag=True, lbd=None, loc=None, mean=None, stdev=None, dim=None):
+    def __init__(self, flag=True, lbd=None, loc=None, mean=None,
+                 stdev=None, dim=None):
 
         # Convert mean/stdev inputs to lbd
         if mean is not None and stdev is not None:
             if lbd is not None:
-                raise ValueError('Cannot simultaneously specify lbd parameter and mean/stdev parameters')
+                raise ValueError('Cannot simultaneously specify lbd \
+                        parameter and mean/stdev parameters')
 
             lbd = self._convert_meanloc_to_lbd(mean, loc)
 
@@ -195,39 +254,22 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         # Construct affine map transformations
 
-        # Low-level routines use Laguerre Polynomials, weight x^rho exp^{-x} when rho = 0
-        # which is equal to the standard Beta, exp^{-lbd x} when lbd = 1
+        # Low-level routines use Laguerre Polynomials, weight
+        # x^rho exp^{-x} when rho = 0, which is equal to the standard Beta,
+        # exp^{-lbd x} when lbd = 1
         A = np.eye(self.dim)
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
-        if np.all([i > 0 for i in lbd]):
-            # User say exp^{-lbd(x-loc)} on [loc, inf), lbd > 0
-            A = np.diag([self.lbd[i] for i in range(self.dim)])
-            b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
+        if self.dim == 1:
+            A = lbd
+            b = -A * loc
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
-        if np.all([i < 0 for i in lbd]):
-            # User say exp^{lbd -(x-loc)} on (-inf, loc), lbd < 0
-            A = np.diag([self.lbd[i] for i in range(self.dim)])
-            b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
+        else:
+            A = np.diag(lbd)
+            b = -A@loc
             self.transform_to_standard = AffineTransform(A=A, b=b)
-
-#         if flag:
-#             # Users say exp^{-lbd(x-loc)} on [loc, np.inf), loc >= 0
-#             for i in range(self.dim):
-#                 assert self.lbd[i] > 0 and self.loc[i] >= 0
-#             A = np.diag([self.lbd[i] for i in range(self.dim)])
-#             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
-#             self.transform_to_standard = AffineTransform(A=A, b=b)
-#
-#         else:
-#             # Users say exp^{-lbd(x-loc)} on (-np.inf, loc], loc < 0
-#             for i in range(self.dim):
-#                 assert self.lbd[i] < 0 and self.loc[i] < 0
-#             A = np.diag([self.lbd[i] for i in range(self.dim)])
-#             b = np.array([-self.lbd[i]*self.loc[i] for i in range(self.dim)])
-#             self.transform_to_standard = AffineTransform(A=A, b=b)
 
         # Construct 1D polynomial families
         Ls = []
@@ -239,7 +281,8 @@ class ExponentialDistribution(ProbabilityDistribution):
 
     def _detect_dimension(self, lbd, loc, dim):
         """
-        Parses user-given inputs to determine the dimension of the distribution.
+        Parses user-given inputs to determine the
+        dimension of the distribution.
 
         lbd and loc are iterables.
 
@@ -255,10 +298,12 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         if len(lbd) > 1 or len(loc) > 1:
             if len(lbd) != len(loc):
-                raise ValueError('Input parameters lbd and loc must be the same dimension')
+                raise ValueError('Input parameters lbd and loc must \
+                        be the same dimension')
 
             if (dim is not None) and (dim != 1) and (dim != len(lbd)):
-                raise ValueError('Lbd, loc parameter lists must have size consistent with input dim')
+                raise ValueError('Lbd, loc parameter lists must \
+                        have size consistent with input dim')
 
             self.dim = len(lbd)
             self.lbd = lbd
@@ -326,7 +371,8 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         if lbditer and lociter:
             if len(lbd) > 1 and len(loc) > 1:
-                assert len(lbd) == len(loc), "Lbd and loc parameter inputs must be of the same size"
+                assert len(lbd) == len(loc), "Lbd and loc parameter inputs \
+                        must be of the same size"
 #            elif len(lbd) == 1 and len(loc) == 1:
 #                pass
             elif len(lbd) == 1:
@@ -371,6 +417,50 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         return self.transform_to_standard.mapinv(p)
 
+    def mean(self):
+        mu = np.zeros(self.dim)
+        for i in range(self.dim):
+            mu[i] = 1.
+
+        mu = np.reshape(mu, [1, self.dim])
+        return self.transform_to_standard.mapinv(mu).flatten()
+
+    def cov(self):
+        sigma = np.eye(self.dim)
+        for i in range(self.dim):
+            sigma[i, i] = 1.
+
+        zero = np.zeros([1, self.dim])
+        b = self.transform_to_standard.mapinv(zero)
+        bmat = np.tile(b, [self.dim, 1])
+        sigma = self.transform_to_standard.mapinv(sigma) - bmat
+        sigma = (self.transform_to_standard.mapinv(sigma.T) - bmat).T
+
+        return sigma
+
+    def stdev(self):
+        """
+        Returns the standard deviation of the distribution, if the
+        distribution is one-dimensional. Raises an error if called
+        for a multivariate distribution.
+        """
+
+        if self.dim == 1:
+            return np.sqrt(self.cov()[0, 0])
+        else:
+            raise TypeError("Can only compute standard deviations for \
+                    scalar random variables.")
+
+    def pdf(self, x):
+        x = self.transform_to_standard.map(x)
+        density = np.ones(x.shape[0])
+        for i in range(self.dim):
+            density *= np.exp(-x[:, i])
+        # Scale based on determinant of map
+        density *= self.transform_to_standard.jacobian_determinant()
+
+        return density
+
 
 class BetaDistribution(ProbabilityDistribution):
     """.. _beta_distribution:
@@ -381,7 +471,8 @@ class BetaDistribution(ProbabilityDistribution):
 
     .. math::
 
-      w(y;\\alpha,\\beta) := \\frac{y^{\\alpha-1} (1-y)^{\\beta-1}}{B(\\alpha,\\beta)}, \\hskip 20pt y \\in (0,1),
+      w(y;\\alpha,\\beta) := \\frac{y^{\\alpha-1} (1-y)^{\\beta-1}}\
+              {B(\\alpha,\\beta)}, \\hskip 20pt y \\in (0,1),
 
     where :math:`\\alpha` and :math:`\\beta` are positive real parameters that
     define the distribution, and :math:`B` is the Beta function. Some special
@@ -425,12 +516,14 @@ class BetaDistribution(ProbabilityDistribution):
         beta (float or np.ndarray): Shape parameter(s) beta.
         polys (:class:`JacobiPolynomials` or list thereof):
     """
-    def __init__(self, alpha=None, beta=None, mean=None, stdev=None, dim=None, domain=None):
+    def __init__(self, alpha=None, beta=None, mean=None, stdev=None,
+                 dim=None, domain=None):
 
         # Convert mean/stdev inputs to alpha/beta
         if mean is not None and stdev is not None:
             if alpha is not None or beta is not None:
-                raise ValueError('Cannot simultaneously specify alpha/beta parameters and mean/stdev parameters')
+                raise ValueError('Cannot simultaneously specify alpha/beta \
+                        parameters and mean/stdev parameters')
 
             alpha, beta = self._convert_meanstdev_to_alphabeta(mean, stdev)
 
@@ -441,7 +534,8 @@ class BetaDistribution(ProbabilityDistribution):
 
         for qd in range(self.dim):
             assert self.alpha[qd] > 0 and self.beta[qd] > 0, \
-                    "Parameter vectors alpha and beta must have strictly positive components"
+                    "Parameter vectors alpha and beta must have strictly \
+                    positive components"
         assert self.dim > 0, "Dimension must be positive"
         assert self.domain.shape == (2, self.dim)
 
@@ -455,21 +549,25 @@ class BetaDistribution(ProbabilityDistribution):
         # instead of the standard Beta domain of [0,1]
         self.poly_domain = np.ones([2, self.dim])
         self.poly_domain[0, :] = -1.
-        self.transform_standard_dist_to_poly = AffineTransform(domain=self.standard_domain, image=self.poly_domain)
+        self.transform_standard_dist_to_poly = AffineTransform(
+                domain=self.standard_domain, image=self.poly_domain)
 
-        self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
+        self.transform_to_standard = AffineTransform(
+                domain=self.domain, image=self.standard_domain)
 
         # Construct 1D polynomial families
         Js = []
         for qd in range(self.dim):
-            Js.append(JacobiPolynomials(alpha=self.beta[qd]-1., beta=self.alpha[qd]-1.))
+            Js.append(JacobiPolynomials(alpha=self.beta[qd]-1.,
+                      beta=self.alpha[qd]-1.))
         self.polys = TensorialPolynomials(polys1d=Js)
 
         self.indices = None
 
     def _detect_dimension(self, alpha, beta, dim, domain):
         """
-        Parses user-given inputs to determine the dimension of the distribution.
+        Parses user-given inputs to determine
+        the dimension of the distribution.
 
         alpha and beta are iterables.
 
@@ -484,17 +582,17 @@ class BetaDistribution(ProbabilityDistribution):
         # 3. User specifies domain hypercube
 
         if len(alpha) > 1 or len(beta) > 1:  # Case 1:
-            assert len(alpha) == len(beta), 'Input parameters alpha and beta must be the same dimension'
-#            if len(alpha) != len(beta):
-#                raise ValueError('Input parameters alpha and beta must be the same dimension')
+            assert len(alpha) == len(beta), 'Input parameters alpha and beta \
+                    must be the same dimension'
 
             assert (dim is None) or (dim == 1) or (dim == len(alpha)), \
-                'Alpha, beta parameter lists must have size consistent with input dim'
-#            if (dim is not None) and (dim != 1) and (dim != len(alpha)):
-#                raise ValueError('Alpha, beta parameter lists must have size consistent with input dim')
+                'Alpha, beta parameter lists must have size consistent with \
+                input dim'
 
-            if (domain is not None) and (domain.shape[1] != 1) and (domain.shape[1] != len(alpha)):
-                raise ValueError('Alpha, beta parameter lists must have size consistent with hypercube domain')
+            if (domain is not None) and (domain.shape[1] != 1) and \
+                    (domain.shape[1] != len(alpha)):
+                raise ValueError('Alpha, beta parameter lists must have size \
+                        consistent with hypercube domain')
 
             self.dim = len(alpha)
             self.alpha = alpha
@@ -584,7 +682,8 @@ class BetaDistribution(ProbabilityDistribution):
                 alpha.append(alph)
                 beta.append(bet)
 
-        # If they're both scalars, let the following alpha/beta checker cf vs dim
+        # If they're both scalars, let the following alpha/beta checker
+        # cf vs dim
         else:
             alpha, beta = self.meanstdev_to_alphabeta(mean, stdev)
 
@@ -603,7 +702,8 @@ class BetaDistribution(ProbabilityDistribution):
         betaiter = isinstance(beta, (list, tuple))
         if alphiter and betaiter:
             if len(alpha) > 1 and len(beta) > 1:
-                assert len(alpha) == len(beta), "Alpha and Beta parameter inputs must be of the same size"
+                assert len(alpha) == len(beta), "Alpha and Beta parameter \
+                        inputs must be of the same size"
             elif len(alpha) == 1:
                 alpha = [alpha[0] for i in range(len(beta))]
             elif len(beta) == 1:
@@ -629,15 +729,18 @@ class BetaDistribution(ProbabilityDistribution):
 
     def meanstdev_to_alphabeta(self, mu, stdev):
         """
-        Returns alpha, beta given an input mean (mu) and standard deviation (stdev)
-        for a Beta distribution on the interval [0, 1].
+        Returns alpha, beta given an input mean (mu) and
+        standard deviation (stdev) for a Beta distribution
+        on the interval [0, 1].
         """
 
         if 0. >= mu or mu >= 1.:
-            raise ValueError('Mean of a standard Beta distribution must be between 0 and 1.')
+            raise ValueError('Mean of a standard Beta distribution \
+                    must be between 0 and 1.')
 
         if stdev >= np.sqrt(mu*(1-mu)):
-            msg = 'Standard deviation of a Beta random variable must be smaller than the geometric mean of mu and (1-mu)'
+            msg = 'Standard deviation of a Beta random variable must be \
+                    smaller than the geometric mean of mu and (1-mu)'
             raise ValueError(msg)
 
         temp = (mu * (1-mu) - stdev**2)/stdev**2
@@ -678,7 +781,7 @@ class BetaDistribution(ProbabilityDistribution):
             num = self.alpha[i]*self.beta[i]
             den = (self.alpha[i]+self.beta[i])**2 * \
                   (self.alpha[i]+self.beta[i]+1)
-            sigma[i,i] = num/den
+            sigma[i, i] = num/den
 
         # Need to get scaling part of the affine transform, so need
         # non-homogeneous term b.
@@ -696,43 +799,43 @@ class BetaDistribution(ProbabilityDistribution):
 
     def stdev(self):
         """
-        Returns the standard deviation of the distribution, if the distribution
-        is one-dimensional. Raises an error if called for a multivariate
-        distribution.
+        Returns the standard deviation of the distribution, if the
+        distribution is one-dimensional. Raises an error if called
+        for a multivariate distribution.
         """
 
         if self.dim == 1:
-            return np.sqrt(self.cov()[0,0])
+            return np.sqrt(self.cov()[0, 0])
         else:
             raise TypeError("Can only compute standard deviations for scalar\
                              random variables.")
 
     def pdf(self, x):
         """
-        Evaluates the probability density function (pdf) of the distribution at
-        the input locations x.
+        Evaluates the probability density function (pdf) of the distribution
+        at the input locations x.
         """
 
-        # Evaluate in standard space 
+        # Evaluate in standard space
         x = self.transform_to_standard.map(x)
         density = np.ones(x.shape[0])
         for i in range(self.dim):
-            density *= x[:,i]**(self.alpha[i]-1) * \
-                       (1 - x[:,i])**(self.beta[i]-1)
+            density *= x[:, i]**(self.alpha[i]-1) * \
+                       (1 - x[:, i])**(self.beta[i]-1)
             density /= sp.special.beta(self.alpha[i], self.beta[i])
 
         # Scale based on determinant of map
         density *= self.transform_to_standard.jacobian_determinant()
-
         return density
+
 
 class UniformDistribution(BetaDistribution):
     """.. _uniform_distribution:
 
     Constructs a (continuous) uniform distribution object; supports
-    multivariate distributions through tensorization. In one dimension, uniform
-    distributions have support on the real interval [0,1], with probability
-    density function,
+    multivariate distributions through tensorization. In one dimension,
+    uniforms distributions have support on the real interval [0,1],
+    with probability density function,
 
     .. math::
 
@@ -766,8 +869,9 @@ class UniformDistribution(BetaDistribution):
 
     def __init__(self, mean=None, stdev=None, dim=None, domain=None):
 
-        super().__init__(alpha=1., beta=1., mean=mean, stdev=stdev, 
+        super().__init__(alpha=1., beta=1., mean=mean, stdev=stdev,
                          dim=dim, domain=domain)
+
 
 class DiscreteUniformDistribution(ProbabilityDistribution):
     def __init__(self, n=None, domain=None, dim=None):
@@ -778,7 +882,8 @@ class DiscreteUniformDistribution(ProbabilityDistribution):
         # Make sure dim is set, and that n is a list with len(n)==dim
         if dim is not None:
             if (len(n) > 1) and (len(n) != dim):
-                raise ValueError('Inconsistent settings for inputs "dim" and "n"')
+                raise ValueError('Inconsistent settings for inputs "dim" \
+                        and "n"')
             elif len(n) == 1:
                 if isinstance(n, (list, tuple)):
                     n = [n[0]]*dim
@@ -800,7 +905,8 @@ class DiscreteUniformDistribution(ProbabilityDistribution):
             domain[0, :] = 0
         else:   # Domain should be a 2 x dim numpy array
             if (domain.shape[0] != 2) or (domain.shape[1] != dim):
-                raise ValueError('Inputs "domain" and inferred dimension are inconsistent')
+                raise ValueError('Inputs "domain" and inferred dimension \
+                        are inconsistent')
             else:
                 pass  # Nothing to do
 
@@ -812,14 +918,15 @@ class DiscreteUniformDistribution(ProbabilityDistribution):
         self.standard_domain = np.ones([2, self.dim])
         self.standard_domain[0, :] = 0.
 
-        # Low-level routines use Discrete Chebyshev Polynomials, which operate on [0,1]
+        # Low-level routines use Discrete Chebyshev Polynomials,
+        # which operate on [0,1]
         self.poly_domain = np.ones([2, self.dim])
         self.poly_domain[0, :] = 0.
-        self.transform_standard_dist_to_poly = AffineTransform(domain=self.standard_domain,
-                                                               image=self.poly_domain)
+        self.transform_standard_dist_to_poly = AffineTransform(
+                domain=self.standard_domain, image=self.poly_domain)
 
-        self.transform_to_standard = AffineTransform(domain=self.domain,
-                                                     image=self.standard_domain)
+        self.transform_to_standard = AffineTransform(
+                domain=self.domain, image=self.standard_domain)
 
         Ps = []
         for qd in range(self.dim):
@@ -837,13 +944,55 @@ class DiscreteUniformDistribution(ProbabilityDistribution):
 
         return self.transform_to_standard.mapinv(p)
 
+    def mean(self):
+        mu = np.zeros(self.dim)
+        for i in range(self.dim):
+            mu[i] = 1/2
+        mu = np.reshape(mu, [1, self.dim])
+        return self.transform_to_standard.mapinv(mu).flatten()
+
+    def cov(self):
+        sigma = np.eye(self.dim)
+        for i in range(self.dim):
+            sigma[i, i] = (self.n[i]+1) / (12*(self.n[i]-1))
+        zero = np.zeros([1, self.dim])
+        b = self.transform_to_standard.mapinv(zero)
+        bmat = np.tile(b, [self.dim, 1])
+        sigma = self.transform_to_standard.mapinv(sigma) - bmat
+        sigma = (self.transform_to_standard.mapinv(sigma.T) - bmat).T
+
+        return sigma
+
+    def stdev(self):
+        """
+        Returns the standard deviation of the distribution, if the distribution
+        is one-dimensional. Raises an error if called for a multivariate
+        distribution.
+        """
+
+        if self.dim == 1:
+            return np.sqrt(self.cov()[0, 0])
+        else:
+            raise TypeError("Can only compute standard deviations for scalar\
+                             random variables.")
+
+    def pmf(self, x):
+        """
+        Evaluates the probability mass function (pmf) of the distribution
+        """
+        density = np.ones(x.shape[0])
+        for i in range(self.dim):
+            density *= 1/self.n[i]
+        return density
+
 
 class TensorialDistribution(ProbabilityDistribution):
     def __init__(self, distributions=None, dim=None):
 
         if dim is not None:
             if len(distributions) > 1:
-                raise ValueError("Input 'dim' cannot be set if 'distributions' contains more than one element")
+                raise ValueError("Input 'dim' cannot be set if \
+                        'distributions' contains more than one element")
             else:
                 distributions = dim*distributions
 
@@ -860,7 +1009,8 @@ class TensorialDistribution(ProbabilityDistribution):
 
         # Construct transform_standard_dist_to_poly
         Ts = [dist.transform_standard_dist_to_poly for dist in distributions]
-        As = [t.A.toarray() if isinstance(t.A, sprs.spmatrix) else t.A for t in Ts]
+        As = [t.A.toarray() if isinstance(t.A, sprs.spmatrix) else
+              t.A for t in Ts]
         bs = [t.b for t in Ts]
 
         self.transform_standard_dist_to_poly = AffineTransform(
@@ -870,7 +1020,8 @@ class TensorialDistribution(ProbabilityDistribution):
 
         # Construct transform_to_standard
         Ts = [dist.transform_to_standard for dist in distributions]
-        As = [t.A.toarray() if isinstance(t.A, sprs.spmatrix) else t.A for t in Ts]
+        As = [t.A.toarray() if isinstance(t.A, sprs.spmatrix) else
+              t.A for t in Ts]
         bs = [t.b for t in Ts]
 
         self.transform_to_standard = AffineTransform(
@@ -878,7 +1029,8 @@ class TensorialDistribution(ProbabilityDistribution):
                 b=np.concatenate(bs)
             )
 
-        self.polys = TensorialPolynomials([poly for dist in distributions for poly in dist.polys.polys1d])
+        self.polys = TensorialPolynomials([poly for dist in distributions
+                                          for poly in dist.polys.polys1d])
 
         self.indices = None
 
