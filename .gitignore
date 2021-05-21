@@ -141,3 +141,4 @@ docs/_build/
 .DS_Store
 
 data_set/*
+._.DS_Store
