@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 
 from UncertainSCI.distributions import NormalDistribution
 from scipy.stats import multivariate_normal

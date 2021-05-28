@@ -76,8 +76,7 @@ Nstarting_samples = pce.samples.shape[0]
 initial_accuracy = pce.accuracy_metrics.copy()
 
 # pce.adapt_robustness(max_new_samples=50)
-residuals, loocvs, added_indices, added_samples = \
-        pce.adapt_expressivity(max_new_samples=100, add_rule=3)
+residuals, loocvs, added_indices, added_samples = pce.adapt_expressivity(max_new_samples=100, add_rule=3)
 
 # # Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
