@@ -70,7 +70,7 @@ dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
 # # Expressivity setup
 # Expressivity determines what order of polynomial to use when emulating
 # our model function. This is a tuneable hyper parameter, however UncertainSCI
-# also has the cabability to auto determine this value. See the example file ??.py
+# also has the cabability to auto determine this value. 
 order = 5
 index_set = TotalDegreeSet(dim=dimension, order=order)
 
@@ -116,14 +116,6 @@ model_evaluations = pce.model_output
 # this means you could run the samples through a model function offline, and return
 # the outputs to the pce seperatly. See the example file ??.py for more information
 
-
-# As a sanity check: you could build a second PCE on the same parameter samples
-#  pce2 = PolynomialChaosExpansion(index_set, dist)
-#  pce2.build(model, samples=parameter_samples)
-#
-# # pce and pce2 have the same coefficients:
-#  np.linalg.norm( pce.coefficients - pce2.coefficients )
-
 # # Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
 stdev = pce.stdev()
@@ -131,33 +123,21 @@ stdev = pce.stdev()
 # Power set of [0, 1, ..., dimension-1]
 variable_interactions = list(chain.from_iterable(combinations(range(dimension), r) for r in range(1, dimension+1)))
 
-# "Total sensitivity" is a non-partitive relative sensitivity measure per parameter.
-total_sensitivity = pce.total_sensitivity()
 
 # "Global sensitivity" is a partitive relative sensitivity measure per set of parameters.
 global_sensitivity = pce.global_sensitivity(variable_interactions)
 
-Q = 3  # Number of quantile bands to plot
-dq = 0.5/(Q+1)
-q_lower = np.arange(dq, 0.5-1e-7, dq)[::-1]
-q_upper = np.arange(0.5 + dq, 1.0-1e-7, dq)
-quantile_levels = np.append(np.concatenate((q_lower, q_upper)), 0.5)
-
-quantiles = pce.quantile(quantile_levels, M=int(2e3))
-median = quantiles[-1, :]
-
 
 # # Visualization
-M = 1000  # Generate MC samples
-p_mc = dist.MC_samples(M)
-output = np.zeros([M, len(xVals)])
+V = 100 # Generate Monte Carlo samples for comparison
+p_mc = dist.MC_samples(V)
+output = np.zeros([V, len(xVals)])
 
-for j in range(M):
+for j in range(V):
     output[j, :] = model(p_mc[j, :])
 
 # mean +/- stdev plot
-V = 100
-plt.plot(xVals, output[:V,:].T, 'k', alpha=0.8, linewidth=0.2)
+plt.plot(xVals, output.T, 'k', alpha=0.8, linewidth=0.2)
 plt.plot(xVals, mean, 'b', label='PCE mean')
 plt.fill_between(xVals, mean-stdev, mean+stdev, interpolate=True, facecolor='red', alpha=0.5, label='PCE 1 stdev range')
 
