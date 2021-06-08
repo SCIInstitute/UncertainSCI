@@ -23,11 +23,11 @@ class ProbabilityDistribution:
 
 
 class NormalDistribution(ProbabilityDistribution):
-    def __init__(self, mean=None, cov=None, dim=None):
+    def __init__(self, _mean=None, _cov=None, dim=None):
 
-        mean, cov = self._convert_meancov_to_iterable(mean, cov)
+        _mean, _cov = self._convert_meancov_to_iterable(_mean, _cov)
 
-        self._detect_dimension(mean, cov, dim)
+        self._detect_dimension(_mean, _cov, dim)
 
         assert self.dim > 0, "Dimension must be positive"
 
@@ -56,15 +56,15 @@ class NormalDistribution(ProbabilityDistribution):
         #       A = inv(L) and b = A * mu
 
         if self.dim == 1:
-            sigma = np.sqrt(self.cov)
+            sigma = np.sqrt(self._cov)
             A = np.eye(self.dim) * (1/sigma)
-            b = np.ones(self.dim) * (-self.mean/sigma)
+            b = np.ones(self.dim) * (-self._mean/sigma)
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
         else:
-            L = np.linalg.cholesky(self.cov)
+            L = np.linalg.cholesky(self._cov)
             A = np.linalg.inv(L)
-            b = -A.dot(self.mean)
+            b = -A.dot(self._mean)
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
         # Construct 1D polynomial families
@@ -75,7 +75,7 @@ class NormalDistribution(ProbabilityDistribution):
 
         self.indices = None
 
-    def _convert_meancov_to_iterable(self, mean, cov):
+    def _convert_meancov_to_iterable(self, _mean, _cov):
         """
         Converts user-input (mean, cov) to iterables. Ensures that the length
         of the iterables matches on output.
@@ -85,53 +85,53 @@ class NormalDistribution(ProbabilityDistribution):
         """
 
         # Tons of type/value checking for mean/cov vs dim
-        meaniter = isinstance(mean, (list, tuple, np.ndarray))
+        meaniter = isinstance(_mean, (list, tuple, np.ndarray))
 
-        if mean is None:
-            mean = 0.
+        if _mean is None:
+            _mean = 0.
 
-        if cov is None:
+        if _cov is None:
             if meaniter:
-                cov = np.eye(len(mean))
-#            elif mean is None:
-#                mean = [0.]
-#                cov = np.eye(1)
+                _cov = np.eye(len(_mean))
+#            elif _mean is None:
+#                _mean = [0.]
+#                _cov = np.eye(1)
             else:  # mean is a scalar
-                mean = [mean, ]
-                cov = np.eye(1)
+                _mean = [_mean, ]
+                _cov = np.eye(1)
 
         else:
-            assert isinstance(cov, np.ndarray), 'Covariance must be an array'
+            assert isinstance(_cov, np.ndarray), 'Covariance must be an array'
             # assert np.all(cov - cov.T == 0), 'Covariance must be symmetric'
 
             if meaniter:
-                if len(mean) > 1 and cov.shape[0] > 1:
-                    assert len(mean) == cov.shape[0], "Mean and cov parameter \
+                if len(_mean) > 1 and _cov.shape[0] > 1:
+                    assert len(_mean) == _cov.shape[0], "Mean and cov parameter \
                             inputs must be of the same size"
                     try:
-                        np.linalg.cholesky(cov)
+                        np.linalg.cholesky(_cov)
                     except ValueError:
                         print('Covariance must be symmetric and \
                                 positive definite')
 
-#                elif len(mean) == 1 and cov.shape[0] == 1:
+#                elif len(_mean) == 1 and _cov.shape[0] == 1:
 #                    pass
 
-                elif len(mean) == 1 and cov.shape[0] > 1:
-                    mean = [mean[0] for i in range(cov.shape[0])]
+                elif len(_mean) == 1 and _cov.shape[0] > 1:
+                    _mean = [_mean[0] for i in range(_cov.shape[0])]
 
-                elif cov.shape[0] == 1 and len(mean) > 1:
-                    cov = np.eye(len(mean)) * cov[0]
+                elif _cov.shape[0] == 1 and len(_mean) > 1:
+                    _cov = np.eye(len(_mean)) * _cov[0]
 
-#            elif mean is None:
-#                mean = [0. for i in range(cov.shape[0])]
+#            elif _mean is None:
+#                _mean = [0. for i in range(_cov.shape[0])]
 #
             else:  # mean is a scalar
-                mean = [mean for i in range(cov.shape[0])]
+                _mean = [_mean for i in range(_cov.shape[0])]
 
-        return mean, cov
+        return _mean, _cov
 
-    def _detect_dimension(self, mean, cov, dim):
+    def _detect_dimension(self, _mean, _cov, dim):
         """
         Parses user-given inputs to determine \
                 the dimension of the distribution.
@@ -147,32 +147,32 @@ class NormalDistribution(ProbabilityDistribution):
         #    cov specification)
         # 3. dim = 1
 
-        if len(mean) > 1 or cov.shape[0] > 1:  # Case 1:
-            if len(mean) != cov.shape[0]:
+        if len(_mean) > 1 or _cov.shape[0] > 1:  # Case 1:
+            if len(_mean) != _cov.shape[0]:
                 raise ValueError('Input parameters mean and cov must \
                         be the same dimension')
 
-            if (dim is not None) and (dim != 1) and (dim != len(mean)):
+            if (dim is not None) and (dim != 1) and (dim != len(_mean)):
                 raise ValueError('Mean parameter list must \
                         have size consistent with input dim')
 
-            if (dim is not None) and (dim != 1) and (dim != cov.shape[0]):
+            if (dim is not None) and (dim != 1) and (dim != _cov.shape[0]):
                 raise ValueError('Cov parameter array must \
                         have size consistance with input dim')
 
-            self.dim = len(mean)
-            self.mean = mean
-            self.cov = cov
+            self.dim = len(_mean)
+            self._mean = _mean
+            self._cov = _cov
 
         elif dim is not None and dim > 1:  # Case 2
             self.dim = dim
-            self.mean = [mean[0] for i in range(self.dim)]
-            self.cov = np.eye(self.dim) * cov[0]
+            self._mean = [_mean[0] for i in range(self.dim)]
+            self._cov = np.eye(self.dim) * _cov[0]
 
         else:  # Case 3
             self.dim = 1
-            self.mean = mean[0]
-            self.cov = cov[0]
+            self._mean = _mean[0]
+            self._cov = _cov[0]
 
     def MC_samples(self, M=100):
         """
@@ -181,6 +181,12 @@ class NormalDistribution(ProbabilityDistribution):
         p = np.random.normal(0., 1., [M, self.dim])
 
         return self.transform_to_standard.mapinv(p)
+
+    def mean(self):
+        return self._mean
+
+    def cov(self):
+        return self._cov
 
     # def means(self):
         # """

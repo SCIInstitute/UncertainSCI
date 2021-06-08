@@ -11,10 +11,10 @@ dim = 2
 mean = np.array([0, 0])
 cov = np.array([[1, 0], [0, 5]])
 
-p = NormalDistribution(mean=mean, cov=cov)
+p = NormalDistribution(_mean=mean, _cov=cov)
 
-mu = p.mean
-cov = p.cov
+mu = p.mean()
+cov = p.cov()
 
 print("The mean of this distribution is")
 print(np.array2string(mu))
