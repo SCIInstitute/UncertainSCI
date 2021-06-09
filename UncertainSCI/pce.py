@@ -608,9 +608,9 @@ class PolynomialChaosExpansion():
         response with respect to dimension :math:`i`.
 
         Args:
-            dim_lists: A list-type iterable with D entries, containing
+            dim_lists (list-type) : A list-type iterable with D entries, containing
               dimensional indices in 0-based indexing. All entries must be
-              between 0 and self.distribution.dim.
+              between 0 and `self.distribution.dim`.
         Returns:
             S: DxK array, where each row corresponds to the sensitivity index
               :math:`S_i` across all K features of the PCE model.

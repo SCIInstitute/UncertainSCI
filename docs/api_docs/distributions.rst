@@ -25,6 +25,9 @@ The distributions are located in the `distributions.py` file.
 .. autoclass:: BetaDistribution
    :members:
    :undoc-members:
+.. autoclass:: UniformDistribution
+   :members:
+   :undoc-members:
 .. autoclass:: ExponentialDistribution
    :members:
    :undoc-members:

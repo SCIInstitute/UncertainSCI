@@ -423,6 +423,25 @@ class LpSet(MultiIndexSet):
 
 
 class TotalDegreeSet(MultiIndexSet):
+    """.. _total_degree_set
+
+    Constructs a total degree set object. This is defined as the set
+    :math:`P^{\\textrm{dim}}_{\\textrm{order}}` of
+    multi-indices :math:`\\lambda \\in \\mathbb{N}^{\\textrm{dim}}_0 = \\{ 0, 1, \\ldots,
+    \\}^{\\textrm{dim}}` satisfying
+
+    For this index set, the `order` is equivalent to the polynomial degree.
+
+    .. math::
+
+        P^{\\textrm{dim}}_{\\textrm{order}} = \\left\\{ \\lambda \\in
+        \\mathbb{N}_0^{\\textrm{dim}} \\quad \\big| \\quad
+        \\sum_{j=1}^{\\textrm{dim}} \\lambda_j \\leq \\textrm{order} \\right\\}
+
+    Parameters:
+        dim (positive integer): Dimension of the index set. Defaults to 1.
+        order (non-negative integer): Order of the index set, corresponds to polynomial degree. Defaults to 0.
+    """
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
@@ -432,6 +451,13 @@ class TotalDegreeSet(MultiIndexSet):
         self.indices = self.get_indices()
 
     def get_indices(self):
+        """
+        Returns an array containing the indices of the set.
+
+        Returns:
+            numpy.ndarray: An :math:`N \\times \\textrm{dim}` array,
+            where :math:`N` is the total number of indices.
+        """
         if self.adaptive:
             return super().get_indices()
         else:

@@ -736,7 +736,7 @@ class UniformDistribution(BetaDistribution):
 
     .. math::
 
-      w(y) := 1, \\hskip 20pt y \\in (0,1),
+      w(y) := \\frac{1}{b-a}, \\hskip 20pt y \\in (a,b),
 
     To generate this distribution on a general compact interval :math:`[a,b]`,
     set the domain parameter below. Alternatively, the mean :math:`\\mu` and
@@ -747,7 +747,7 @@ class UniformDistribution(BetaDistribution):
     corresopnding to independent one-dimensional marginal distributions are
     supported. In the case of identically distributed marginals, the `dim`
     parameter can be set to the appropriate dimension. In case of non-identical
-    marginals, an array or iterable can be input for :math:`\\alpha, \\beta,
+    marginals, an array or iterable can be input for :math:`a, b,
     \\mu, \\sigma`.
 
     Parameters:
