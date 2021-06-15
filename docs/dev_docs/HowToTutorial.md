@@ -192,45 +192,35 @@ inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\)
 
 ### Citations
 
-Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  Another option may be [Myst](https://myst-parser.readthedocs.io/en/latest/)
-
-
 Since we are using Sphinx to build the documentation, we can use its citation manager, sphinxcontrib-bibtex.  We will provide some exmples here, but for more information, refer to the [sphinxcontrib-bibtex documentation](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).  
 
-Citations to include in the UncertainSCI docs can be included in the `UncertainSCI/docs/UncertainSCI.bib` file.  For the keys, please use the convention: Initials of the contributor, colon, first three letters of the author (with apropriate capitalization), and the year.  For example `JDT:Bur2020`.  For multiple citations from the same author in the same year, lowercase letters can be appended to the key: `JDT:Bur2020a`.  
+Citations to include in the UncertainSCI docs can be included in the `UncertainSCI/docs/references.bib` file.  For the keys, please use the convention: Initials of the contributor, colon, first three letters of the author (with apropriate capitalization), and the year.  For example `JDT:Bur2020`.  For multiple citations from the same author in the same year, lowercase letters can be appended to the key: `JDT:Bur2020a`.  
 
-After the reference has been added to `UncertainSCI/docs/UncertainSCI.bib`, the final step is to include the command in the appropriate place.  See  <cite data-cite="JDT:Bur2020">Burk *etal.*</cite>  
+After the reference has been added to `UncertainSCI/docs/references.bib`, the final step is to include the command in the appropriate place.  
 
-try this
+The sphinxcontrib-bibtex is built to run with rst in Sphinx. However, it can be used in markdown using the [AutoStructify](https://recommonmark.readthedocs.io/en/latest/auto_structify.html) package.  This will require using using an `eval_rst` block as follows:
+
+````
 ```eval_rst
-:cite:t:`JDT:Bur2020a`
+The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
 ```
+````
 
-try this one
 ```eval_rst
-:cite:p:`JDT:Bur2020`
+The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
 ```
-
-and this
-```eval_rst
-put some text here and cite it :cite:t:`JDT:Bur2020`.  
-```
-
-and this
-`eval_rst :cite:t:`JDT:Bur2020``
-
-and this
-`eval_rst :cite:p:`JDT:Bur2020``
 
 add a bibliography section
+````
+```eval_rst
+.. bibliography::
+```
+````
 
 #### Bibliography
 ```eval_rst
 .. bibliography::
 ```
-
-TODO.
-
 
 ### Snippets
 
@@ -333,8 +323,3 @@ With the embed link, just include the html into the markdown file.
 
 Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
-
-## Bibliography
-
-```{bibliography}
-```

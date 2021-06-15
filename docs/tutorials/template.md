@@ -55,9 +55,19 @@ inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\)
 
 ### Citations
 
-Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  Another option may be [Myst](https://myst-parser.readthedocs.io/en/latest/)
+Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  The sphinxcontrib-bibtex is built to run with rst in Sphinx. However, it can be used in markdown using the [AutoStructify](https://recommonmark.readthedocs.io/en/latest/auto_structify.html) package.
 
-TODO.
+```eval_rst
+The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
+```
+
+
+add a bibliography section
+````
+```eval_rst
+.. bibliography::
+```
+````
 
 ### Snippets
 Inline snippets `like this`.  Muliple lines:
