@@ -14,12 +14,17 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
 
+import recommonmark
+from recommonmark.transform import AutoStructify
+
 
 # -- Project information -----------------------------------------------------
 
 project = 'UncertainSCI'
 copyright = '2020, The Scientific Computing and Imaging Institute at the University of Utah'
 author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sumientra Rampersad, Lindsay Rupp, Jess Tate, Dan White'
+
+github_doc_root = 'https://github.com/SCIInstitute/UncertainSCI/tree/master/docs'
 
 # The full version, including alpha/beta/rc tags
 release = '0.01'
@@ -40,6 +45,7 @@ extensions = [
 
 # Path for bibtex files
 bibtex_bibfiles = ['references.bib']
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -98,3 +104,17 @@ html_logo = '_static/UncertainSCI.png'
 html_theme_options = {
     'logo_only': True
 }
+
+
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+        #'url_resolver': lambda url: github_doc_root + url,
+        'auto_toc_tree_section': 'Contents',
+        'enable_math': False,
+        'enable_inline_math': False,
+        'enable_eval_rst': True,
+    }, True)
+    app.add_transform(AutoStructify)
+
+
+

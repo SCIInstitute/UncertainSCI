@@ -192,12 +192,49 @@ inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\)
 
 ### Citations
 
-Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  Another option may be [Myst](https://myst-parser.readthedocs.io/en/latest/)
+Since we are using Sphinx to build the documentation, we can use its citation manager, sphinxcontrib-bibtex.  We will provide some exmples here, but for more information, refer to the [sphinxcontrib-bibtex documentation](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).  
 
-TODO.
+Citations to include in the UncertainSCI docs can be included in the `UncertainSCI/docs/references.bib` file.  For the keys, please use the convention: Initials of the contributor, colon, first three letters of the author (with apropriate capitalization), and the year.  For example `JDT:Bur2020`.  For multiple citations from the same author in the same year, lowercase letters can be appended to the key: `JDT:Bur2020a`.  
 
+After the reference has been added to `UncertainSCI/docs/references.bib`, the final step is to include the command in the appropriate place.  
+
+The sphinxcontrib-bibtex is built to run with rst in Sphinx. However, it can be used in markdown using the [AutoStructify](https://recommonmark.readthedocs.io/en/latest/auto_structify.html) package.  This will require using using an `eval_rst` block as follows:
+
+````
+```eval_rst
+The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
+```
+````
+
+```eval_rst
+The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
+```
+
+add a bibliography section
+````
+```eval_rst
+.. bibliography::
+```
+````
+
+#### Bibliography
+```eval_rst
+.. bibliography::
+```
 
 ### Snippets
+
+Basic markdown ``some snippet``
+
+```
+def function():
+    return True
+```
+
+```python
+def function():
+    return True
+```
 
 ### Links
 Including links in Markdown is simple, just use `<>` or `[]()`.  For example, an internal link for section [Adding Content](#adding-content) is :
@@ -233,12 +270,21 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 | Paragraph   | Text        |
 
 
+```eval_rst
++------------+------------+-----------+ 
+| Header 1   | Header 2   | Header 3  | 
++============+============+===========+ 
+| body row 1 | column 2   | column 3  | 
++------------+------------+-----------+ 
+| body row 2 | Cells may span columns.| 
++------------+------------+-----------+ 
+```
 
-### Referencing Sphynx
 
-TODO
+### Referencing Sphinx
 
-To link the UncertainSCI API generated using Sphynx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
+
+To link the UncertainSCI API generated using Sphinx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
 
 ## Content Guide
 
@@ -246,9 +292,34 @@ TODO
 
 ## Supplemental Materials
 
-TODO
+Some things to consider including with the tutorial.  
 
 ### Example Scripts
+
+Example scripts should be located in the  `UncertainSCI/demos/` directory.  Consider using one of the existing demos as a template and try to follow the coding standards outlined in the [contribution guide](contribute.html).  
+
 ### Movies
+
+Movies should be stored in a serperate place.  We host most of ours on youtube or vimeo.  
+
+#### Youtube
+
+Get the imbed link from the youtube video.  This can be found by pressing the share button. 
+
+#### Vimeo
+
+Get the imbed link from the vimeo video.  This can be found by pressing the share button.  There are more options if for some users who own the video.  More info [here.](https://vimeo.zendesk.com/hc/en-us/articles/224969968-Embedding-videos-overview)
+
+With the embed link, just include the html into the markdown file.  
+
+```
+<iframe title="vimeo-player" src="https://player.vimeo.com/video/279319572" width="640" height="360" frameborder="0" allowfullscreen></iframe>
+```
+
+<iframe title="vimeo-player" src="https://player.vimeo.com/video/279319572" width="640" height="360" frameborder="0" allowfullscreen></iframe>
+
+
 ### Datasets
+
+Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
