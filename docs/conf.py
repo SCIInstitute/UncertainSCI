@@ -99,6 +99,12 @@ html_css_files = ['css/main.css']
 
 html_title = project
 
+html_logo = '_static/UncertainSCI.png'
+
+html_theme_options = {
+    'logo_only': True
+}
+
 
 def setup(app):
     app.add_config_value('recommonmark_config', {
@@ -110,9 +116,5 @@ def setup(app):
     }, True)
     app.add_transform(AutoStructify)
 
-html_logo = '_static/UncertainSCI.png'
 
-html_theme_options = {
-    'logo_only': True
-}
 
