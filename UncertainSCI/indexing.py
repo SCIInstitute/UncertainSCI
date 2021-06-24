@@ -389,6 +389,27 @@ class MultiIndexSet():
 
 
 class LpSet(MultiIndexSet):
+    """.. _Lp_set
+
+    Constructs a Lp set object. This is defined as the set
+    :math:`P^{\\textrm{dim}}_{\\textrm{order}}` of
+    multi-indices :math:`\\lambda \\in \\mathbb{N}^{\\textrm{dim}}_0 = \\{ 0, 1, \\ldots,
+    \\}^{\\textrm{dim}}` satisfying
+
+    For this index set, the `order` is equivalent to the polynomial degree.
+
+    .. math::
+
+        P^{\\textrm{dim}}_{\\textrm{order}} = \\left\\{ \\lambda \\in
+        \\mathbb{N}_0^{\\textrm{dim}} \\quad \\big| \\quad
+        (\\sum_{j=1}^{\\textrm{dim}} |\\lambda_j|^p)^\\frac{1}{p} \\leq \\textrm{order} \\right\\}
+
+    Parameters:
+        dim (positive integer): Dimension of the index set. Defaults to 1.
+        order (non-negative integer): Order of the index set, corresponds to polynomial degree. Defaults to 0.
+        p (non-negative real number or infinity): p-norms in finite dimensions. If p is set to 1, a total degree set is returned. If p is set to infinity, a tensor product set is returned. Defaults to 1.
+    """
+
     def __init__(self, dim=1, order=0, p=1):
         assert dim > 0 and order >= 0 and p >= 0
 
@@ -399,6 +420,14 @@ class LpSet(MultiIndexSet):
         self.indices = self.get_indices()
 
     def get_indices(self):
+        """
+        Returns an array containing the indices of the set.
+
+        Returns:
+            numpy.ndarray: An :math:`N \\times \\textrm{dim}` array,
+            where :math:`N` is the total number of indices.
+        """
+
         if self.p < 1:
             lambdas = total_degree_indices(self.dim, self.order)
             norm = (np.sum(lambdas**self.p, axis=1))**(1/self.p)
@@ -465,6 +494,25 @@ class TotalDegreeSet(MultiIndexSet):
 
 
 class HyperbolicCrossSet(MultiIndexSet):
+    """.. _hyperbolic_cross_set
+
+    Constructs a hyperbolic cross set object. This is defined as the set
+    :math:`P^{\\textrm{dim}}_{\\textrm{order}}` of
+    multi-indices :math:`\\lambda \\in \\mathbb{N}^{\\textrm{dim}}_0 = \\{ 0, 1, \\ldots,
+    \\}^{\\textrm{dim}}` satisfying
+
+    For this index set, the `order` is equivalent to the polynomial degree.
+
+    .. math::
+
+        P^{\\textrm{dim}}_{\\textrm{order}} = \\left\\{ \\lambda \\in
+        \\mathbb{N}_0^{\\textrm{dim}} \\quad \\big| \\quad
+        \\prod_{j=1}^{\\textrm{dim}} (\\lambda_j+1) \\leq \\textrm{order+1} \\right\\}
+
+    Parameters:
+        dim (positive integer): Dimension of the index set. Defaults to 1.
+        order (non-negative integer): Order of the index set, corresponds to polynomial degree. Defaults to 0.
+    """
     def __init__(self, dim=1, order=0):
         assert dim > 0 and order >= 0
 
@@ -474,6 +522,14 @@ class HyperbolicCrossSet(MultiIndexSet):
         self.indices = self.get_indices()
 
     def get_indices(self):
+        """
+        Returns an array containing the indices of the set.
+
+        Returns:
+            numpy.ndarray: An :math:`N \\times \\textrm{dim}` array,
+            where :math:`N` is the total number of indices.
+        """
+
         if self.adaptive:
             return super().get_indices()
         else:
