@@ -73,6 +73,8 @@ total_sensitivity = pce.total_sensitivity()
 # "Global sensitivity" is a partitive relative sensitivity measure per set of parameters.
 global_sensitivity = pce.global_sensitivity(variable_interactions)
 
+
+
 Q = 4  # Number of quantile bands to plot
 dq = 0.5/(Q+1)
 q_lower = np.arange(dq, 0.5-1e-7, dq)[::-1]
@@ -160,4 +162,36 @@ ax.pie(average_global_SI*100, labels=labels, autopct='%1.1f%%',
 ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 plt.title('Sensitivity due to variable interactions')
 
+
+
+
+
+sensitivities = [total_sensitivity, global_sensitivity]
+
+sensbounds = [[0, 1], [0, 1]]
+
+senslabels = ['Total sensitivity', 'Global sensitivity']
+dimlabels = ['Dimension 1', 'Dimension 2', 'Interaction']
+
+fig, ax = plt.subplots(2, 3)
+for row in range(2):
+    for col in range(2):
+        ax[row][col].plot(x, sensitivities[row][col,:])
+        ax[row][col].set_ylim(sensbounds[row])
+        if row==2:
+            ax[row][col].set(xlabel='$x$')
+        if col==0:
+            ax[row][col].set(ylabel=senslabels[row])
+        if row==0:
+            ax[row][col].set_title(dimlabels[col])
+        if row<2:
+            ax[row][col].xaxis.set_ticks([])
+        if col>0:
+            ax[row][col].yaxis.set_ticks([])
+  
+ax[1][2].plot(x, sensitivities[1][2,:])
+ax[1][2].set_ylim(sensbounds[1])
+
+
 plt.show()
+
