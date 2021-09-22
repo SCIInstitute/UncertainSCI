@@ -3,6 +3,7 @@ from scipy.linalg import qr, qr_delete
 
 from UncertainSCI.utils.version import version_lessthan
 
+
 def mgs_pivot_restart(A, p=None, pstart=None):
     """
     Computes pivots from a QR decomposition with starting pivots specified. If
@@ -185,11 +186,12 @@ def lstsq_loocv_error(A, b, weights):
 
     return np.sqrt(cv/M)
 
+
 def weighted_lsq(A, b, w):
     """
     Computes the weighted least squares solution to A x = b. I.e., computes x
-    that minimizes the :math:`\\ell^2' norm of the weighted residual 
-      
+    that minimizes the :math:`\\ell^2' norm of the weighted residual
+
     .. math::
 
       \\mathrm{diag}(\\sqrt{w_1}, \\ldots, \\sqrt{w_M}) (A x - b)
@@ -197,7 +199,8 @@ def weighted_lsq(A, b, w):
 
     Parameters:
         A (array-like): The M x N design matrix from a least-squares procedure
-        b (array-like): The right-hand side array with M rows from a least-squares procedure
+        b (array-like): The right-hand side array with M rows from a
+            least-squares procedure
         w: size-M array with positive entries, indicating pointwise
             weights in the least squares problem.
     Attributes:
@@ -217,6 +220,7 @@ def weighted_lsq(A, b, w):
         return np.linalg.lstsq(Aweighted, bweighted, rcond=-1)[:2]
     else:
         return np.linalg.lstsq(Aweighted, bweighted, rcond=None)[:2]
+
 
 if __name__ == "__main__":
 

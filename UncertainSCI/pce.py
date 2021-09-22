@@ -334,8 +334,8 @@ class PolynomialChaosExpansion():
                 of number of added indices. Nsamples = Nindices + add_rule.
                 Defaults to None.
             mult_rule (float): Specifies number of samples added as a function
-                of number of added indices. Nsamples = int(Nindices * add_rule).
-                Defaults to None.
+                of number of added indices. Nsamples = 
+                int(Nindices * add_rule).  Defaults to None.
         """
 
         if (max_new_samples is not None) and (max_new_indices is not None):
@@ -437,7 +437,7 @@ class PolynomialChaosExpansion():
         else:
             pass  # User didn't specify samples now, but did previously
 
-        if self.model_output is None: # We need to generate data
+        if self.model_output is None:  # We need to generate data
             if model_output is None:
 
                 if model is None:
@@ -457,7 +457,7 @@ class PolynomialChaosExpansion():
             self.model_output = model_output
 
         else:
-            pass # We'll assume the user did things correctly.
+            pass  # We'll assume the user did things correctly.
 
         # For now, we only have 1 method:
         if self.training == 'christoffel_lsq':

@@ -64,6 +64,7 @@ class NormalDistribution(ProbabilityDistribution):
         else:
             # Option 1: Cholesky
             #L = np.linalg.cholesky(self._cov)
+
             # Option 2: matrix square root
             W, V = np.linalg.eigh(self._cov)
             L = V.T @ np.sqrt(np.diag(W))
@@ -80,8 +81,8 @@ class NormalDistribution(ProbabilityDistribution):
 
         # Standard domain is R^dim
         self.standard_domain = np.zeros([2, self.dim])
-        self.standard_domain[0,:] = -np.inf
-        self.standard_domain[1,:] = np.inf
+        self.standard_domain[0, :] = -np.inf
+        self.standard_domain[1, :] = np.inf
 
         self.poly_domain = self.standard_domain.copy()
 
@@ -489,14 +490,14 @@ class GammaDistribution(ProbabilityDistribution):
     .. math::
 
       w(y;k,\\theta) := \\frac{1}{\\Gamma(k) \\theta^k}\
-              y^{k-1} exp(-y/\\theta), \\hskip 20pt y \\in (0,\infty),
+              y^{k-1} exp(-y/\\theta), \\hskip 20pt y \\in (0,\\infty),
 
     where :math:`k` and :math:`\\theta` are positive real parameters that
     define the distribution, and :math:`\\Gamma` is the Gamma function. Some
     special cases of note:
 
-    To generate this distribution on a general shifted interval :math:`(shift,\infty)`,
-    set the shift parameter below.
+    To generate this distribution on a general shifted interval
+    :math:`(shift,\\infty)`, set the shift parameter below.
 
     To generate this distribution so it has support on the negative half-line
     :math:`(-\\infty,0)`, set the flip parameter below.
@@ -510,7 +511,8 @@ class GammaDistribution(ProbabilityDistribution):
     Attributes:
         k (float): Shape parameter k.
         theta (float): Scale parameter theta.
-        polys (:class:`LaguerrePolynomials`): Orthogonal polynomials for this distribution.
+        polys (:class:`LaguerrePolynomials`): Orthogonal polynomials for this
+            distribution.
     """
 
     def __init__(self, k=1., theta=1., shift=0., flip=False):
@@ -521,7 +523,8 @@ class GammaDistribution(ProbabilityDistribution):
         # Construct affine map transformations
 
         # Low-level routines use Laguerre Polynomials, weight
-        # x^rho exp^{-x} when rho = 0, which is equal to the standard Exponential,
+        # x^rho exp^{-x} when rho = 0, which is equal to the standard
+        # Exponential,
         # exp^{-lbd x} when lbd = 1
         A = np.eye(self.dim)
         b = np.zeros(self.dim)
@@ -571,8 +574,9 @@ class GammaDistribution(ProbabilityDistribution):
         """
 
         z = self.transform_to_standard.map(x)
-        density = 1/scipy.special.gamma(self.k) * z**(self.k-1) * np.exp(-z)
+        density = 1/sp.special.gamma(self.k) * z**(self.k-1) * np.exp(-z)
         return density*self.transform_to_standard.A
+
 
 class BetaDistribution(ProbabilityDistribution):
     """.. _beta_distribution:
