@@ -2,7 +2,7 @@ from math import floor
 
 import numpy as np
 
-from UncertainSCI.indexing import MultiIndexSet
+from UncertainSCI.indexing import MultiIndexSet, TotalDegreeSet
 from UncertainSCI.distributions import ProbabilityDistribution
 from UncertainSCI.utils.casting import to_numpy_array
 from UncertainSCI.utils.version import version_lessthan
