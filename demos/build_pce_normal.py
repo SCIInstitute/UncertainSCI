@@ -54,7 +54,8 @@ model_evaluations = pce.model_output
 
 # And you could build a second PCE on the same parameter samples
 pce2 = PolynomialChaosExpansion(index_set, dist)
-pce2.build(model, samples=parameter_samples)
+pce2.set_samples(parameter_samples)
+pce2.build(model)
 
 # pce and pce2 have the same coefficients:
 # np.linalg.norm( pce.coefficients - pce2.coefficients )
@@ -194,4 +195,3 @@ ax[1][2].set_ylim(sensbounds[1])
 
 
 plt.show()
-

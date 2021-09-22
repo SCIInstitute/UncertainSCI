@@ -49,6 +49,9 @@ class AffineTransform:
             assert b.size == A.shape[0], \
                    ValueError("Input vector b must have same dimension as A")
 
+            if A.ndim == 1:
+                A = np.reshape(A, [1,1])
+
             self.A, self.b = A, b
             self.Ainv = np.linalg.inv(A)
             self.binv = self.Ainv.dot(-self.b)

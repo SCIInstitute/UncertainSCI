@@ -23,9 +23,9 @@ class ProbabilityDistribution:
 
 
 class NormalDistribution(ProbabilityDistribution):
-    def __init__(self, _mean=None, _cov=None, dim=None):
+    def __init__(self, mean=None, cov=None, dim=None):
 
-        _mean, _cov = self._convert_meancov_to_iterable(_mean, _cov)
+        _mean, _cov = self._convert_meancov_to_iterable(mean, cov)
 
         self._detect_dimension(_mean, _cov, dim)
 
@@ -62,7 +62,12 @@ class NormalDistribution(ProbabilityDistribution):
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
         else:
-            L = np.linalg.cholesky(self._cov)
+            # Option 1: Cholesky
+            #L = np.linalg.cholesky(self._cov)
+            # Option 2: matrix square root
+            W, V = np.linalg.eigh(self._cov)
+            L = V.T @ np.sqrt(np.diag(W))
+
             A = np.linalg.inv(L)
             b = -A.dot(self._mean)
             self.transform_to_standard = AffineTransform(A=A, b=b)
@@ -72,6 +77,13 @@ class NormalDistribution(ProbabilityDistribution):
         for qd in range(self.dim):
             Hs.append(HermitePolynomials())  # modify for different mean, cov?
         self.polys = TensorialPolynomials(polys1d=Hs)
+
+        # Standard domain is R^dim
+        self.standard_domain = np.zeros([2, self.dim])
+        self.standard_domain[0,:] = -np.inf
+        self.standard_domain[1,:] = np.inf
+
+        self.poly_domain = self.standard_domain.copy()
 
         self.indices = None
 
@@ -467,6 +479,100 @@ class ExponentialDistribution(ProbabilityDistribution):
 
         return density
 
+
+class GammaDistribution(ProbabilityDistribution):
+    """.. _gamma_distribution:
+
+    Constructs a Gamma distribution object. Gamma distributions have support on
+    the real interval [0,infty), with probability density function,
+
+    .. math::
+
+      w(y;k,\\theta) := \\frac{1}{\\Gamma(k) \\theta^k}\
+              y^{k-1} exp(-y/\\theta), \\hskip 20pt y \\in (0,\infty),
+
+    where :math:`k` and :math:`\\theta` are positive real parameters that
+    define the distribution, and :math:`\\Gamma` is the Gamma function. Some
+    special cases of note:
+
+    To generate this distribution on a general shifted interval :math:`(shift,\infty)`,
+    set the shift parameter below.
+
+    To generate this distribution so it has support on the negative half-line
+    :math:`(-\\infty,0)`, set the flip parameter below.
+
+    Parameters:
+        k (float, optional): Shape parameter. Defaults to 1.
+        theta (float, optional): Scale parameter. Defaults to 1.
+        shift (float, optional): Shift parameter. Defaults to 0.
+        flip (bool, optional): Flip parameter. Defaults to False.
+
+    Attributes:
+        k (float): Shape parameter k.
+        theta (float): Scale parameter theta.
+        polys (:class:`LaguerrePolynomials`): Orthogonal polynomials for this distribution.
+    """
+
+    def __init__(self, k=1., theta=1., shift=0., flip=False):
+
+        self.theta, self.k, self.shift, self.flip = theta, k, shift, flip
+        self.dim = 1
+
+        # Construct affine map transformations
+
+        # Low-level routines use Laguerre Polynomials, weight
+        # x^rho exp^{-x} when rho = 0, which is equal to the standard Exponential,
+        # exp^{-lbd x} when lbd = 1
+        A = np.eye(self.dim)
+        b = np.zeros(self.dim)
+        self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
+
+        if not flip:
+            A = 1/self.theta
+        else:
+            A = -1/self.theta
+
+        b = -A*self.shift
+        self.transform_to_standard = AffineTransform(A=A, b=b)
+
+        # Construct 1D polynomial families
+        Ls = []
+        for qd in range(self.dim):
+            Ls.append(LaguerrePolynomials())
+        self.polys = TensorialPolynomials(polys1d=Ls)
+
+        self.indices = None
+
+    def MC_samples(self, M=100):
+        """
+        Returns M Monte Carlo samples from the distribution.
+        """
+
+        x = sp.stats.gamma.rvs(self.k, loc=0., scale=self.theta, size=M)
+        if self.flip:
+            x = -x
+
+        return x + self.shift
+
+    def mean(self):
+        mu = self.k
+        return self.transform_to_standard.mapinv(mu)
+
+    def stdev(self):
+        """
+        Returns the standard deviation of the distribution.
+        """
+
+        return np.sqrt(self.k)*self.theta
+
+    def pdf(self, x):
+        """
+        Evaluates the probability distribution function at the locations x.
+        """
+
+        z = self.transform_to_standard.map(x)
+        density = 1/scipy.special.gamma(self.k) * z**(self.k-1) * np.exp(-z)
+        return density*self.transform_to_standard.A
 
 class BetaDistribution(ProbabilityDistribution):
     """.. _beta_distribution:
