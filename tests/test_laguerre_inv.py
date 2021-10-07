@@ -25,7 +25,7 @@ class IDistTestCase(unittest.TestCase):
         # see if idistinv givens x back
         x2 = L.idistinv(u, n)
 
-        delta = 1e-3
+        delta = 5e-3
         ind = np.where(np.abs(x1-x2) > delta)[:2][0]
         if ind.size > 0:
             errstr = 'Failed for rho={0:1.3f}, n={1:d}'.format(rho, n)

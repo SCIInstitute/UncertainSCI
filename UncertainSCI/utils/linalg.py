@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.linalg import qr, qr_delete
 
+from UncertainSCI.utils.version import version_lessthan
+
 
 def mgs_pivot_restart(A, p=None, pstart=None):
     """
@@ -151,12 +153,12 @@ def lstsq_loocv_error(A, b, weights):
     """Computes the leave-one-out cross validation (LOOCV) metric for a
     least-squares problem.
 
-    Args:
+    Parameters:
         A: The M x N design matrix from a least-squares procedure
         b: The right-hand side array with M rows from a least-squares procedure
         weights: size-M array with positive entries, indicating pointwise
             weights in the LOOCV metric.
-    Returns:
+    Attributes:
         cv: The sum-of-squares cross-validation metric (scalar, float)
     """
 
@@ -183,6 +185,41 @@ def lstsq_loocv_error(A, b, weights):
                               A[m, P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
 
     return np.sqrt(cv/M)
+
+
+def weighted_lsq(A, b, w):
+    """
+    Computes the weighted least squares solution to A x = b. I.e., computes x
+    that minimizes the :math:`\\ell^2' norm of the weighted residual
+
+    .. math::
+
+      \\mathrm{diag}(\\sqrt{w_1}, \\ldots, \\sqrt{w_M}) (A x - b)
+
+
+    Parameters:
+        A (array-like): The M x N design matrix from a least-squares procedure
+        b (array-like): The right-hand side array with M rows from a
+            least-squares procedure
+        w: size-M array with positive entries, indicating pointwise
+            weights in the least squares problem.
+    Attributes:
+        x (array-like): The least-squares solution.
+        residual (array-like): Residual for the least squares problem.
+    """
+
+    M, N = A.shape
+    assert M == b.shape[0], ("Matrix A and right-hand side b must have "
+                             "identical size along axis 0.")
+
+    wsqrt = np.sqrt(w)
+    bweighted = np.multiply(b.T, wsqrt).T
+    Aweighted = np.multiply(A.T, wsqrt).T
+
+    if version_lessthan(np, '1.14.0'):
+        return np.linalg.lstsq(Aweighted, bweighted, rcond=-1)[:2]
+    else:
+        return np.linalg.lstsq(Aweighted, bweighted, rcond=None)[:2]
 
 
 if __name__ == "__main__":

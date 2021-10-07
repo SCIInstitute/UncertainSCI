@@ -11,7 +11,7 @@ dim = 2
 mean = np.array([0, 0])
 cov = np.array([[1, 0], [0, 5]])
 
-p = NormalDistribution(_mean=mean, _cov=cov)
+p = NormalDistribution(mean=mean, cov=cov)
 
 mu = p.mean()
 cov = p.cov()

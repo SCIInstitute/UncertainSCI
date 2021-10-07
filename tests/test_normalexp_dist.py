@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+from numpy.linalg import norm
 
 from UncertainSCI.distributions import NormalDistribution, ExponentialDistribution
 
@@ -66,8 +67,8 @@ class DistTestCase(unittest.TestCase):
         N = NormalDistribution(mean=mean, cov=cov)
         delta = 1e-3
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, mean, delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), np.eye(len(mean)).all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), mean, delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-np.eye(len(mean))), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, len(mean), delta=delta, msg=errstr)
 
         # cov is None and mean is None
@@ -75,17 +76,17 @@ class DistTestCase(unittest.TestCase):
         cov = None
         N = NormalDistribution(mean=mean, cov=cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, 0., delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), np.eye(1).all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), 0., delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-np.eye(1)), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, 1, delta=delta, msg=errstr)
 
         # cov is None and mean is a scalar
-        mean = 0.
+        mean = np.random.randn()
         cov = None
         N = NormalDistribution(mean=mean, cov=cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, 0., delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), np.eye(1).all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), mean, delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-np.eye(1)), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, 1, delta=delta, msg=errstr)
 
         # len(mean) > 1 and cov.shape[0] > 1
@@ -93,8 +94,8 @@ class DistTestCase(unittest.TestCase):
         cov = np.eye(n)
         N = NormalDistribution(mean=mean, cov=cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, mean, delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), cov.all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), mean, delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-cov), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, cov.shape[0], delta=delta, msg=errstr)
 
         # len(mean) == 1 and cov.shape[0] > 1
@@ -102,8 +103,8 @@ class DistTestCase(unittest.TestCase):
         cov = np.eye(n)
         N = NormalDistribution(mean=mean, cov=cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, [mean[0] for i in range(cov.shape[0])], delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), cov.all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), [mean[0] for i in range(cov.shape[0])], delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-cov), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, cov.shape[0], delta=delta, msg=errstr)
 
         # mean is None and cov.shape[0] > 1
@@ -111,8 +112,8 @@ class DistTestCase(unittest.TestCase):
         cov = np.eye(n)
         N = NormalDistribution(mean=mean, cov=cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, [0. for i in range(cov.shape[0])], delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), cov.all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), [0. for i in range(cov.shape[0])], delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-cov), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, cov.shape[0], delta=delta, msg=errstr)
 
         # mean is a scalar and cov.shape[0] > 1
@@ -120,8 +121,8 @@ class DistTestCase(unittest.TestCase):
         cov = np.eye(n)
         N = NormalDistribution(mean=mean, cov=cov)
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
-        self.assertAlmostEqual(N.mean, [mean for i in range(cov.shape[0])], delta=delta, msg=errstr)
-        self.assertAlmostEqual(N.cov.all(), cov.all(), delta=delta, msg=errstr)
+        self.assertAlmostEqual(N.mean(), [mean for i in range(cov.shape[0])], delta=delta, msg=errstr)
+        self.assertAlmostEqual(norm(N.cov()-cov), 0, delta=delta, msg=errstr)
         self.assertAlmostEqual(N.dim, cov.shape[0], delta=delta, msg=errstr)
 
         # Test for MC_samples
