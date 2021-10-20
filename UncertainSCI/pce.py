@@ -1,6 +1,7 @@
 from math import floor
 
 import numpy as np
+from scipy.stats.mstats import mquantiles
 
 from UncertainSCI.indexing import MultiIndexSet, TotalDegreeSet
 from UncertainSCI.distributions import ProbabilityDistribution
@@ -550,7 +551,12 @@ class PolynomialChaosExpansion():
             inds = range(pce_counter, end_ind)
             ensemble = self.pce_eval(p, components=inds)
 
-            quantiles[:, inds] = np.quantile(ensemble, q, axis=0)
+
+
+            if version_lessthan(np, '1.15'):
+                quantiles[:, inds] = mquantiles(ensemble, q, axis=0)
+            else:
+                quantiles[:, inds] = np.quantile(ensemble, q, axis=0)
 
             pce_counter = end_ind
 

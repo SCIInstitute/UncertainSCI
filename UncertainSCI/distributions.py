@@ -646,6 +646,7 @@ class BetaDistribution(ProbabilityDistribution):
         alpha, beta = self._convert_alphabeta_to_iterable(alpha, beta)
 
         # Sets self.dim, self.alpha, self.beta, self.domain
+        domain = np.asarray(domain)
         self._detect_dimension(alpha, beta, dim, domain)
 
         for qd in range(self.dim):
@@ -730,7 +731,7 @@ class BetaDistribution(ProbabilityDistribution):
             self.alpha = [alpha[0] for i in range(self.dim)]
             self.beta = [beta[0] for i in range(self.dim)]
 
-            if domain is None:  # Standard domain [0,1]^dim
+            if (domain is None) or (domain.any() is not True):  # Standard domain [0,1]^dim
                 self.domain = np.zeros([2, self.dim])
                 self.domain[1, :] = 1.
             else:
