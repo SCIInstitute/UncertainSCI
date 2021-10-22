@@ -231,6 +231,17 @@ class MultiIndexSet():
     def get_indices(self):
         return self.indices
 
+    def choice(self, n=1):
+        """
+        Returns n randomly chosen multi-indices as a (n x self.dim)
+        numpy.ndarray.
+        """
+
+        assert n > 0
+
+        index_choices = random.choice(range(self.indices.shape[0]), size=n)
+        return self.indices[index_choices,:]
+
     def size(self):
         return self.indices.shape[0]
 

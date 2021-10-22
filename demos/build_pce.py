@@ -1,68 +1,49 @@
 # Demonstrates generation of a PCE for a simple model
 
+import pdb
+
 from itertools import chain, combinations
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 from UncertainSCI.distributions import BetaDistribution
-from UncertainSCI.model_examples import laplace_grid_x, laplace_ode, KLE_exponential_covariance_1d
-from UncertainSCI.indexing import TotalDegreeSet
+from UncertainSCI.model_examples import laplace_ode_1d
 from UncertainSCI.pce import PolynomialChaosExpansion
+from UncertainSCI.utils.version import version_lessthan
 
 # # 3 things must be specified:
 # - A parameter distribution
-# - The expressivity of the PCE (polynomial space)
+# - The capacity of the PCE model (here, polynomial space)
 # - The physical model
 
 # # Distribution setup
 
 # Number of parameters
-dimension = 3
+Nparams = 3
 
-# Specifies 1D distribution on [0,1] (alpha=beta=1 ---> uniform)
-alpha = 0.5
-beta = 1.
-dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
+# Three independent parameters with different Beta distributions
+p1 = BetaDistribution(alpha=0.5, beta=1.)
+p2 = BetaDistribution(alpha=1., beta=0.5)
+p3 = BetaDistribution(alpha=1., beta=1.)
 
-# # Expressivity setup
+# # Polynomial order
 order = 5
-index_set = TotalDegreeSet(dim=dimension, order=order)
 
-# # Define model:
-#
+# # Model:
 # -d/dx a(x,p) d/dx u(x,p) = f(x)
 #
-# over x in [-1,1], where a(x,p) is a parameterized diffusion model:
-#
-# a(x,p) = abar(x) + sum_{j=1}^d lambda_j Y_j phi_j(x),
-#
-# where d = dimension, (lambda_j, phi_j) are eigenpairs of the exponential
-# covariance kernel,
-#
-#   K(s,t) = exp(-|s-t|/a).
-#
-# The Y_j are modeled as iid random variables.
+# with x in [-1,1] discretized with N points, where a(x,p) is a
+# Fourier-Series-parameterized diffusion model with the variables pj.
+# See the laplace_ode_1d method in UncertainSCI/model_examples.py for
+# deatils.
 
-# Define diffusion coefficient
-a = 1.
-b = 1.  # Interval is [-b,b]
-abar = lambda x: 3*np.ones(np.shape(x))
-KLE = KLE_exponential_covariance_1d(dimension, a, b, abar)
-
-diffusion = lambda x, p: KLE(x, p)
-
-N = int(1e2)  # Number of spatial degrees of freedom of model
-left = -1.
-right = 1.
-x = laplace_grid_x(left, right, N)
-
-# model = sine_modulation(N=N)
-model = laplace_ode(left=left, right=right, N=N, diffusion=diffusion)
+N = 100
+x, model = laplace_ode_1d(Nparams, N=N)
 
 # # Building the PCE
 # Generate samples first, then manually query model, then give model output to pce.
-pce = PolynomialChaosExpansion(index_set, dist)
+pce = PolynomialChaosExpansion(distribution=[p1, p2, p3], order=order)
 pce.generate_samples()
 
 print('This will query the model {0:d} times'.format(pce.samples.shape[0]))
@@ -72,28 +53,12 @@ for ind in range(pce.samples.shape[0]):
     model_output[ind, :] = model(pce.samples[ind, :])
 pce.build(model_output=model_output)
 
-# Alternatively, you can just provide the whole model:
-#  pce = PolynomialChaosExpansion(index_set, dist)
-#  pce.generate_samples()
-#  pce.build(model)
-
-# The parameter samples and model evaluations are accessible:
-parameter_samples = pce.samples
-model_evaluations = pce.model_output
-
-# As a sanity check: you could build a second PCE on the same parameter samples
-#  pce2 = PolynomialChaosExpansion(index_set, dist)
-#  pce2.build(model, samples=parameter_samples)
-#
-# # pce and pce2 have the same coefficients:
-#  np.linalg.norm( pce.coefficients - pce2.coefficients )
-
 # # Postprocess PCE: mean, stdev, sensitivities, quantiles
 mean = pce.mean()
 stdev = pce.stdev()
 
 # Power set of [0, 1, ..., dimension-1]
-variable_interactions = list(chain.from_iterable(combinations(range(dimension), r) for r in range(1, dimension+1)))
+variable_interactions = list(chain.from_iterable(combinations(range(Nparams), r) for r in range(1, Nparams+1)))
 
 # "Total sensitivity" is a non-partitive relative sensitivity measure per parameter.
 total_sensitivity = pce.total_sensitivity()
@@ -112,7 +77,7 @@ median = quantiles[-1, :]
 
 # # For comparison: Monte Carlo statistics
 M = 1000  # Generate MC samples
-p_phys = dist.MC_samples(M)
+p_phys = pce.distribution.MC_samples(M)
 output = np.zeros([M, N])
 
 for j in range(M):
@@ -120,7 +85,13 @@ for j in range(M):
 
 MC_mean = np.mean(output, axis=0)
 MC_stdev = np.std(output, axis=0)
-MC_quantiles = np.quantile(output, quantile_levels, axis=0)
+
+if version_lessthan(np, '1.15'):
+    from scipy.stats.mstats import mquantiles
+    MC_quantiles = mquantiles(output, quantile_levels, axis=0)
+else:
+    MC_quantiles = np.quantile(output, quantile_levels, axis=0)
+
 MC_median = quantiles[-1, :]
 
 # # Visualization
