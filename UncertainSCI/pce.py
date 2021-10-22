@@ -2,11 +2,11 @@ from math import floor
 
 import numpy as np
 
-from UncertainSCI.indexing import MultiIndexSet
+from UncertainSCI.indexing import MultiIndexSet, TotalDegreeSet
 from UncertainSCI.distributions import ProbabilityDistribution
 from UncertainSCI.utils.casting import to_numpy_array
 from UncertainSCI.utils.version import version_lessthan
-from UncertainSCI.utils.linalg import lstsq_loocv_error
+from UncertainSCI.utils.linalg import lstsq_loocv_error, weighted_lsq
 
 
 class PolynomialChaosExpansion():
@@ -24,12 +24,28 @@ class PolynomialChaosExpansion():
         samples: The experimental or sample design in stochastic space.
 
     """
-    def __init__(self, index_set=None, distribution=None):
+    def __init__(self, index_set=None, distribution=None, order=None):
 
         self.coefficients = None
         self.accuracy_metrics = {}
-        self.index_set, self.distribution = index_set, distribution
         self.samples = None
+        self.model_output = None
+
+        self.sampling = 'induced'
+        self.training = 'christoffel_lsq'
+
+        if distribution is None:
+            raise ValueError('A distribution must be specified')
+        else:
+            self.distribution = distribution
+
+        if index_set is None:
+            if order is None:
+                raise ValueError('Either "index_set" or "order" must be specified')
+            else:
+                self.index_set = TotalDegreeSet(dim=distribution.dim, order=order)
+        else:
+            self.index_set = index_set
 
     def set_indices(self, index_set):
         """Sets multi-index set for polynomial approximation.
@@ -69,19 +85,26 @@ class PolynomialChaosExpansion():
         if self.index_set is None:
             raise ValueError('First set indices with set_indices')
 
-    def generate_samples(self, new_samples=None, sample_type='wafp',
-                         **sampler_options):
+    def set_samples(self, samples):
+        if samples.shape[1] != self.index_set.get_indices().shape[1]:
+                raise ValueError('Input parameter samples '
+                                 'have wrong dimension')
+
+        self.samples = samples
+
+    def generate_samples(self, new_samples=None, **sampler_options):
         """Generates sample/experimental design for use in PCE construction.
 
-        Args:
-            sample_type: A string indicating the type of random sampling to
-             use. Currently only 'wafp' is supported.
+        Parameters:
+            new_samples (array-like, optional): Specifies samples that must be
+                part of the ensemble.
         """
 
         self.check_distribution()
         self.check_indices()
 
-        if sample_type.lower() == 'wafp':
+        #if sample_type.lower() == 'wafp':
+        if self.sampling.lower() == 'induced':
             if new_samples is None:
                 p_standard = self.distribution.polys.wafp_sampling(
                                self.index_set.get_indices(), **sampler_options)
@@ -107,71 +130,47 @@ class PolynomialChaosExpansion():
 
         else:
             raise ValueError("Unsupported sample type '{0}' for input\
-                              sample_type".format(sample_type))
+                              sample_type".format(self.sampling))
 
-    def build_pce_wafp(self, model=None, model_output=None, samples=None,
-                       **sampler_options):
-        """Computes PCE coefficients.
-
-        Uses a weighted approximate Fekete point design to compute a
-        least-squares collocation solution.
-
-        Args:
-            model: A pointer to a function with the syntax xi ---> model(xi),
-              which returns a vector corresponding to the model evaluated at
-              the stochastic parameter value xi. The input xi to the model
-              function should be a vector of size self.dim, and the output
-              should be a 1D numpy array. If model_output is None, this is
-              required. If model_output is given, this is ignored.
-            model_output: A numpy.ndarray corresponding to the output of the
-              model at the sample locations specified by self.samples. This is
-              required if the input model is None.
-            samples: A numpy.ndarray containing a specific sample design. This
-              array should satisfy self.dim == samples.shape[1].
-        Returns:
-            numpy.ndarray: A vector containing a weighted sum-of-squares
-              residual for the PCE construction. The size of this vector equals
-              the size of the output from the model function.
-
+    def integration_weights(self):
         """
+        Generates sample weights associated to integration."
+        """
+        
+        if self.training == 'christoffel_lsq':
 
-        self.check_distribution()
-        self.check_indices()
+            p_standard = self.distribution.transform_standard_dist_to_poly.map(
+                        self.distribution.transform_to_standard.map(self.samples))
 
-        # Samples on standard domain
-        if samples is None:
+            V = self.distribution.polys.eval(p_standard,
+                                             self.index_set.get_indices())
 
-            if self.samples is None:
-                self.generate_samples(sample_type='wafp', **sampler_options)
-            else:
-                pass  # User didn't specify samples now, but did previously
+            weights = self.training_weights()
 
+            # Should replace with more well-conditioned procedure
+            rhs = np.zeros(V.shape[1])
+            ind = np.where(np.linalg.norm(self.index_set.get_indices(), axis=1)==0)[0]
+            rhs[ind] = 1.
+            b = np.linalg.solve((V.T @ np.diag(weights) @ V), rhs)
+
+            return weights * (V @ b)
+
+    def training_weights(self):
+        """
+        Generates sample weights associated to training.
+        """
+        
+        if self.training == 'christoffel_lsq':
+
+            p_standard = self.distribution.transform_standard_dist_to_poly.map(
+                        self.distribution.transform_to_standard.map(self.samples))
+
+            V = self.distribution.polys.eval(p_standard,
+                                             self.index_set.get_indices())
+
+            return 1/(np.sum(V**2, axis=1))
         else:
-            if samples.shape[1] != self.index_set.get_indices().shape[1]:
-                raise ValueError('Input parameter samples'
-                                 ' have wrong dimension')
-
-            self.samples = samples
-
-        if model_output is None:
-
-            if model is None:
-                raise ValueError('Must input argument "model"')
-            else:
-                self.model = model
-
-            for ind in range(self.samples.shape[0]):
-                if model_output is None:
-                    model_output = model(self.samples[ind, :])
-                    M = model_output.size
-                    model_output = np.concatenate([model_output.reshape([1, M]),
-                                                  np.zeros([self.samples.shape[0]-1, M])], axis=0)
-                else:
-                    model_output[ind, :] = model(self.samples[ind, :])
-
-        self.model_output = model_output
-
-        return self.build_pce_wlsq()
+            raise ValueError('Unrecongized training directive "{0:s}"'.format(self.training))
 
     def build_pce_wlsq(self):
         """
@@ -186,17 +185,16 @@ class PolynomialChaosExpansion():
                                          self.index_set.get_indices())
 
         # Precondition for stability
-        norms = 1/np.sqrt(np.sum(V**2, axis=1))
-        V = np.multiply(V.T, norms).T
-        model_output = np.multiply(self.model_output.T, norms).T
+        weights = self.training_weights()
+        #if self.training == 'christoffel_lsq':
+        #    norms = 1/(np.sum(V**2, axis=1))
+        #else:
+        #    raise ValueError('Unrecongized training directive "{0:s}"'.format(self.training))
 
-        if version_lessthan(np, '1.14.0'):
-            coeffs, residuals = np.linalg.lstsq(V, model_output, rcond=-1)[:2]
-        else:
-            coeffs, residuals = np.linalg.lstsq(V, model_output, rcond=None)[:2]
+        coeffs, residuals = weighted_lsq(V, self.model_output, weights)
 
-        self.accuracy_metrics['loocv'] = lstsq_loocv_error(V, model_output,
-                                                           1/norms**2)
+        self.accuracy_metrics['loocv'] = lstsq_loocv_error(V, self.model_output,
+                                                           weights)
         self.accuracy_metrics['residuals'] = residuals
 
         self.coefficients = coeffs
@@ -336,8 +334,8 @@ class PolynomialChaosExpansion():
                 of number of added indices. Nsamples = Nindices + add_rule.
                 Defaults to None.
             mult_rule (float): Specifies number of samples added as a function
-                of number of added indices. Nsamples = int(Nindices * add_rule).
-                Defaults to None.
+                of number of added indices. Nsamples = 
+                int(Nindices * add_rule).  Defaults to None.
         """
 
         if (max_new_samples is not None) and (max_new_indices is not None):
@@ -430,8 +428,42 @@ class PolynomialChaosExpansion():
             None:
         """
 
+        self.check_distribution()
+        self.check_indices()
+
+        # Samples on standard domain
+        if self.samples is None:
+            self.generate_samples(**options)
+        else:
+            pass  # User didn't specify samples now, but did previously
+
+        if self.model_output is None:  # We need to generate data
+            if model_output is None:
+
+                if model is None:
+                    raise ValueError('Must input argument "model" or "model_output".')
+                else:
+                    self.model = model
+
+                for ind in range(self.samples.shape[0]):
+                    if model_output is None:
+                        model_output = model(self.samples[ind, :])
+                        M = model_output.size
+                        model_output = np.concatenate([model_output.reshape([1, M]),
+                                                      np.zeros([self.samples.shape[0]-1, M])], axis=0)
+                    else:
+                        model_output[ind, :] = model(self.samples[ind, :])
+
+            self.model_output = model_output
+
+        else:
+            pass  # We'll assume the user did things correctly.
+
         # For now, we only have 1 method:
-        return self.build_pce_wafp(model=model, model_output=model_output, **options)
+        if self.training == 'christoffel_lsq':
+            return self.build_pce_wlsq()
+        else:
+            raise ValueError('Unrecongized training directive "{0:s}"'.format(self.training))
 
     def assert_pce_built(self):
         if self.coefficients is None:
@@ -491,6 +523,8 @@ class PolynomialChaosExpansion():
                                                        self.index_set.
                                                             get_indices()),
                                                        self.coefficients[:, components])
+
+    eval = pce_eval
 
     def quantile(self, q, M=100):
         """
