@@ -449,7 +449,8 @@ class PolynomialChaosExpansion():
         Mold = self.samples.shape[0]
         Nsamples = samplefun(Nindices)
 
-        self.generate_samples(new_samples=Nsamples, weights=weights)
+        self.weights = weights
+        self.generate_samples(new_samples=Nsamples)
 
         # Resample model
         self.model_output = np.vstack((self.model_output,
