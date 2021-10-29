@@ -1,3 +1,4 @@
+import warnings
 from math import floor
 
 import numpy as np
@@ -10,7 +11,7 @@ from UncertainSCI.utils.version import version_lessthan
 from UncertainSCI.utils.linalg import lstsq_loocv_error, weighted_lsq
 from UncertainSCI.sampling import mixture_tensor_discrete_sampling
 
-valid_training_strigs = ['christoffel_lsq', 'wlsq']
+valid_training_types = ['christoffel_lsq', 'wlsq']
 valid_sampling_types = ['induced', 'gq', 'gq-induced', 'greedy-induced', 'greedy-gq-induced']
 
 sampling_options = {'induced': [],
@@ -200,6 +201,10 @@ class PolynomialChaosExpansion():
             self.weights = w
 
         elif self.sampling.lower() == 'gq-induced':
+
+            K = self.sampling_options.get('K')
+            if K is None:
+                raise ValueError("The sampling option 'K' must be specified for induced sampling on Gauss quadrature grids.")
 
             p_standard = self.distribution.opolys.idist_gq_sampling(K, self.indices, M=self.sampling_options.get('M'))
 

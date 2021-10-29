@@ -29,6 +29,11 @@ def discrete_sampling(N, probs, states):
 
     return x
 
+# TODO: use numpy.choice, scipy.stats.discrete_rv
+def choice(a, size=1, p=None):
+    if p is None:
+        p = np.ones(len(a))/len(a)
+    return discrete_sampling(size, p, a)
 
 if __name__ == "__main__":
 

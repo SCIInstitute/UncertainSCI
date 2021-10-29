@@ -4,8 +4,7 @@ import numpy as np
 from scipy import special as sp
 from scipy.special import comb
 
-from UncertainSCI.utils.prob import discrete_sampling
-
+from UncertainSCI.utils.prob import discrete_sampling, choice
 
 def hyperbolic_cross_indices(d, k):
     """
@@ -239,7 +238,7 @@ class MultiIndexSet():
 
         assert n > 0
 
-        index_choices = random.choice(range(self.indices.shape[0]), size=n)
+        index_choices = choice(range(self.indices.shape[0]), size=n)
         return self.indices[index_choices,:]
 
     def size(self):

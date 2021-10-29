@@ -192,7 +192,7 @@ class TensorialPolynomials:
             # Measures
             kj = max_degrees[j]+1
             weights[j] = np.zeros([grids[j].size, kj])
-            V = self.polys1d[j].eval(x, range(max_degrees[j]+1))**2
+            V = self.polys1d[j].eval(grids[j], range(max_degrees[j]+1))**2
             V = V * (np.tile(w, [kj, 1]).T)
 
             for k in range(kj):

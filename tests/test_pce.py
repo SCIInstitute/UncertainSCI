@@ -40,7 +40,7 @@ class PCETestCase(unittest.TestCase):
         pce = PolynomialChaosExpansion(indices, dist)
 
         pce.sampling_options = {'fast_sampler': False}
-        #lsq_residuals = pce.build(mymodel, fast_sampler=False)
+        # lsq_residuals = pce.build(mymodel, fast_sampler=False)
         lsq_residuals = pce.build(mymodel)
         reserror = np.linalg.norm(lsq_residuals)
         msg = 'Failed for (M, alpha, beta)=({0:d}, '\
