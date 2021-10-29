@@ -54,14 +54,50 @@ bibliography: paper.bib
 
 # Summary
 
+We have developed UncertainSCI \cite{JDT:USCI} as an open source, flexible,
+and easy to use tool to make modern UQ techniques more accessible in
+biomedical simulation application. By implementing UncertainSCI in Python
+and a noninvasive interface we were able to meet our software design goals
+of 1) numerical accuracy, 2) simple application programming interface
+(API), 3) adaptability to many applications and methods, and 4) interfacing
+with diverse simulation software. In this paper we describe the
+architecture of UncertainSCI and demonstrate its capability with ECG forward simulations utilizing  BEM and FEM, and a transcranial direct current stimulation (tDCS) examples.  
 
+We utilized the popularity and low barrier-to-entry of Python and its
+common packages to meet some of our design goals. Many software packages
+and language have built in support for Python, either through hard disk
+exchange or a more integrated strategy, therefore we created an interface
+that is non-invasive to the modeling software and can be called in diverse
+ways. Using this interface, users can initiate the UQ modeling pipeline in
+UncertainSCI, pass relevant parameters to the modeling software of choice,
+then pull the model solutions into UncertainSCI to compute statistics on
+the uncertainty of the model.
 
+UncertainSCI's architecture was designed to allow easy to access for users
+and other software and expandable as new UQ methods are needed. This is
+accomplished by having two main types of classes, for each distribution to
+model and UQ method, and a series of mathematical and utility helper
+libraries. The distribution classes are to facilitate characterizing data
+as inputs into UQ methods like polynomial chaos expansion
+(PCE)\cite{JDT:Bur2020}. Each method class has an API to add input
+distributions and parameters, and to extract relevant statistics of model
+uncertainty.
 
 
 # Statement of need
 
+Biomedical computer models include many input parameters and each
+produces a possible error that propagates through the model. Quantification
+and control of these errors through uncertainty quantification (UQ) provide
+sensitivity information, a critical component when evaluating the relative
+impact of parameter variation on the solution accuracy. While the need and
+importance of UQ in clinical modeling is generally accepted, tools for
+implementing UQ techniques remains evasive for many researchers.
+
 
 # Mathematics
+
+
 
 
 
