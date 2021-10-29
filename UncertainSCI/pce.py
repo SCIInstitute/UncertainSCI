@@ -1,4 +1,5 @@
 import warnings
+from itertools import chain, combinations
 from math import floor
 
 import numpy as np
@@ -663,15 +664,40 @@ class PolynomialChaosExpansion():
 
         return total_sensitivities
 
-    def global_sensitivity(self, dim_lists=None, vartol=1e-16):
+    def global_sensitivity(self, dim_lists=None, interaction_orders=None, vartol=1e-16):
         """
         Computes global sensitivity associated to dimensional indices dim_lists
         from PCE coefficients.
 
         dim_lists should be a list of index lists. The global sensitivity for each
         index list is returned.
+
+        interaction_orders (list): Computes sensitivities corresponding to
+        variable interactions for the specified orders. E.g., order 2 implies
+        binary interactions, 3 is ternary interactions, [2,3] computes both of
+        these orders.
+
         The output is len(dim_lists) x self.coefficients.shape[1]
         """
+
+        d = self.distribution.dim
+
+        return_dim_lists = True
+        # If dim_lists is given, ignore interaction_orders
+        if dim_lists is not None:
+            if interaction_orders is not None:
+                print("Ignoring input 'interaction_orders' since 'dim_lists' \
+                       was specified.")
+            return_dim_lists = False
+        else:
+            if interaction_orders is None: # Assume all interactions are requested
+                interaction_orders = range(1, d+1)
+            else:
+                try:
+                    iter(interaction_orders)
+                except: # Assume an int is given
+                    interaction_orders = [interaction_orders,]
+            dim_lists = list(chain.from_iterable(combinations(range(d), r) for r in interaction_orders))
 
         # unique_rows = np.vstack({tuple(row) for row in lambdas})
         # # Just making sure
@@ -696,7 +722,10 @@ class PolynomialChaosExpansion():
             global_sensitivities[qj, ~zerovar] = np.sum(self.coefficients[np.ix_(inds, ~zerovar)]**2,
                                                         axis=0) / variance[~zerovar]
 
-        return global_sensitivities
+        if return_dim_lists:
+            return global_sensitivities, dim_lists
+        else: 
+            return global_sensitivities
 
     def global_derivative_sensitivity(self, dim_list):
         """

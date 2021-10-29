@@ -2,8 +2,6 @@
 
 import pdb
 
-from itertools import chain, combinations
-
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -57,14 +55,11 @@ pce.build(model_output=model_output)
 mean = pce.mean()
 stdev = pce.stdev()
 
-# Power set of [0, 1, ..., dimension-1]
-variable_interactions = list(chain.from_iterable(combinations(range(Nparams), r) for r in range(1, Nparams+1)))
-
 # "Total sensitivity" is a non-partitive relative sensitivity measure per parameter.
 total_sensitivity = pce.total_sensitivity()
 
 # "Global sensitivity" is a partitive relative sensitivity measure per set of parameters.
-global_sensitivity = pce.global_sensitivity(variable_interactions)
+global_sensitivity, variable_interactions = pce.global_sensitivity()
 
 Q = 3  # Number of quantile bands to plot
 dq = 0.5/(Q+1)
