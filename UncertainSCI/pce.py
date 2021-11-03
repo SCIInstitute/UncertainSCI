@@ -39,7 +39,7 @@ class PolynomialChaosExpansion():
 
     """
     def __init__(self, index_set=None, distribution=None, order=None,
-                       sampling='induced', training='wlsq',
+                       sampling='greedy-induced', training='wlsq',
                        **kwargs):
 
         self.coefficients = None
@@ -172,7 +172,7 @@ class PolynomialChaosExpansion():
         self.check_indices()
         self.check_sampling()
 
-        if self.sampling.lower() == 'induced':
+        if self.sampling.lower() == 'greedy-induced':
             if new_samples is None:
                 p_standard = self.distribution.polys.wafp_sampling(
                                self.index_set.get_indices(), **self.sampling_options)
@@ -198,7 +198,7 @@ class PolynomialChaosExpansion():
                 raise ValueError("The sampling option 'M' must be specified for Gauss quadrature sampling.")
 
             p_standard, w = self.distribution.polys.tensor_gauss_quadrature(M)
-            self.samples = self.map_to_model_space(x)
+            self.samples = self.map_to_model_space(p_standard)
             self.weights = w
 
         elif self.sampling.lower() == 'gq-induced':
