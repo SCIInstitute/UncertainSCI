@@ -10,6 +10,8 @@ from UncertainSCI.model_examples import laplace_ode_1d
 from UncertainSCI.pce import PolynomialChaosExpansion
 from UncertainSCI.utils.version import version_lessthan
 
+from UncertainSCI.vis import piechart_sensitivity
+
 # # 3 things must be specified:
 # - A parameter distribution
 # - The capacity of the PCE model (here, polynomial space)
@@ -24,6 +26,8 @@ Nparams = 3
 p1 = BetaDistribution(alpha=0.5, beta=1.)
 p2 = BetaDistribution(alpha=1., beta=0.5)
 p3 = BetaDistribution(alpha=1., beta=1.)
+
+plabels = ['a', 'b', 'z']
 
 # # Polynomial order
 order = 5
@@ -41,7 +45,7 @@ x, model = laplace_ode_1d(Nparams, N=N)
 
 # # Building the PCE
 # Generate samples first, then manually query model, then give model output to pce.
-pce = PolynomialChaosExpansion(distribution=[p1, p2, p3], order=order)
+pce = PolynomialChaosExpansion(distribution=[p1, p2, p3], order=order, plabels=plabels)
 pce.generate_samples()
 
 print('This will query the model {0:d} times'.format(pce.samples.shape[0]))
@@ -145,13 +149,15 @@ plt.xlabel('x')
 plt.legend(loc='lower right')
 
 # Sensitivity pie chart, averaged over all model degrees of freedom
-average_global_SI = np.sum(global_sensitivity, axis=1)/N
+piechart_sensitivity(pce)
 
-labels = ['[' + ' '.join(str(elem) for elem in [i+1 for i in item]) + ']' for item in variable_interactions]
-_, ax = plt.subplots()
-ax.pie(average_global_SI*100, labels=labels, autopct='%1.1f%%',
-       startangle=90)
-ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-plt.title('Sensitivity due to variable interactions')
-
-plt.show()
+#average_global_SI = np.sum(global_sensitivity, axis=1)/N
+#
+#labels = ['[' + ' '.join(str(elem) for elem in [i+1 for i in item]) + ']' for item in variable_interactions]
+#_, ax = plt.subplots()
+#ax.pie(average_global_SI*100, labels=labels, autopct='%1.1f%%',
+#       startangle=90)
+#ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+#plt.title('Sensitivity due to variable interactions')
+#
+#plt.show()

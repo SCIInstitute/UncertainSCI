@@ -39,8 +39,8 @@ class PolynomialChaosExpansion():
 
     """
     def __init__(self, index_set=None, distribution=None, order=None,
-                       sampling='greedy-induced', training='wlsq',
-                       **kwargs):
+                       plabels=None, sampling='greedy-induced', 
+                       training='wlsq', **kwargs):
 
         self.coefficients = None
         self.accuracy_metrics = {}
@@ -60,6 +60,15 @@ class PolynomialChaosExpansion():
                 self.distribution = TensorialDistribution(distribution)
             except:
                 raise ValueError('Invalid distribution specification')
+
+        if plabels is None:
+            self.plabels = [str(val+1) for val in range(self.distribution.dim)]
+        else:
+            if len(plabels) != self.distribution.dim:
+                raise ValueError('Parameter labels input "plabels" must have \
+                                  same size as number of parameters in given \
+                                  input "distribution"')
+            self.plabels = plabels
 
         if index_set is None:
             if order is None:
