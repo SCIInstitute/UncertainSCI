@@ -54,51 +54,29 @@ bibliography: paper.bib
 
 # Summary
 
-We have developed UncertainSCI \cite{JDT:USCI} as an open source, flexible,
-and easy to use tool to make modern UQ techniques more accessible in
-biomedical simulation application. By implementing UncertainSCI in Python
-and a noninvasive interface we were able to meet our software design goals
-of 1) numerical accuracy, 2) simple application programming interface
-(API), 3) adaptability to many applications and methods, and 4) interfacing
-with diverse simulation software. In this paper we describe the
-architecture of UncertainSCI and demonstrate its capability with ECG forward simulations utilizing  BEM and FEM, and a transcranial direct current stimulation (tDCS) examples.  
-
-We utilized the popularity and low barrier-to-entry of Python and its
-common packages to meet some of our design goals. Many software packages
-and language have built in support for Python, either through hard disk
-exchange or a more integrated strategy, therefore we created an interface
-that is non-invasive to the modeling software and can be called in diverse
-ways. Using this interface, users can initiate the UQ modeling pipeline in
-UncertainSCI, pass relevant parameters to the modeling software of choice,
-then pull the model solutions into UncertainSCI to compute statistics on
-the uncertainty of the model.
-
-UncertainSCI's architecture was designed to allow easy to access for users
-and other software and expandable as new UQ methods are needed. This is
-accomplished by having two main types of classes, for each distribution to
-model and UQ method, and a series of mathematical and utility helper
-libraries. The distribution classes are to facilitate characterizing data
-as inputs into UQ methods like polynomial chaos expansion
-(PCE)\cite{JDT:Bur2020}. Each method class has an API to add input
-distributions and parameters, and to extract relevant statistics of model
-uncertainty.
-
+We have developed UncertainSCI \cite{JDT:USCI} as an open source tool designed to make modern uncertatinty quantification (UQ) techniques more accessible in biomedical simulation application. UncertainSCI is implemented in Python with a noninvasive interface to meet our software design goals of 1) numerical accuracy, 2) simple application programming interface (API), 3) adaptability to many applications and methods, and 4) interfacing with diverse simulation software.  Using a Python implementation in UncertainSCI allowed us to utilize the popularity and low barrier-to-entry of Python and its common packages and to leverage the built in integration and support for Python in common simulation software packages and languages. Additionally, we used non-invasive UQ techniqued and created an similarly non-invasive interface to external modeling software and can be called in diverse ways, depending on the complexity and level of Python integration of the external simulation pipeline. We have developed and included examples applying UQ relatively simple 1D simulations implemented in python and to bioelectric field simulations implemented in external software packages to demonstrate the use of UncertainSCI and the effectiveness of the archetecture and implementation in achieving our design goals.
 
 # Statement of need
 
-Biomedical computer models include many input parameters and each
-produces a possible error that propagates through the model. Quantification
-and control of these errors through uncertainty quantification (UQ) provide
-sensitivity information, a critical component when evaluating the relative
-impact of parameter variation on the solution accuracy. While the need and
-importance of UQ in clinical modeling is generally accepted, tools for
-implementing UQ techniques remains evasive for many researchers.
+Biomedical computer models include many input parameters and each produces a possible error that propagates through the model. Quantification and control of these errors through UQ provide sensitivity information, a critical component when evaluating the relative impact of parameter variation on the solution accuracy. While the need and importance of UQ in clinical modeling is generally accepted, tools for implementing UQ techniques remains evasive for many researchers.
 
 
 # Mathematics
 
+In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial Chaos expansions (PCE). [] Such an approach attempts to approximate the dependence of a quantity of interest (QoI) on a finite number of random parameters via a multivariate polynomial function of those parameters. This approximation is an emulator for the associated forward problem. Once this approximation is constructed, then statistics of the QoI, including the mean, variance, and parameter sensitivities, are computed via straightforward, computationally efficient manipulations of the polynomial. One non-intrusive strategy to construct this polynomial dependence is through least-squares approximation, where data for the least-squares problem is collected through an ensemble of simulations of the forward model. 
 
+For a fixed number of data points, the stability and accuracy of the PCE emulator is known to depend on the experimental design. UncertainSCI constructs this design through the procedure of Weighted Approximate Fekete Points (WAFP), which computes a geometrically unstructured experiment as a special type of D-optimal (determinant-maximizing) design. More precisely, the design is computed through a greedy algorithm that iteratively adds parametric samples that maximize a matrix determinant. The maximization is computed over a discrete candidate set; generating this candidate set via Monte Carlo sampling from the distribution of the parameter is known to produce suboptimal sets. UncertainSCI computes the candidate set by sampling from the induced distribution, which exploits a concentration of measurable phenomena to provably increase the quality of the candidate set. Sampling from the induced distribution for in- dependent parameters is computationally efficient, having complexity that is linear in the dimension (number of parameters).
 
+Once the experimental design is created through the WAFP procedure with induced distribution sampling, an ensemble of forward simulations is collected from the simulation software, and UncertainSCI produces a PCE emulator through a (weighted) least-squares procedure. From this least-squares procedure, UncertainSCI also can compute residuals and cross-validation metrics, and can adaptively tune the expressivity of the PCE emulator based on a userprescribed tolerance and/or computational budget.
+
+\cite{JDT:Bur2020}
+
+# Architecture
+
+We utilized the popularity and low barrier-to-entry of Python and its
+common packages to meet some of our design goals. Many software packages
+and language have built in support for Python, either through hard disk
+exchange or a more integrated strategy, therefore 
 
 
 # Citations
