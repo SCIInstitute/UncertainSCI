@@ -63,21 +63,13 @@ Biomedical computer models include many input parameters and each produces a pos
 
 # Mathematics
 
-In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial Chaos expansions (PCE). [] Such an approach attempts to approximate the dependence of a quantity of interest (QoI) on a finite number of random parameters via a multivariate polynomial function of those parameters. This approximation is an emulator for the associated forward problem. Once this approximation is constructed, then statistics of the QoI, including the mean, variance, and parameter sensitivities, are computed via straightforward, computationally efficient manipulations of the polynomial. One non-intrusive strategy to construct this polynomial dependence is through least-squares approximation, where data for the least-squares problem is collected through an ensemble of simulations of the forward model. 
+In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial Chaos expansions (PCE). [] PCE attempts to approximate the dependence of a quantity of interest (QoI) on a finite number of random parameters via a multivariate polynomial function of those parameters. The polynomial function constitutes an emulator, from which statistics of the QoI, including the mean, variance, and parameter sensitivities, are computed via straightforward, computationally efficient manipulations of the polynomial. One non-intrusive strategy to construct this polynomial dependence is through least-squares approximation, where data for the least-squares problem is collected through an ensemble of simulations of the forward model. 
 
 For a fixed number of data points, the stability and accuracy of the PCE emulator is known to depend on the experimental design. UncertainSCI constructs this design through the procedure of Weighted Approximate Fekete Points (WAFP), which computes a geometrically unstructured experiment as a special type of D-optimal (determinant-maximizing) design. More precisely, the design is computed through a greedy algorithm that iteratively adds parametric samples that maximize a matrix determinant. The maximization is computed over a discrete candidate set; generating this candidate set via Monte Carlo sampling from the distribution of the parameter is known to produce suboptimal sets. UncertainSCI computes the candidate set by sampling from the induced distribution, which exploits a concentration of measurable phenomena to provably increase the quality of the candidate set. Sampling from the induced distribution for in- dependent parameters is computationally efficient, having complexity that is linear in the dimension (number of parameters).
 
 Once the experimental design is created through the WAFP procedure with induced distribution sampling, an ensemble of forward simulations is collected from the simulation software, and UncertainSCI produces a PCE emulator through a (weighted) least-squares procedure. From this least-squares procedure, UncertainSCI also can compute residuals and cross-validation metrics, and can adaptively tune the expressivity of the PCE emulator based on a userprescribed tolerance and/or computational budget.
 
 \cite{JDT:Bur2020}
-
-# Architecture
-
-We utilized the popularity and low barrier-to-entry of Python and its
-common packages to meet some of our design goals. Many software packages
-and language have built in support for Python, either through hard disk
-exchange or a more integrated strategy, therefore 
-
 
 # Citations
 
