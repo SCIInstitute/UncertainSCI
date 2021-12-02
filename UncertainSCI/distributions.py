@@ -749,7 +749,6 @@ class BetaDistribution(ProbabilityDistribution):
 
             return
 
-        #elif domain is not None and domain.shape[1] > 1:  # Case 3
         elif domain is not None and len(domain.shape) > 1:  # Case 3
             self.dim = domain.shape[1]
             self.alpha = [alpha[0] for i in range(self.dim)]
