@@ -263,8 +263,6 @@ class PolynomialChaosExpansion():
         and model output.
         """
 
-        #p_standard = self.distribution.transform_standard_dist_to_poly.map(
-        #            self.distribution.transform_to_standard.map(self.samples))
         p_standard = self.map_to_standard_space(self.samples)
 
         V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
