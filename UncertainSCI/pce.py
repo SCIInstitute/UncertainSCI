@@ -18,7 +18,7 @@ valid_sampling_types = ['induced', 'gq', 'gq-induced', 'greedy-induced', 'greedy
 sampling_options = {'induced': [],
                     'gq': ['M'],
                     'gq-induced': ['M'],
-                    'greedy-induced': [],
+                    'greedy-induced': ['oversampling'],
                     'greedy-gq-induced': ['M']}
 
 training_options = {'wlsq': []}
@@ -80,8 +80,12 @@ class PolynomialChaosExpansion():
                 warnings.warn("Both inputs 'order' and 'index_set' specified. Ignoring 'order'.")
             self.index_set = index_set
 
-        self.sampling_options = {key: kwargs[key] for key in sampling_options[self.sampling]}
-        self.training_options = {key: kwargs[key] for key in training_options[self.training]}
+        self.sampling_options = {key: kwargs[key] \
+                                 for key in sampling_options[self.sampling] \
+                                 if key in kwargs.keys()}
+        self.training_options = {key: kwargs[key] \
+                                 for key in training_options[self.training] \
+                                 if key in kwargs.keys()}
 
     def check_training(self):
         """Determines if a valid training type has been specified."""
@@ -169,7 +173,7 @@ class PolynomialChaosExpansion():
         return self.distribution.transform_to_standard.mapinv(
                 self.distribution.transform_standard_dist_to_poly.mapinv(p))
 
-    def generate_samples(self, new_samples=None):
+    def generate_samples(self, **kwargs):
         """Generates sample/experimental design for use in PCE construction.
 
         Parameters:
@@ -180,6 +184,15 @@ class PolynomialChaosExpansion():
         self.check_distribution()
         self.check_indices()
         self.check_sampling()
+
+        if 'new_samples' in kwargs.keys():
+            new_samples = kwargs['new_samples']
+        else:
+            new_samples = None
+
+        for key in kwargs.keys():
+            if key in sampling_options[self.sampling]:
+                self.sampling_options[key] = kwargs[key]
 
         if self.sampling.lower() == 'greedy-induced':
             if new_samples is None:

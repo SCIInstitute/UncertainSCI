@@ -1,7 +1,5 @@
 # Demonstrates generation of a PCE for a simple model
 
-import pdb
-
 from itertools import chain, combinations
 
 import numpy as np
