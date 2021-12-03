@@ -39,7 +39,7 @@ class PolynomialChaosExpansion():
 
     """
     def __init__(self, index_set=None, distribution=None, order=None,
-                       plabels=None, sampling='greedy-induced', 
+                       plabels=None, sampling='greedy-induced',
                        training='wlsq', **kwargs):
 
         self.coefficients = None
