@@ -343,9 +343,10 @@ class MultiIndexSet():
             candidates = np.tile(self.indices[m, :], [d, 1]) +\
                          np.eye(d, dtype=self.indices.dtype)
             membership_flags = ~self.isamember(candidates)
-            margin = np.unique(
-                      np.append(margin, candidates[membership_flags, :], axis=0),
-                      axis=0)
+            if candidates[membership_flags, :].size > 0:
+                margin = np.unique(
+                          np.append(margin, candidates[membership_flags, :], axis=0),
+                          axis=0)
 
         return margin
 
