@@ -1,5 +1,5 @@
 ---
-title: 'UncertainSCI: A Python Package fro Noninvasive Uncertainty Quantification of Simulation Pipelines'
+title: 'UncertainSCI: A Python Package for Noninvasive Parametric Uncertainty Quantification of Simulation Pipelines'
 tags:
   - Python
   - uncertainty quantification
@@ -58,16 +58,28 @@ We have developed UncertainSCI [@USCI] as an open source tool designed to make m
 
 # Statement of need
 
-Biomedical computer models include many input parameters and variation of each can propagate through a model to produce a subsequently varying output. Quantification and control of these errors through UQ provides statistics and sensitivity information, a critical component when evaluating the relative impact of parameter variation on the solution accuracy. While the need and importance of UQ in clinical modeling is generally accepted, tools for implementing UQ techniques remains evasive for many researchers.
+Biomedical computer models include many input parameters that do not precisely defined values, e.g., since their value defines physiological processes that are not uniform across patients. As such, any simulation model output necessarily has some uncertainty associated with the uncertain value of the parameter. Exploration and quantification of this model ouptut uncertainty is challenging when more than a single parameter is present; biomedical computer models often have 5-20 such parameters. Quantification of this uncertainty through UQ techniques provides statistics and sensitivity information, a critical component when evaluating the relative impact of parameter variation on the solution accuracy. While the need and importance of UQ in clinical modeling is generally accepted, autmated tools for implementing UQ techniques remains evasive for many researchers.
 
 
 # Mathematics
 
-In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial Chaos expansions (PCE) [@ACN:Xiu2010]. PCE attempts to approximate the dependence of a quantity of interest (QoI) from the forward simulation on a finite number of random parameters via a multivariate polynomial function of those parameters. The polynomial function constitutes an emulator, from which statistics of the QoI, including the mean, variance, and parameter sensitivities, are efficiently computed from the polynomial. UncertainSCI uses  a non-intrusive strategy to construct this polynomial dependence through least-squares approximation, where data for the least-squares problem is collected through an ensemble of simulations of the forward model. 
+In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial Chaos expansions (PCE) [@ACN:Xiu2010]. PCE approximates the dependence of a quantity of interest (QoI) that is the model output from the forward simulation on a finite number of random parameters via a multivariate polynomial function of those parameters. With $u$ the QoI (scalar-valued for simplicity), and $p \in \mathbb{R}^d$ the vector of uncertain parameters, the PCE approach builds the function $u_N$, given as,
+\begin{align}
+  u(p) \approx u_N(p) = \sum_{j=1}^N c_j \phi_j(p),
+\end{align}
+where the $\{\phi_j\}_{j=1}^N$ functions are multivariate polynomials, and the coefficients $\{c_j\}_{j=1}^N$ are learned through an ensemble of collected data,
+\begin{align}\label{eq:training}
+  \left\{ p_j\right\}_{j=1}^M \xrightarrow[\textrm{Forward model $u$}]{} \left\{ u(p_j) \right\}_{j=1}^M \xrightarrow[\textrm{Emulator training}]{} \left\{c_j\right\}_{j=1}^N.
+\end{align}
+Typically one seeks convergence of $u_N$ to $u$ in an $L^2$-type norm weighted by the probability density of the parameters $p$. The polynomial function $u_N$ constitutes an emulator for QoI $u$, from which statistics of the QoI, including the mean, variance, and parameter sensitivities, are efficiently computed from the polynomial. UncertainSCI uses a particular type of pseudo-random sampling for the parameter design $\{p_j\}_{j=1}^M$, along with a particular weighted least-squares approach for emulator training, both of which are recently developed advances in high-dimensional approximation. The entire procedure \eqref{eq:training} is non-intrusive, since the forward model need only be queried at a particular set of samples.
 
-The efficiency of PCE to comput UQ of a forward simulation depends on efficient selection of parameter samples, or experimental design.  UncetainSCI strategically samples the parameter space  the procedure of Weighted Approximate Fekete Points (WAFP) [ACN:Guo2018,@JDT:Burk:2020], which computes a geometrically unstructured parametric design of experiments as a special type of weighted D-optimal (determinant-maximizing) design.  More precisely, the design is computed through a greedy algorithm that iteratively adds parametric samples that maximize a weighted matrix determinant.  The maximization is computed over a discrete candidate set compute by random sampling from a specially tailored probability that exploits a concentration of measurable phenomena to provably increase the quality of the candidate set [ACN:Coh2017].  Sampling from this induced distribution for independent parameters is computationally efficient, having complexity that is linear in the number of parameters [ACN:Nar2018].
+The efficiency of PCE to compute UQ of a forward simulation depends on efficient selection of parameter samples, or parametric experimental design.  The goal is to use as few samples $M$ as possible while still ensuring that $u_N$ is an accurate emulator for $u$. UncertainSCI uses a two-step approach to strategically sample the parameter space:
+- First a discrete candidate set is generated via random sampling with respect to a ''biased'' probability measure $\mu$, that is distinct from (but related to) the probability distribution of the parameter $p$.
+- Second, a weighted D-optimal design is sought by subsampling this discrete candidate set. UncertainSCI uses a greedy approach to produce an approximation to such a design.
 
-Once the experimental design is created through the WAFP procedure with induced distribution sampling, an ensemble of forward simulations is collected from the simulation software, and UncertainSCI produces a PCE emulator through a (weighted) least-squares procedure. From this least-squares procedure, UncertainSCI also can compute residuals and cross-validation metrics, and can adaptively tune the expressivity of the PCE emulator based on a userprescribed tolerance and/or computational budget.
+The probability measure $\mu$ that must be randomly sampled is specially tailored distribution that exploits a concentration of measurable phenomena to provably increase the quality of the candidate set [ACN:Coh2017].  Sampling from this distribution when the components of the parameter vector $p$ are independent is computationally efficient, having complexity that is linear in the number $d$ of parameters [ACN:Nar2018]. The relatively large candidate set generated from this random sampling is pruned via the weighted D-optimal design. UncertainSCI's algorithm for this approach approximately computes a weighted D-optimal design via the Weighted Approximate Fekete Points (WAFP) procedure [ACN:Guo2018,@JDT:Burk:2020], which greedily maximizes a specially weighted matrix determinant. The result is a geometrically unstructured parameter design of $M$ samples.
+
+Once the experimental design is created through the WAFP procedure, an ensemble of forward simulations is collected from the simulation software, and UncertainSCI produces a PCE emulator through a (weighted) least-squares procedure. From this least-squares procedure, UncertainSCI can compute statistics, sensitivities, residuals, and cross-validation metrics, and can adaptively tune the expressivity of the PCE emulator based on a user-prescribed tolerance and/or computational budget.
 
 # Citations
 
