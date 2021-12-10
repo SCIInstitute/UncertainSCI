@@ -33,7 +33,7 @@ def borehole_function():
     .. math::
 
       f(p) = g_1(p) / (g_2(p) * g_3(p)),
-      g_1(p) = 2\\pi p_3 * (p_4 - p_6) 
+      g_1(p) = 2\\pi p_3 * (p_4 - p_6)
       g_2(p) = log(p_2/p_1)
       g_3(p) = 1 + 2*p_7*p_3/(g_2(p) * p_1^2 * p_8) + p_3/p_5
 
@@ -309,6 +309,32 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
 
     return lambda p: solve_system(p)
 
+def laplace_ode_1d(Nparams, a=1., b=1., abar=3., N=100):
+    """ Generates a 1D Laplace ODE model with parameterized diffusion.
+
+    Define model:
+
+    -d/dx a(x,p) d/dx u(x,p) = f(x)
+
+    over x in [-1,1], where a(x,p) is a parameterized diffusion model:
+
+    a(x,p) = abar(x) + sum_{j=1}^d lambda_j Y_j phi_j(x),
+
+    where d = Nparams, (lambda_j, phi_j) are eigenpairs of the exponential
+    covariance kernel,
+
+      K(s,t) = exp(-|s-t|/a).
+
+    The Y_j are modeled as iid random variables.
+    """
+
+    abarfun = lambda x: abar*np.ones(np.shape(x))
+    KLE = KLE_exponential_covariance_1d(Nparams, a, b, abarfun)
+
+    diffusion = lambda x, p: KLE(x, p)
+    x = laplace_grid_x(-b, b, N)
+
+    return x, laplace_ode(left=-b, right=b, N=N, diffusion=diffusion)
 
 def laplace_grid_xy(left, right, N1, down, up, N2):
     """

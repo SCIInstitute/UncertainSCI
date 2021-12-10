@@ -3,7 +3,7 @@ from UncertainSCI import opoly1d
 from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
 
 from UncertainSCI.utils.linalg import greedy_d_optimal
-
+from UncertainSCI.sampling import mixture_tensor_discrete_sampling
 
 def opolynd_eval(x, lambdas, ab):
     # Evaluates tensorial orthonormal polynomials associated with the
@@ -163,6 +163,43 @@ class TensorialPolynomials:
 
                 x[:, qd] = idistinv(np.random.random(M), Lambdas[:, qd])
             return x
+
+    def idist_gq_sampling(self, K, iset, M=None):
+        """
+        Generates K random samples from the induced distribution defined
+        by Lambdas, restricted to the tensorial Gauss quadrature grid
+        defined by M.
+        """
+
+        max_degrees = iset.max_univariate_degree()
+
+        if M is None:
+            M = [m+1 for m in max_degrees]
+            self.sampling_options['M'] = M
+        else:
+            try:
+                iter(M)
+            except:
+                M = [M,]*self.dim
+
+        # Construct all tensorial measures
+        grids = [None,]*self.dim
+        weights = [None,]*self.dim
+        for j in range(self.dim):
+            # Gauss grid
+            grids[j], w = self.polys.polys1d[j].gauss_quadrature(M[j])
+
+            # Measures
+            kj = max_degrees[j]+1
+            weights[j] = np.zeros([grids[j].size, kj])
+            V = self.polys1d[j].eval(grids[j], range(max_degrees[j]+1))**2
+            V = V * (np.tile(w, [kj, 1]).T)
+
+            for k in range(kj):
+                # Ensure probabilities sum to 1
+                weights[:,k] = V[:,k]/np.sum(V[:,k])
+
+        return mixture_tensor_discrete_sampling(K, grids, weights, iset)
 
     def wafp_sampling(self, indices, oversampling=10, weights=None,
                       sampler='idist', K=None, fast_sampler=True):

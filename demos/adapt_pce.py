@@ -11,6 +11,7 @@ from UncertainSCI.model_examples import KLE_exponential_covariance_1d, \
                                         laplace_ode, laplace_grid_x
 from UncertainSCI.indexing import TotalDegreeSet
 from UncertainSCI.pce import PolynomialChaosExpansion
+from UncertainSCI.utils.version import version_lessthan
 
 
 animate = True
@@ -112,7 +113,11 @@ for j in range(M):
 
 MC_mean = np.mean(output, axis=0)
 MC_stdev = np.std(output, axis=0)
-MC_quantiles = np.quantile(output, quantile_levels, axis=0)
+if version_lessthan(np,'1.15'):
+    from scipy.stats.mstats import mquantiles
+    MC_quantiles = mquantiles(output, quantile_levels, axis=0)
+else:
+    MC_quantiles = np.quantile(output, quantile_levels, axis=0)
 MC_median = quantiles[-1, :]
 
 # # Visualization

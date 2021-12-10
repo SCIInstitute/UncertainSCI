@@ -1,13 +1,27 @@
+import warnings
+from itertools import chain, combinations
 from math import floor
 
 import numpy as np
+from scipy.stats.mstats import mquantiles
 
 from UncertainSCI.indexing import MultiIndexSet, TotalDegreeSet
-from UncertainSCI.distributions import ProbabilityDistribution
+from UncertainSCI.distributions import ProbabilityDistribution, TensorialDistribution
 from UncertainSCI.utils.casting import to_numpy_array
 from UncertainSCI.utils.version import version_lessthan
 from UncertainSCI.utils.linalg import lstsq_loocv_error, weighted_lsq
+from UncertainSCI.sampling import mixture_tensor_discrete_sampling
 
+valid_training_types = ['christoffel_lsq', 'wlsq']
+valid_sampling_types = ['induced', 'gq', 'gq-induced', 'greedy-induced', 'greedy-gq-induced']
+
+sampling_options = {'induced': [],
+                    'gq': ['M'],
+                    'gq-induced': ['M'],
+                    'greedy-induced': ['oversampling'],
+                    'greedy-gq-induced': ['M']}
+
+training_options = {'wlsq': []}
 
 class PolynomialChaosExpansion():
     """Base polynomial chaos expansion class.
@@ -24,28 +38,66 @@ class PolynomialChaosExpansion():
         samples: The experimental or sample design in stochastic space.
 
     """
-    def __init__(self, index_set=None, distribution=None, order=None):
+    def __init__(self, index_set=None, distribution=None, order=None,
+                       plabels=None, sampling='greedy-induced',
+                       training='wlsq', **kwargs):
 
         self.coefficients = None
         self.accuracy_metrics = {}
         self.samples = None
         self.model_output = None
 
-        self.sampling = 'induced'
-        self.training = 'christoffel_lsq'
+        self.sampling = sampling.lower()
+        self.training = training.lower()
 
         if distribution is None:
             raise ValueError('A distribution must be specified')
-        else:
+        elif issubclass(type(distribution), ProbabilityDistribution):
             self.distribution = distribution
+        else:
+            try:
+                iter(distribution)
+                self.distribution = TensorialDistribution(distribution)
+            except:
+                raise ValueError('Invalid distribution specification')
+
+        if plabels is None:
+            self.plabels = [str(val+1) for val in range(self.distribution.dim)]
+        else:
+            if len(plabels) != self.distribution.dim:
+                raise ValueError('Parameter labels input "plabels" must have \
+                                  same size as number of parameters in given \
+                                  input "distribution"')
+            self.plabels = plabels
 
         if index_set is None:
             if order is None:
                 raise ValueError('Either "index_set" or "order" must be specified')
             else:
-                self.index_set = TotalDegreeSet(dim=distribution.dim, order=order)
+                self.index_set = TotalDegreeSet(dim=self.distribution.dim, order=order)
         else:
+            if order is not None:
+                warnings.warn("Both inputs 'order' and 'index_set' specified. Ignoring 'order'.")
             self.index_set = index_set
+
+        self.sampling_options = {key: kwargs[key] \
+                                 for key in sampling_options[self.sampling] \
+                                 if key in kwargs.keys()}
+        self.training_options = {key: kwargs[key] \
+                                 for key in training_options[self.training] \
+                                 if key in kwargs.keys()}
+
+    def check_training(self):
+        """Determines if a valid training type has been specified."""
+
+        if self.training.lower() not in valid_training_types:
+            raise ValueError('Invalid training type specified')
+
+    def check_sampling(self):
+        """Determines if a valid sampling type has been specified."""
+
+        if self.sampling.lower() not in valid_sampling_types:
+            raise ValueError('Invalid sampling type specified')
 
     def set_indices(self, index_set):
         """Sets multi-index set for polynomial approximation.
@@ -92,7 +144,36 @@ class PolynomialChaosExpansion():
 
         self.samples = samples
 
-    def generate_samples(self, new_samples=None, **sampler_options):
+    def map_to_standard_space(self, q):
+        """Maps parameter values from model space to standard space.
+
+        Parameters:
+            q (array-like): Samples in model space.
+
+        Returns:
+            p (numpy.ndarray): Samples in standard space
+        """
+
+        q = np.asarray(q)
+        return self.distribution.transform_standard_dist_to_poly.map(
+                self.distribution.transform_to_standard.map(q))
+
+
+    def map_to_model_space(self, p):
+        """Maps parameter values from standard space to model space.
+
+        Parameters:
+            p (array-like): Samples in standard space.
+
+        Returns:
+            q (numpy.ndarray): Samples in model space
+        """
+
+        p = np.asarray(p)
+        return self.distribution.transform_to_standard.mapinv(
+                self.distribution.transform_standard_dist_to_poly.mapinv(p))
+
+    def generate_samples(self, **kwargs):
         """Generates sample/experimental design for use in PCE construction.
 
         Parameters:
@@ -102,31 +183,56 @@ class PolynomialChaosExpansion():
 
         self.check_distribution()
         self.check_indices()
+        self.check_sampling()
 
-        #if sample_type.lower() == 'wafp':
-        if self.sampling.lower() == 'induced':
+        if 'new_samples' in kwargs.keys():
+            new_samples = kwargs['new_samples']
+        else:
+            new_samples = None
+
+        for key in kwargs.keys():
+            if key in sampling_options[self.sampling]:
+                self.sampling_options[key] = kwargs[key]
+
+        if self.sampling.lower() == 'greedy-induced':
             if new_samples is None:
                 p_standard = self.distribution.polys.wafp_sampling(
-                               self.index_set.get_indices(), **sampler_options)
+                               self.index_set.get_indices(), **self.sampling_options)
+
                 # Maps to domain
-                self.samples = self.distribution.transform_to_standard.mapinv(
-                                    self.distribution.
-                                    transform_standard_dist_to_poly.
-                                    mapinv(p_standard))
+                self.samples = self.map_to_model_space(p_standard)
 
             else:  # Add new_samples random samples
-                x = self.distribution.transform_standard_dist_to_poly.map(
-                        self.distribution.transform_to_standard.map(
-                            self.samples))
+                x = self.map_to_standard_space(self.samples)
 
                 x = self.distribution.polys.wafp_sampling_restart(
                         self.index_set.get_indices(), x, new_samples,
-                        **sampler_options)
+                        **self.sampling_options)
 
-                self.samples = self.distribution.transform_to_standard.mapinv(
-                                   self.distribution.
-                                        transform_standard_dist_to_poly.
-                                        mapinv(x))
+                self.samples = self.map_to_model_space(x)
+
+            self.weights = self.christoffel_weights()
+
+        elif self.sampling.lower() == 'gq':
+
+            M = self.sampling_options.get('M')
+            if M is None:
+                raise ValueError("The sampling option 'M' must be specified for Gauss quadrature sampling.")
+
+            p_standard, w = self.distribution.polys.tensor_gauss_quadrature(M)
+            self.samples = self.map_to_model_space(p_standard)
+            self.weights = w
+
+        elif self.sampling.lower() == 'gq-induced':
+
+            K = self.sampling_options.get('K')
+            if K is None:
+                raise ValueError("The sampling option 'K' must be specified for induced sampling on Gauss quadrature grids.")
+
+            p_standard = self.distribution.opolys.idist_gq_sampling(K, self.indices, M=self.sampling_options.get('M'))
+
+            self.samples = self.map_to_model_space(p_standard)
+            self.weights = self.christoffel_weights()
 
         else:
             raise ValueError("Unsupported sample type '{0}' for input\
@@ -136,16 +242,14 @@ class PolynomialChaosExpansion():
         """
         Generates sample weights associated to integration."
         """
-        
-        if self.training == 'christoffel_lsq':
 
-            p_standard = self.distribution.transform_standard_dist_to_poly.map(
-                        self.distribution.transform_to_standard.map(self.samples))
+        if self.training == 'wlsq':
 
-            V = self.distribution.polys.eval(p_standard,
-                                             self.index_set.get_indices())
+            p_standard = self.map_to_standard_space(self.samples)
 
-            weights = self.training_weights()
+            V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
+
+            weights = self.christoffel_weights()
 
             # Should replace with more well-conditioned procedure
             rhs = np.zeros(V.shape[1])
@@ -155,22 +259,16 @@ class PolynomialChaosExpansion():
 
             return weights * (V @ b)
 
-    def training_weights(self):
+    def christoffel_weights(self):
         """
-        Generates sample weights associated to training.
+        Generates sample weights associated to Christoffel preconditioning.
         """
-        
-        if self.training == 'christoffel_lsq':
+        p_standard = self.distribution.transform_standard_dist_to_poly.map(
+                    self.distribution.transform_to_standard.map(self.samples))
 
-            p_standard = self.distribution.transform_standard_dist_to_poly.map(
-                        self.distribution.transform_to_standard.map(self.samples))
+        V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
 
-            V = self.distribution.polys.eval(p_standard,
-                                             self.index_set.get_indices())
-
-            return 1/(np.sum(V**2, axis=1))
-        else:
-            raise ValueError('Unrecongized training directive "{0:s}"'.format(self.training))
+        return 1/(np.sum(V**2, axis=1))
 
     def build_pce_wlsq(self):
         """
@@ -178,23 +276,14 @@ class PolynomialChaosExpansion():
         and model output.
         """
 
-        p_standard = self.distribution.transform_standard_dist_to_poly.map(
-                    self.distribution.transform_to_standard.map(self.samples))
+        p_standard = self.map_to_standard_space(self.samples)
 
-        V = self.distribution.polys.eval(p_standard,
-                                         self.index_set.get_indices())
+        V = self.distribution.polys.eval(p_standard, self.index_set.get_indices())
 
-        # Precondition for stability
-        weights = self.training_weights()
-        #if self.training == 'christoffel_lsq':
-        #    norms = 1/(np.sum(V**2, axis=1))
-        #else:
-        #    raise ValueError('Unrecongized training directive "{0:s}"'.format(self.training))
-
-        coeffs, residuals = weighted_lsq(V, self.model_output, weights)
+        coeffs, residuals = weighted_lsq(V, self.model_output, self.weights)
 
         self.accuracy_metrics['loocv'] = lstsq_loocv_error(V, self.model_output,
-                                                           weights)
+                                                           self.weights)
         self.accuracy_metrics['residuals'] = residuals
 
         self.coefficients = coeffs
@@ -386,7 +475,8 @@ class PolynomialChaosExpansion():
         Mold = self.samples.shape[0]
         Nsamples = samplefun(Nindices)
 
-        self.generate_samples(new_samples=Nsamples, weights=weights)
+        self.weights = weights
+        self.generate_samples(new_samples=Nsamples)
 
         # Resample model
         self.model_output = np.vstack((self.model_output,
@@ -460,7 +550,7 @@ class PolynomialChaosExpansion():
             pass  # We'll assume the user did things correctly.
 
         # For now, we only have 1 method:
-        if self.training == 'christoffel_lsq':
+        if self.training == 'wlsq':
             return self.build_pce_wlsq()
         else:
             raise ValueError('Unrecongized training directive "{0:s}"'.format(self.training))
@@ -550,7 +640,12 @@ class PolynomialChaosExpansion():
             inds = range(pce_counter, end_ind)
             ensemble = self.pce_eval(p, components=inds)
 
-            quantiles[:, inds] = np.quantile(ensemble, q, axis=0)
+
+
+            if version_lessthan(np, '1.15'):
+                quantiles[:, inds] = mquantiles(ensemble, q, axis=0)
+            else:
+                quantiles[:, inds] = np.quantile(ensemble, q, axis=0)
 
             pce_counter = end_ind
 
@@ -589,15 +684,40 @@ class PolynomialChaosExpansion():
 
         return total_sensitivities
 
-    def global_sensitivity(self, dim_lists=None, vartol=1e-16):
+    def global_sensitivity(self, dim_lists=None, interaction_orders=None, vartol=1e-16):
         """
         Computes global sensitivity associated to dimensional indices dim_lists
         from PCE coefficients.
 
         dim_lists should be a list of index lists. The global sensitivity for each
         index list is returned.
+
+        interaction_orders (list): Computes sensitivities corresponding to
+        variable interactions for the specified orders. E.g., order 2 implies
+        binary interactions, 3 is ternary interactions, [2,3] computes both of
+        these orders.
+
         The output is len(dim_lists) x self.coefficients.shape[1]
         """
+
+        d = self.distribution.dim
+
+        return_dim_lists = True
+        # If dim_lists is given, ignore interaction_orders
+        if dim_lists is not None:
+            if interaction_orders is not None:
+                print("Ignoring input 'interaction_orders' since 'dim_lists' \
+                       was specified.")
+            return_dim_lists = False
+        else:
+            if interaction_orders is None: # Assume all interactions are requested
+                interaction_orders = range(1, d+1)
+            else:
+                try:
+                    iter(interaction_orders)
+                except: # Assume an int is given
+                    interaction_orders = [interaction_orders,]
+            dim_lists = list(chain.from_iterable(combinations(range(d), r) for r in interaction_orders))
 
         # unique_rows = np.vstack({tuple(row) for row in lambdas})
         # # Just making sure
@@ -622,7 +742,10 @@ class PolynomialChaosExpansion():
             global_sensitivities[qj, ~zerovar] = np.sum(self.coefficients[np.ix_(inds, ~zerovar)]**2,
                                                         axis=0) / variance[~zerovar]
 
-        return global_sensitivities
+        if return_dim_lists:
+            return global_sensitivities, dim_lists
+        else: 
+            return global_sensitivities
 
     def global_derivative_sensitivity(self, dim_list):
         """

@@ -633,7 +633,7 @@ class BetaDistribution(ProbabilityDistribution):
         polys (:class:`JacobiPolynomials` or list thereof):
     """
     def __init__(self, alpha=None, beta=None, mean=None, stdev=None,
-                 dim=None, domain=None):
+                 dim=None, domain=None, bounds=None):
 
         # Convert mean/stdev inputs to alpha/beta
         if mean is not None and stdev is not None:
@@ -645,6 +645,10 @@ class BetaDistribution(ProbabilityDistribution):
 
         alpha, beta = self._convert_alphabeta_to_iterable(alpha, beta)
 
+        if (domain is not None) and (bounds is not None):
+            raise ValueError("Inputs 'domain' and 'bounds' cannot both be given")
+        elif bounds is not None:
+            domain = bounds
         # Sets self.dim, self.alpha, self.beta, self.domain
         self._detect_dimension(alpha, beta, dim, domain)
 
@@ -718,6 +722,7 @@ class BetaDistribution(ProbabilityDistribution):
                 self.domain = np.zeros([2, self.dim])
                 self.domain[1, :] = 1.
             else:
+                domain = np.asarray(domain)
                 if domain.shape[1] == 1:  # Tensorize 1D domain
                     self.domain = np.zeros([2, self.dim])
                     self.domain[0, :] = domain[0]
@@ -730,10 +735,11 @@ class BetaDistribution(ProbabilityDistribution):
             self.alpha = [alpha[0] for i in range(self.dim)]
             self.beta = [beta[0] for i in range(self.dim)]
 
-            if domain is None:  # Standard domain [0,1]^dim
+            if (domain is None) or (domain.any() is not True):  # Standard domain [0,1]^dim
                 self.domain = np.zeros([2, self.dim])
                 self.domain[1, :] = 1.
             else:
+                domain = np.asarray(domain)
                 if domain.shape[1] == 1:  # Tensorize 1D domain
                     self.domain = np.zeros([2, self.dim])
                     self.domain[0, :] = domain[0]
@@ -743,7 +749,7 @@ class BetaDistribution(ProbabilityDistribution):
 
             return
 
-        elif domain is not None and domain.shape[1] > 1:  # Case 3
+        elif domain is not None and len(domain.shape) > 1:  # Case 3
             self.dim = domain.shape[1]
             self.alpha = [alpha[0] for i in range(self.dim)]
             self.beta = [beta[0] for i in range(self.dim)]
@@ -983,10 +989,10 @@ class UniformDistribution(BetaDistribution):
         polys (:class:`JacobiPolynomials` or list thereof):
     """
 
-    def __init__(self, mean=None, stdev=None, dim=None, domain=None):
+    def __init__(self, mean=None, stdev=None, dim=None, domain=None, bounds=None):
 
         super().__init__(alpha=1., beta=1., mean=mean, stdev=stdev,
-                         dim=dim, domain=domain)
+                         dim=dim, domain=domain, bounds=bounds)
 
 
 class DiscreteUniformDistribution(ProbabilityDistribution):

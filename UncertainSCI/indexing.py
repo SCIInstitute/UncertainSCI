@@ -4,8 +4,7 @@ import numpy as np
 from scipy import special as sp
 from scipy.special import comb
 
-from UncertainSCI.utils.prob import discrete_sampling
-
+from UncertainSCI.utils.prob import discrete_sampling, choice
 
 def hyperbolic_cross_indices(d, k):
     """
@@ -231,6 +230,17 @@ class MultiIndexSet():
     def get_indices(self):
         return self.indices
 
+    def choice(self, n=1):
+        """
+        Returns n randomly chosen multi-indices as a (n x self.dim)
+        numpy.ndarray.
+        """
+
+        assert n > 0
+
+        index_choices = choice(range(self.indices.shape[0]), size=n)
+        return self.indices[index_choices,:]
+
     def size(self):
         return self.indices.shape[0]
 
@@ -333,9 +343,10 @@ class MultiIndexSet():
             candidates = np.tile(self.indices[m, :], [d, 1]) +\
                          np.eye(d, dtype=self.indices.dtype)
             membership_flags = ~self.isamember(candidates)
-            margin = np.unique(
-                      np.append(margin, candidates[membership_flags, :], axis=0),
-                      axis=0)
+            if candidates[membership_flags, :].size > 0:
+                margin = np.unique(
+                          np.append(margin, candidates[membership_flags, :], axis=0),
+                          axis=0)
 
         return margin
 

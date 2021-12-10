@@ -39,7 +39,8 @@ class PCETestCase(unittest.TestCase):
         indices = TotalDegreeSet(dim=1, order=3)
         pce = PolynomialChaosExpansion(indices, dist)
 
-        lsq_residuals = pce.build(mymodel, fast_sampler=False)
+        pce.sampling_options = {'fast_sampler': False}
+        lsq_residuals = pce.build(mymodel)
         reserror = np.linalg.norm(lsq_residuals)
         msg = 'Failed for (M, alpha, beta)=({0:d}, '\
               '{1:1.6f}, {2:1.6f})'.format(M, alpha, beta)
