@@ -17,11 +17,11 @@ authors:
    orcid: 
    affiliation: "1, 2"
  - name: Jake A Bergquist
-   orcid: 
+   orcid: 0000-0002-4586-6911
    affiliation: "1, 3" 
  - name: Jake A Bergquist
    orcid: 
-   affiliation: "1, 3" 
+   affiliation: "1, 3, 5" 
  - name: Sumientra Rampersad
    orcid: 
    affiliation: 4
@@ -32,12 +32,12 @@ authors:
    affiliation: "1, 3" 
  - name: Lindsay Rupp
    orcid: 
-   affiliation: "1, 3" 
+   affiliation: "1, 3, 5" 
  - name: Dana H Brooks
    affiliation: 4
  - name: Rob S MacLeod
    orcid: 
-   affiliation: "1, 3" 
+   affiliation: "1, 3, 5" 
        
 affiliations:
  - name: Scientific Computing and Imaging Institute, University of Utah, Salt Lake City, UT, USA
@@ -48,6 +48,8 @@ affiliations:
    index: 3
 - name: Electrical and Computer Engineering Department, Northeastern University, Boston, MA, USA
    index: 4
+ - name: Nora Eccles Cardiovascular Research and Training Institute, University of Utah, Salt Lake City, UT, USA
+   index: 5
 date: July 8, 2021
 bibliography: paper.bib
 ---
