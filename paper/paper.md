@@ -12,26 +12,26 @@ authors:
     affiliation: "1, 2"
   - name: Jess Tate
     orcid: 0000-0002-2934-1453
-    affiliation: 1
+    affiliation: "1"
  - name: Zexin Liu
    orcid: 
-   affiliation: "1, 3" 
+   affiliation: "1,2" 
  - name: Jake A Bergquist
    orcid: 
-   affiliation: "4" 
+   affiliation: "1,3" 
  - name: Sumientra Rampersad
    orcid: 
-   affiliation: 1
+   affiliation: "4"
  - name: Dan White
-   affiliation: 1,3
+   affiliation: "1"
  - name: Chantel Charlebois
    orcid: 
    affiliation: "1, 3" 
  - name: Lindsay Rupp
    orcid: 
-   affiliation: "5" 
+   affiliation: "1, 3" 
  - name: Dana H Brooks
-   affiliation: 4
+   affiliation: "5"
  - name: Rob S MacLeod
    orcid: 
    affiliation: "1, 3" 
@@ -43,10 +43,11 @@ affiliations:
    index: 2
  - name: Biomedical Engineering Department , University of Utah, Salt Lake City, UT, USA
    index: 3
-- name: Electrical and Computer Engineering Department, University of Massachussetts, Boston, MA, USA
-  index: 4
 - name: Physics Department, Northeastern University, Boston, MA, USA
-   index: 5
+  index: 4
+- name: Electrical and Computer Engineering Department, University of Massachussetts, Boston, MA, USA
+  index: 5
+
 date: Dec 17, 2021
 bibliography: paper.bib
 ---
