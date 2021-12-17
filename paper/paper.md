@@ -12,32 +12,29 @@ authors:
     affiliation: "1, 2"
   - name: Jess Tate
     orcid: 0000-0002-2934-1453
-    affiliation: 1
+    affiliation: "1"
  - name: Zexin Liu
    orcid: 
    affiliation: "1, 2"
  - name: Jake A Bergquist
    orcid: 0000-0002-4586-6911
-   affiliation: "1, 3" 
- - name: Jake A Bergquist
-   orcid: 
-   affiliation: "1, 3, 5" 
+   affiliation: "1, 3, 6" 
  - name: Sumientra Rampersad
    orcid: 
-   affiliation: 4
+   affiliation: "1"
  - name: Dan White
-   affiliation: 1
+   affiliation: 1,3
  - name: Chantel Charlebois
    orcid: 
    affiliation: "1, 3" 
  - name: Lindsay Rupp
    orcid: 
-   affiliation: "1, 3, 5" 
+   affiliation: "1, 3, 6" 
  - name: Dana H Brooks
-   affiliation: 4
+   affiliation: "4, 5"
  - name: Rob S MacLeod
    orcid: 
-   affiliation: "1, 3, 5" 
+   affiliation: "1, 3, 6" 
        
 affiliations:
  - name: Scientific Computing and Imaging Institute, University of Utah, Salt Lake City, UT, USA
@@ -48,15 +45,19 @@ affiliations:
    index: 3
 - name: Electrical and Computer Engineering Department, Northeastern University, Boston, MA, USA
    index: 4
- - name: Nora Eccles Cardiovascular Research and Training Institute, University of Utah, Salt Lake City, UT, USA
+- name: Physics Department, Northeastern University, Boston, MA, USA
    index: 5
-date: July 8, 2021
+- name: Nora Eccles Cardiovascular Research and Training Institute, University of Utah, Salt Lake City, UT, USA
+   index: 6
 bibliography: paper.bib
 ---
 
 # Summary
 
-We have developed UncertainSCI [@USCI] as an open source tool designed to make modern uncertatinty quantification (UQ) techniques more accessible in biomedical simulation applications. UncertainSCI is implemented in Python with a noninvasive interface to meet our software design goals of 1) numerical accuracy, 2) simple application programming interface (API), 3) adaptability to many applications and methods, and 4) interfacing with diverse simulation software.  Using a Python implementation in UncertainSCI allowed us to utilize the popularity and low barrier-to-entry of Python and its common packages and to leverage the built in integration and support for Python in common simulation software packages and languages. Additionally, we used non-invasive UQ techniques and created a similarly non-invasive interface to external modeling software that can be called in diverse ways, depending on the complexity and level of Python integration of the external simulation pipeline. We have developed and included examples applying UQ to relatively simple 1D simulations implemented in python and to bioelectric field simulations implemented in external software packages to demonstrate the use of UncertainSCI and the effectiveness of the archetecture and implementation in achieving our design goals.
+We have developed UncertainSCI [@USCI] as an open source tool designed to make modern uncertatinty quantification (UQ) techniques more accessible in biomedical simulation applications. UncertainSCI is implemented in Python with a noninvasive interface to meet our software design goals of 1) numerical accuracy, 2) simple application programming interface (API), 3) adaptability to many applications and methods, and 4) interfacing with diverse simulation software.  Using a Python implementation in UncertainSCI allowed us to utilize the popularity and low barrier-to-entry of Python and its common packages and to leverage the built in integration and support for Python in common simulation software packages and languages. Additionally, we used non-invasive UQ techniques and created a similarly non-invasive interface to external modeling software that can be called in diverse ways, depending on the complexity and level of Python integration of the external simulation pipeline. We have developed and included examples applying UQ to relatively simple 1D simulations implemented in python and to bioelectric field simulations implemented in external software packages to demonstrate the use of UncertainSCI and the effectiveness of the archetecture and implementation in achieving our design goals. Figure \autoref{fig:pipeline} illustrates the use of UncertainSCI in computing Uncertainty Quantification with forward modeling piplines.  
+
+![User pipeline for UncertainSCI.  Input parameter distribuions and UncertainSCI will compute an efficient sampling scheme.  The parameter samples are run through the targeted modeling pipeline, which can be implemented in external software tools.  The computed solutions are collected and compiled into relavent statistics with UncertainSCI. \label{fig:pipeline}](UncertainSCI_pipeline.png){ width=100% }
+
 
 # Statement of need
 
@@ -82,29 +83,6 @@ The efficiency of PCE to compute UQ of a forward simulation depends on efficient
 The probability measure $\mu$ that must be randomly sampled is specially tailored distribution that exploits a concentration of measurable phenomena to provably increase the quality of the candidate set [ACN:Coh2017].  Sampling from this distribution when the components of the parameter vector $p$ are independent is computationally efficient, having complexity that is linear in the number $d$ of parameters [ACN:Nar2018]. The relatively large candidate set generated from this random sampling is pruned via the weighted D-optimal design. UncertainSCI's algorithm for this approach approximately computes a weighted D-optimal design via the Weighted Approximate Fekete Points (WAFP) procedure [ACN:Guo2018,@JDT:Burk:2020], which greedily maximizes a specially weighted matrix determinant. The result is a geometrically unstructured parameter design of $M$ samples.
 
 Once the experimental design is created through the WAFP procedure, an ensemble of forward simulations is collected from the simulation software, and UncertainSCI produces a PCE emulator through a (weighted) least-squares procedure. From this least-squares procedure, UncertainSCI can compute statistics, sensitivities, residuals, and cross-validation metrics, and can adaptively tune the expressivity of the PCE emulator based on a user-prescribed tolerance and/or computational budget.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
 
 # Acknowledgements
 
