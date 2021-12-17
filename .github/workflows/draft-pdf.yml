@@ -1,4 +1,6 @@
-on: [push]
+name: Paper Build
+
+on: [push, pull_request]
 
 jobs:
   paper:
