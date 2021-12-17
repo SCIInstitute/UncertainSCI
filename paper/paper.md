@@ -14,26 +14,25 @@ authors:
     orcid: 0000-0002-2934-1453
     affiliation: "1"
  - name: Zexin Liu
-   orcid: 
+   orcid: 0000-0003-3409-5709
    affiliation: "1,2" 
  - name: Jake A Bergquist
-   orcid: 
-   affiliation: "1,3" 
+   orcid: 0000-0002-4586-6911
+   affiliation: "1, 3, 4" 
  - name: Sumientra Rampersad
-   orcid: 
-   affiliation: "4"
+   orcid: 0000-0001-9860-4459
+   affiliation: "5"
  - name: Dan White
    affiliation: "1"
  - name: Chantel Charlebois
-   orcid: 
+   orcid: 0000-0002-4139-3539
    affiliation: "1, 3" 
  - name: Lindsay Rupp
-   orcid: 
-   affiliation: "1, 3" 
+   affiliation: "1, 3, 4" 
  - name: Dana H Brooks
-   affiliation: "5"
+   affiliation: "6"
  - name: Rob S MacLeod
-   orcid: 
+   orcid: 0000-0002-0000-0356
    affiliation: "1, 3" 
        
 affiliations:
@@ -43,10 +42,12 @@ affiliations:
    index: 2
  - name: Biomedical Engineering Department , University of Utah, Salt Lake City, UT, USA
    index: 3
+- name: Nora Eccles Cardiovascular Research and Training Institute, University of Utah, Salt Lake City, UT, USA
+   index: 4
 - name: Physics Department, Northeastern University, Boston, MA, USA
-  index: 4
-- name: Electrical and Computer Engineering Department, University of Massachussetts, Boston, MA, USA
   index: 5
+- name: Electrical and Computer Engineering Department, University of Massachussetts, Boston, MA, USA
+  index: 6
 
 date: Dec 17, 2021
 bibliography: paper.bib
