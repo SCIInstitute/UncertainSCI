@@ -50,7 +50,7 @@ affiliations:
   index: 6
 
 date: 17 Dec 2021
-bibliography: paper.bib
+bibliography: paper/paper.bib
 ---
 
 # Summary
