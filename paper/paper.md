@@ -12,7 +12,7 @@ authors:
     affiliation: "1, 2"
   - name: Jess Tate
     orcid: 0000-0002-2934-1453
-    affiliation: "1"
+    affiliation: 1
  - name: Zexin Liu
    orcid: 0000-0003-3409-5709
    affiliation: "1,2" 
@@ -21,16 +21,16 @@ authors:
    affiliation: "1, 3, 4" 
  - name: Sumientra Rampersad
    orcid: 0000-0001-9860-4459
-   affiliation: "5"
+   affiliation: "5, 6"
  - name: Dan White
-   affiliation: "1"
+   affiliation: 1
  - name: Chantel Charlebois
    orcid: 0000-0002-4139-3539
    affiliation: "1, 3" 
  - name: Lindsay Rupp
    affiliation: "1, 3, 4" 
  - name: Dana H Brooks
-   affiliation: "6"
+   affiliation: 6
  - name: Rob S MacLeod
    orcid: 0000-0002-0000-0356
    affiliation: "1, 3" 
