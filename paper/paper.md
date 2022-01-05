@@ -67,7 +67,7 @@ Biomedical computer models include many input parameters that do not have precis
 
 # Mathematics
 
-In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial Chaos expansions (PCE) [@ACN:Xiu2010]. PCE approximates the dependence of a quantity of interest (QoI) that is the model output from the forward simulation on a finite number of random parameters via a multivariate polynomial function of those parameters. With $u$ the QoI (scalar-valued for simplicity), and $p \in \mathbb{R}^d$ the vector of uncertain parameters, the PCE approach builds the function $u_N$, given as,
+In UncertainSCI, we quantify forward parametric uncertainty in cardiac simulations using polynomial chaos expansions (PCE) [@ACN:Xiu2010]. PCE approximates the dependence of a quantity of interest (QoI) that is the model output from the forward simulation on a finite number of random parameters via a multivariate polynomial function of those parameters. With $u$ the QoI (scalar-valued for simplicity), and $p \in \mathbb{R}^d$ the vector of uncertain parameters, the PCE approach builds the function $u_N$, given as,
 \begin{align}
   u(p) \approx u_N(p) = \sum_{j=1}^N c_j \phi_j(p),
 \end{align}
