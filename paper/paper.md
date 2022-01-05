@@ -31,7 +31,7 @@ authors:
     orcid: 0000-0002-2688-7688
     affiliation: "1, 3, 4" 
   - name: Dana H Brooks
-    affiliation: 0000-0003-3231-6715
+    orcid: 0000-0003-3231-6715
     affiliation: 6
   - name: Rob S MacLeod
     orcid: 0000-0002-0000-0356
