@@ -44,7 +44,7 @@ affiliations:
    index: 3
 - name: Nora Eccles Cardiovascular Research and Training Institute, University of Utah, Salt Lake City, UT, USA
    index: 4
-- name: Physics Department, Northeastern University, Boston, MA, USA
+- name: Physics Department, University of Massachussetts, Boston, MA, USA
   index: 5
 - name: Electrical and Computer Engineering Department, University of Massachussetts, Boston, MA, USA
   index: 6
