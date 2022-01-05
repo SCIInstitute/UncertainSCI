@@ -28,8 +28,10 @@ authors:
     orcid: 0000-0002-4139-3539
     affiliation: "1, 3" 
   - name: Lindsay Rupp
+    orcid: 0000-0002-2688-7688
     affiliation: "1, 3, 4" 
   - name: Dana H Brooks
+    affiliation: 0000-0003-3231-6715
     affiliation: 6
   - name: Rob S MacLeod
     orcid: 0000-0002-0000-0356
@@ -60,7 +62,7 @@ We have developed UncertainSCI [@USCI] as an open-source tool designed to make m
 
 # Statement of need
 
-Biomedical computer models include many input parameters that do not have precisely defined values, for example because their value defines physiological processes that are not uniform across patients. As such, any simulation output necessarily has some uncertainty associated with the uncertain value of the input parameter. Exploration and quantification of this model output uncertainty is challenging when more than a single parameter is present; biomedical computer models often have 5-20 such parameters. Quantification of this uncertainty through UQ techniques provides statistics and sensitivity information, a critical component when evaluating the relative impact of parameter variation on the solution accuracy.  While the need and importance of UQ in clinical modeling is generally accepted, automated tools for implementing UQ techniques remain evasive for many researchers.   UncertainSCI has been use to quantify uncertainty in multiple modeling pipelines, including:  cardiac tissue modeling [@JDT:Rup2021; @JDT:Ber2021 ], electrocardiographic (ECG) simulation [@RSM:Swe2011; @RSM:Gen2005b], ECG imaging (ECGI) [@JDT:Tat2021a], transcranial current stimulation (tCS) modeling [@JDT:Tat2021c], transcranial magnetic stimulation  (TMS) [@JDT:Tat2021c], and electrocorticography (ECoG) stimulation [@JDT:Tat2021c].  
+Biomedical computer models include many input parameters that do not have precisely defined values, for example because their value defines physiological processes that are not uniform across patients. As such, any simulation output necessarily has some uncertainty associated with the uncertain value of the input parameter. Exploration and quantification of this model output uncertainty is challenging when more than a single parameter is present; biomedical computer models often have 5-20 such parameters. Quantification of this uncertainty through UQ techniques provides statistics and sensitivity information, a critical component when evaluating the relative impact of parameter variation on the solution accuracy.  While the need and importance of UQ in clinical modeling is generally accepted, automated tools for implementing UQ techniques remain evasive for many researchers.   UncertainSCI has been use to quantify uncertainty in multiple modeling pipelines, including:  cardiac tissue modeling [@JDT:Rup2021; @JDT:Ber2021 ], electrocardiographic (ECG) simulation [@RSM:Swe2011; @RSM:Gen2005b], ECG imaging (ECGI) [@JDT:Tat2021a], transcranial current stimulation (tCS) modeling [@JDT:Tat2021c; @JDT:Ram2021], and electrocorticography (ECoG) stimulation [@JDT:Tat2021c; @JDT:Ram2021].  
 
 
 # Mathematics
