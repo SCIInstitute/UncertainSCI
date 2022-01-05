@@ -46,7 +46,7 @@ affiliations:
    index: 4
 - name: Physics Department, University of Massachussetts, Boston, MA, USA
   index: 5
-- name: Electrical and Computer Engineering Department, University of Massachussetts, Boston, MA, USA
+- name: Electrical and Computer Engineering Department, Northeastern University, Boston, MA, USA
   index: 6
 
 date: 17 Dec 2021
