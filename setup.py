@@ -9,7 +9,7 @@ setup(
     author='UncertainSCI Developers',
     author_email='uncertainsci@sci.utah.edu',
     packages=['UncertainSCI'],
-    package_dir={'itk': 'itk'},
+    package_dir={'UncertainSCI': 'UncertainSCI'},
     download_url=r'https://github.com/SCIInstitute/UncertainSCI',
     description=r'A Non-invasive Uncertainty Quantification tool.',
     long_description='A Python-based toolkit that harnesses modern techniques to estimate model and parametric uncertainty, with a particular emphasis on needs for biomedical simulations and applications. UncertainSCI (https://www.sci.utah.edu/sci-software/simulation/uncertainsci.html) enables non-intrusive integration of these techniques with well-established biomedical simulation software. Developed by the NIH Center for Integrative Biomedical Computing at the University of Utah Scientific Computing and Imaging (SCI) Institute.',
