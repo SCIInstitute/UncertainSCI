@@ -4,7 +4,7 @@ tags:
   - Python
   - uncertainty quantification
   - computer modeling
-  - polynomial choas
+  - polynomial chaos
   - bioelectricity
 authors:
   - name: Akil Narayan
@@ -45,7 +45,7 @@ affiliations:
    index: 3
  - name: Nora Eccles Cardiovascular Research and Training Institute, University of Utah, Salt Lake City, UT, USA
    index: 4
- - name: Physics Department, University of Massachussetts, Boston, MA, USA
+ - name: Physics Department, University of Massachusetts, Boston, MA, USA
    index: 5
  - name: Electrical and Computer Engineering Department, Northeastern University, Boston, MA, USA
    index: 6
@@ -83,7 +83,7 @@ The efficiency of PCE for analysis of UQ in a forward simulation depends on effi
 
 The probability measure $\mu$ that must be randomly sampled is a distribution that exploits a concentration of measurable phenomena to provably increase the quality of the candidate set [@ACN:Coh2017].  Sampling from this distribution when the components of the parameter vector $p$ are independent is computationally efficient, having complexity that is linear in the number $d$ of parameters [@ACN:Nar2018]. The relatively large candidate set generated from this random sampling is pruned via subsampling using a weighted D-optimal design optimization. UncertainSCI's algorithm for this approach approximately computes a weighted D-optimal design via the weighted approximate Fekete points (WAFP) procedure [@ACN:Guo2018; @JDT:Bur2020], which greedily maximizes a weighted matrix determinant. The result is a geometrically unstructured parameter design of $M$ samples for use in the pipeline \eqref{eq:training}.
 
-Once the experimental design is created through the WAFP procedure, an ensemble of forward simulations $\left\{ u(p_j) \right\}_{j=1}^M$ is collected from the simulation software, and UncertainSCI produces a PCE emulator $u_N$ through a (weighted) least-squares procedure. From this emulator, UncertainSCI can compute statistics, sensitivities, residuals, and cross-validation metrics, and can adaptively tune the expressivity of the PCE emulator based on a user-prescribed tolerance and/or computational budget.
+Once the experimental design is created through the WAFP procedure, an ensemble of forward simulations $\left\{ u(p_j) \right\}_{j=1}^M$ is collected from the simulation software, and UncertainSCI produces a PCE emulator $u_N$ through a (weighted) least-squares procedure. From this emulator, UncertainSCI can compute statistics, sensitivities, residuals, and cross-validation metrics, and can adaptively tune the complexity of the PCE emulator based on a user-prescribed tolerance and/or computational budget.
 
 # Acknowledgements
 
