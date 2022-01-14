@@ -36,5 +36,5 @@ jobs:
     - name: Test with pytest
       continue-on-error: true
       run: |
-        pip install --editable UncertainSCI/
+        pip install --editable ./
         pytest --cov=UncertainSCI
