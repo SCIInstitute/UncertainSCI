@@ -1,8 +1,5 @@
 from setuptools import setup, find_packages
 
-#setup(name="UncertainSCI", packages=find_packages())
-#packages=['UncertainSCI'],
-
 setup(
     name='UncertainSCI',
     version='0.1.1-beta',
