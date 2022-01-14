@@ -19,7 +19,7 @@ To build UncertainSCI from a downloaded copy of the source code, ensure that the
 
 With the dependencies installed, UncertainSCI can be built by calling the `setup.py` file in python with `python setup.py build` to only build locally or `python setup.py install` to install UncertainSCI with the python distribution. 
 
-Alternatively, UncertainSCI can be isntalled locally with the command  `pip install .` or  `python -m pip install .`.  This will only build 
+Alternatively, UncertainSCI can be isntalled locally with the command  `pip install .` or  `python -m pip install .`. 
 
 The UncertainSCI source directory will need to be added to the PYTHONPATH environment variable for it to be called from other locations.  More on adding directories to the PYTHONPATH can be found [here](https://bic-berkeley.github.io/psych-214-fall-2016/using_pythonpath.html).  
 
