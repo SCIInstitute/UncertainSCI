@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='UncertainSCI',
-    version='0.1.1-beta',
+    version='0.1.1-b1',
     author='UncertainSCI Developers',
     author_email='uncertainsci@sci.utah.edu',
     packages=find_packages(where = 'UncertainSCI'),
