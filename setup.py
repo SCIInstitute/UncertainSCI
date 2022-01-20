@@ -45,7 +45,7 @@ setup(
         "kiwisolver==1.2.0",
         "matplotlib==3.1.3",
         "numpy==1.15.2; python_version < '3.8'",
-        "numpy==1.17.2; python_version >= '3.8'",
+        "numpy==1.21.0; python_version >= '3.8'",
         "packaging==20.3",
         "pyparsing==2.4.7",
         "python-dateutil==2.8.1",
