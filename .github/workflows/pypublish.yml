@@ -24,11 +24,12 @@ jobs:
           --sdist
           --wheel
           --outdir dist/
-      - name: check wheel
+      - name: install check-wheel-contents
         run: >-
           python3 -m
           pip install
           check-wheel-contents
+      - name: check wheel
         run: >-
           check-wheel-contents
           dist/*.whl
