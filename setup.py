@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setup(
     name='UncertainSCI',
-    version='0.1.1-b0',
+    version='0.2.0-b0',
     author='UncertainSCI Developers',
     author_email='uncertainsci@sci.utah.edu',
     packages=find_packages(),
