@@ -39,7 +39,6 @@ setup(
     keywords='Uncertainty Quantification, Simulation',
     url=r'https://sci.utah.edu/sci-software/simulation/uncertainsci.html',
     install_requires=[
-        "wheel",
         "certifi==2020.4.5.1",
         "cycler==0.10.0",
         "kiwisolver==1.2.0",
