@@ -24,7 +24,16 @@ jobs:
           --sdist
           --wheel
           --outdir dist/
+      - name: check wheel
+        run: >-
+          python3 -m
+          pip install
+          check-wheel-contents
+        run: >-
+          check-wheel-contents
+          dist/*.whl
       - name: Publish distribution to TestPyPI
+        if: startsWith(github.event.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
