@@ -39,9 +39,11 @@ setup(
     keywords='Uncertainty Quantification, Simulation',
     url=r'https://sci.utah.edu/sci-software/simulation/uncertainsci.html',
     install_requires=[
-        "matplotlib>=3.1.3",
+        "matplotlib==3.1.3; python_version < '3.8'",
+        "matplotlib>=3.1.3; python_version >= '3.8'",
         "numpy==1.15.2; python_version < '3.8'",
         "numpy>=1.21.0; python_version >= '3.8'",
-        "scipy>=1.4.1"
+        "scipy==1.4.1; python_version < '3.8'",
+        "scipy>=1.4.1; python_version >= '3.8'"
     ]
     )
