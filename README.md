@@ -8,6 +8,8 @@ A Python-based toolkit that harnesses modern techniques to estimate model and pa
 
 ![Linux build](https://github.com/SCIInstitute/UncertainSCI/workflows/Linux%20build/badge.svg)
 
+[![status](https://joss.theoj.org/papers/660d2fe53fbf67dd2714e9546251bd33/status.svg)](https://joss.theoj.org/papers/660d2fe53fbf67dd2714e9546251bd33)
+
 
 ## Documentation
 
