@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setup(
     name='UncertainSCI',
-    version='0.1.1-b0',
+    version='0.2.0-b0',
     author='UncertainSCI Developers',
     author_email='uncertainsci@sci.utah.edu',
     packages=find_packages(),
@@ -39,17 +39,11 @@ setup(
     keywords='Uncertainty Quantification, Simulation',
     url=r'https://sci.utah.edu/sci-software/simulation/uncertainsci.html',
     install_requires=[
-        "wheel",
-        "certifi==2020.4.5.1",
-        "cycler==0.10.0",
-        "kiwisolver==1.2.0",
-        "matplotlib==3.1.3",
+        "matplotlib==3.1.3; python_version < '3.8'",
+        "matplotlib>=3.1.3; python_version >= '3.8'",
         "numpy==1.15.2; python_version < '3.8'",
-        "numpy==1.17.2; python_version >= '3.8'",
-        "packaging==20.3",
-        "pyparsing==2.4.7",
-        "python-dateutil==2.8.1",
-        "scipy==1.4.1",
-        "six==1.15.0"
+        "numpy>=1.21.0; python_version >= '3.8'",
+        "scipy==1.4.1; python_version < '3.8'",
+        "scipy>=1.4.1; python_version >= '3.8'"
     ]
     )
