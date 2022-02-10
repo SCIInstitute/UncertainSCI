@@ -143,6 +143,7 @@ class PolynomialChaosExpansion():
                                  'have wrong dimension')
 
         self.samples = samples
+        self.set_weights()
 
     def set_weights(self):
         """Sets weights based on assigned samples.
