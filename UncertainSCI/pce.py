@@ -233,8 +233,6 @@ class PolynomialChaosExpansion():
 
                 self.samples = self.map_to_model_space(x)
 
-            #self.weights = self.christoffel_weights()
-
         elif self.sampling.lower() == 'gq':
 
             M = self.sampling_options.get('M')
@@ -243,6 +241,8 @@ class PolynomialChaosExpansion():
 
             p_standard, w = self.distribution.polys.tensor_gauss_quadrature(M)
             self.samples = self.map_to_model_space(p_standard)
+            # We do the following in the call to self.set_weights() below. A
+            # little more expensive, but makes for more transparent control structure.
             #self.weights = w
 
         elif self.sampling.lower() == 'gq-induced':
@@ -254,7 +254,6 @@ class PolynomialChaosExpansion():
             p_standard = self.distribution.opolys.idist_gq_sampling(K, self.indices, M=self.sampling_options.get('M'))
 
             self.samples = self.map_to_model_space(p_standard)
-            #self.weights = self.christoffel_weights()
 
         else:
             raise ValueError("Unsupported sample type '{0}' for input\
