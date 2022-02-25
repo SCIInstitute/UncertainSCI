@@ -34,7 +34,7 @@ x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
 # Compute PCE (runs model)
-lsq_residuals = pce.build_pce_wafp(model)
+lsq_residuals = pce.build(model, oversampling=10)
 
 Q = 6  # Number of quantile bands to plot
 

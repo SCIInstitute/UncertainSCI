@@ -143,29 +143,6 @@ class PolynomialChaosExpansion():
                                  'have wrong dimension')
 
         self.samples = samples
-        self.set_weights()
-
-    def set_weights(self):
-        """Sets weights based on assigned samples.
-        """
-        if self.samples is None:
-            raise RuntimeError("PCE weights cannot be set unless samples are set first.""")
-        
-        if self.sampling.lower() == 'greedy-induced':
-            self.weights = self.christoffel_weights()
-        elif self.sampling.lower() == 'gq':
-            M = self.sampling_options.get('M')
-            if M is None:
-                raise ValueError("The sampling option 'M' must be specified for Gauss quadrature sampling.")
-
-            _, self.weights = self.distribution.polys.tensor_gauss_quadrature(M)
-
-        elif self.sampling.lower() == 'gq-induced':
-            self.weights = self.christoffel_weights()
-
-        else:
-            raise ValueError("Unsupported sample type '{0}' for input\
-                              sample_type".format(self.sampling))
 
     def map_to_standard_space(self, q):
         """Maps parameter values from model space to standard space.
@@ -234,6 +211,8 @@ class PolynomialChaosExpansion():
 
                 self.samples = self.map_to_model_space(x)
 
+            self.weights = self.christoffel_weights()
+
         elif self.sampling.lower() == 'gq':
 
             M = self.sampling_options.get('M')
@@ -242,9 +221,7 @@ class PolynomialChaosExpansion():
 
             p_standard, w = self.distribution.polys.tensor_gauss_quadrature(M)
             self.samples = self.map_to_model_space(p_standard)
-            # We do the following in the call to self.set_weights() below. A
-            # little more expensive, but makes for more transparent control structure.
-            #self.weights = w
+            self.weights = w
 
         elif self.sampling.lower() == 'gq-induced':
 
@@ -255,12 +232,11 @@ class PolynomialChaosExpansion():
             p_standard = self.distribution.opolys.idist_gq_sampling(K, self.indices, M=self.sampling_options.get('M'))
 
             self.samples = self.map_to_model_space(p_standard)
+            self.weights = self.christoffel_weights()
 
         else:
             raise ValueError("Unsupported sample type '{0}' for input\
                               sample_type".format(self.sampling))
-
-        self.set_weights()
 
     def integration_weights(self):
         """

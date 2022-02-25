@@ -8,6 +8,8 @@ from UncertainSCI.model_examples import sine_modulation
 from UncertainSCI.indexing import TotalDegreeSet
 from UncertainSCI.pce import PolynomialChaosExpansion
 
+from UncertainSCI.vis import quantile_plot
+
 # Number of parameters
 dimension = 3
 
@@ -35,7 +37,7 @@ x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
 # Compute PCE (runs model)
-lsq_residuals = pce.build_pce_wafp(model)
+lsq_residuals = pce.build(model)
 
 Q = 6  # Number of quantile bands to plot
 
@@ -57,16 +59,8 @@ output = np.zeros([M, N])
 for j in range(M):
     output[j, :] = model(p_phys[j, :])
 
+quantile_plot(pce, bands=3, xvals=x, xlabel='$x$')
 plt.plot(x, output[:M, :].T, 'k', alpha=0.8, linewidth=0.2)
-plt.plot(x, median, 'b', label='PCE median')
 
-for ind in range(Q):
-    alpha = (Q-ind) * 1/Q - (1/(2*Q))
-    plt.fill_between(x, quantiles_lower[ind, :], quantiles_upper[ind, :],
-                     interpolate=True, facecolor='red', alpha=alpha)
-
-plt.xlabel('x')
-
-plt.legend(loc='lower right')
 
 plt.show()
