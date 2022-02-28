@@ -33,6 +33,16 @@ jobs:
         run: >-
           check-wheel-contents
           dist/*.whl
+      - name: Upload wheel
+        uses: actions/upload-artifact@v2
+        with:
+          name: UncertainSCIWheel
+          path: dist/UncertainSCI*.whl
+      - name: Upload tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: UncertainSCItarball
+          path: dist/UncertainSCI*.tar.gz
       - name: Publish distribution to TestPyPI
         if: startsWith(github.event.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
