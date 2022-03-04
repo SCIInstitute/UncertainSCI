@@ -281,7 +281,7 @@ class ExponentialDistribution(ProbabilityDistribution):
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
         if self.dim == 1:
-            A = np.array(lbd)
+            A = lbd
             b = -A * loc
             self.transform_to_standard = AffineTransform(A=A, b=b)
 
