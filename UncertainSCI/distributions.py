@@ -531,11 +531,11 @@ class GammaDistribution(ProbabilityDistribution):
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
         if not flip:
-            A = 1/self.theta
+            A *= 1/self.theta
         else:
-            A = -1/self.theta
+            A *= -1/self.theta
 
-        b = -A*self.shift
+        b = -A @ (self.shift*np.ones(1))
         self.transform_to_standard = AffineTransform(A=A, b=b)
 
         # Construct 1D polynomial families
@@ -543,6 +543,12 @@ class GammaDistribution(ProbabilityDistribution):
         for qd in range(self.dim):
             Ls.append(LaguerrePolynomials())
         self.polys = TensorialPolynomials(polys1d=Ls)
+
+        self.standard_domain = np.zeros([2, 1])
+        self.standard_domain[0, :] = 0.
+        self.standard_domain[1, :] = np.inf
+
+        self.poly_domain = self.standard_domain
 
         self.indices = None
 
@@ -1164,7 +1170,8 @@ class TensorialDistribution(ProbabilityDistribution):
         p = np.zeros([M, self.dim])
         counter = 0
         for dist in self.distributions:
-            p[:, range(counter, counter+dist.dim)] = dist.MC_samples(M=M)
+            p[:, range(counter, counter+dist.dim)] = np.reshape(dist.MC_samples(M=M), [M, dist.dim])
+            #p[:, range(counter, counter+dist.dim)] = dist.MC_samples(M=M)
             counter += dist.dim
 
         # Each component distribution already applies
