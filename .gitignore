@@ -142,3 +142,7 @@ docs/_build/
 
 data_set/*
 ._.DS_Store
+
+#paper files
+paper/paper.pdf
+
