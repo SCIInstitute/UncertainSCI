@@ -530,18 +530,28 @@ class GammaDistribution(ProbabilityDistribution):
         b = np.zeros(self.dim)
         self.transform_standard_dist_to_poly = AffineTransform(A=A, b=b)
 
+        A = np.eye(self.dim)
         if not flip:
             A *= 1/self.theta
         else:
             A *= -1/self.theta
-
         b = -A @ (self.shift*np.ones(1))
         self.transform_to_standard = AffineTransform(A=A, b=b)
 
         # Construct 1D polynomial families
         Ls = []
+        try:
+            kiter = iter(self.k)
+            kiter = True
+        except:
+            kiter = False
+
         for qd in range(self.dim):
-            Ls.append(LaguerrePolynomials())
+            if kiter:
+                Ls.append(LaguerrePolynomials(rho=k[qd]-1))
+            else:
+                Ls.append(LaguerrePolynomials(rho=k-1))
+
         self.polys = TensorialPolynomials(polys1d=Ls)
 
         self.standard_domain = np.zeros([2, 1])
