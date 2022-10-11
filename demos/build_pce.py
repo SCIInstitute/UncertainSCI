@@ -45,11 +45,18 @@ x, model = laplace_ode_1d(Nparams, N=N)
 pce = PolynomialChaosExpansion(distribution=[p1, p2, p3], order=order, plabels=plabels)
 pce.generate_samples()
 
+sample =pce.samples
+
+print(sample.shape)
+
 print('This queries the model {0:d} times'.format(pce.samples.shape[0]))
 
 model_output = np.zeros([pce.samples.shape[0], N])
 for ind in range(pce.samples.shape[0]):
     model_output[ind, :] = model(pce.samples[ind, :])
+    
+    
+    
 pce.build(model_output=model_output)
 
 ## Postprocess PCE: statistics are computable:
