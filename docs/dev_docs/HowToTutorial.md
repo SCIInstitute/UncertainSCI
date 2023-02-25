@@ -286,6 +286,8 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 
 To link the UncertainSCI API generated using Sphinx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
 
+
+
 ## Content Guide
 
 Try to be comprehensive, yet consise, and keep in mind the target audience for the tutorial. It is ok to write an advanced tutorial that builds on more basic knowledge, but please make this expectation clear and link to tutorials and materials that will help the reader develop the required understanding.  Include code snippets, example scripts, screenshots, and videos as appropriate.  Please use [existing tutorials](../tutorials/index.html#Contents) as try to match the style, flow, and level of detail they provide.   
