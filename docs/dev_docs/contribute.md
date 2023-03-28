@@ -6,16 +6,7 @@ Thank you for you contributions to UncertainSCI!  We welcome and appreciate and 
 
 A great way to start contributing to UncertainSCI is to submit and answer questions on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.   
 
-We also have a mailing list <uncertainsci@sci.utah.edu>.  To subscribe:
- - send an email to <sympa@sci.utah.edu> with  `subscribe uncertainsci` in the body of the email.  
- - You will receive an email requesting confirmation of the subscription.
- - Reply (no text needed) to the email to confirm submission.  
-
-Now you're on the list and will receive updates and questions.  You can also submit questions to the list once subscribed
-
-To unsubscribe from the mailing list:
-- send an email to <sympa@sci.utah.edu> with  `unsubscribe uncertainsci` in the body of the email.  
-- You will receive a confirmation email confirming the unsubcription.  
+Other ways of contacting the communtity are located on our [support page](../user_docs/support.html#support)
 
 ## Bugs and Features
 
