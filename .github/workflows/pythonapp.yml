@@ -42,12 +42,12 @@ jobs:
       run:
         pip install coveralls
         coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: ${{ matrix.os }}
-          COVERALLS_PARALLEL: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_FLAG_NAME: ${{ matrix.os }}
+        COVERALLS_PARALLEL: true
     - name: Coveralls
-        uses: coverallsapp/github-action@v2.0.0
+      uses: coverallsapp/github-action@v2.0.0
         
       
 
