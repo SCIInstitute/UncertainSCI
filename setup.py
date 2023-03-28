@@ -40,7 +40,7 @@ setup(
     url=r'https://sci.utah.edu/sci-software/simulation/uncertainsci.html',
     install_requires=[
         "matplotlib>=3.1.3",
-        "numpy>=1.19",
+        "numpy>=1.22",
         "scipy>=1.4.1"
     ]
     )
