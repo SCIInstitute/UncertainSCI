@@ -54,6 +54,7 @@ jobs:
     steps:
     - name: Finished
       run: |
+        pip3 install --upgrade pip
         pip3 install --upgrade coveralls
         coveralls --service=github --finish
       env:
