@@ -46,8 +46,18 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_FLAG_NAME: ${{ matrix.os }}
         COVERALLS_PARALLEL: true
-    - name: Coveralls
-      uses: coverallsapp/github-action@v2.0.0
+  coveralls:
+    name: confirm coveralls upload
+    needs: build
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Finished
+      run: |
+        pip3 install --upgrade coveralls
+        coveralls --service=github --finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
       
 
