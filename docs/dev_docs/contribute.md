@@ -4,11 +4,23 @@ Thank you for you contributions to UncertainSCI!  We welcome and appreciate and 
 
 ## Community Support 
 
-A great way to start contributing to UncertainSCI is to post and answer questions on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.  
+A great way to start contributing to UncertainSCI is to post and answer questions on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.   
+
+We also have a mailing list <uncertainsci@sci.utah.edu>.  To subscribe:
+ - send an email to <sympa@sci.utah.edu> with  `subscribe uncertainsci` in the body of the email.  
+ - You will receive an email requesting confirmation of the subscription.
+ - Reply (no text needed) to the email to confirm submission.  
+
+Now you're on the list and will receive updates and questions.  You can also submit questions to the list once subscribed
+
+To unsubscribe from the mailing list:
+- send an email to <sympa@sci.utah.edu> with  `unsubscribe uncertainsci` in the body of the email.  
+- You will receive a confirmation email confirming the unsubcription.  
 
 ## Bugs and Features
 
-We  encourage users to report any bugs they find and request any features they'd like as a [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues>.  If would like to tackle any issues, please volunteer or assign yourself on the issue.  
+We  encourage users to report any bugs they find and request any features they'd like as a [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues>.  If would like to tackle any issues, please volunteer by commenting in the issue or [assigning yourself]<https://docs.github.com/en/issues/tracking-your-work-with-issues/assigning-issues-and-pull-requests-to-other-github-users>.  
+
 
 ## Make a Tutorial
 
@@ -89,6 +101,11 @@ If you are editing code, take a few minutes to look at the code around you and d
 
 ### Testing
 
+Please add unit testing to new function contributed to UncertainSCI using pytest.  Unit test should be placed in the [test folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/tests>, which contains several tests to use as examples.  To run the test, use the command: 
+
+```
+pytest --cov=UncertainSCI
+```
 
 
 
