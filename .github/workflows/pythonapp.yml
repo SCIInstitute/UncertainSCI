@@ -39,7 +39,7 @@ jobs:
         pip install --editable ./
         pytest --cov=UncertainSCI
     - name: Upload coverage data to coveralls.io
-      run:
+      run: |
         pip install coveralls
         coveralls --service=github
       env:
