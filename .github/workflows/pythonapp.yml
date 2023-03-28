@@ -38,3 +38,7 @@ jobs:
       run: |
         pip install --editable ./
         pytest --cov=UncertainSCI
+    - name: Coveralls
+      uses: coverallsapp/github-action@v2.0.0
+      
+
