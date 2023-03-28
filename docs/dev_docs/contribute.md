@@ -4,7 +4,7 @@ Thank you for you contributions to UncertainSCI!  We welcome and appreciate and 
 
 ## Community Support 
 
-A great way to start contributing to UncertainSCI is to post and answer questions on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.   
+A great way to start contributing to UncertainSCI is to submit and answer questions on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.   
 
 We also have a mailing list <uncertainsci@sci.utah.edu>.  To subscribe:
  - send an email to <sympa@sci.utah.edu> with  `subscribe uncertainsci` in the body of the email.  
@@ -19,7 +19,7 @@ To unsubscribe from the mailing list:
 
 ## Bugs and Features
 
-We  encourage users to report any bugs they find and request any features they'd like as a [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues>.  If would like to tackle any issues, please volunteer by commenting in the issue or [assigning yourself]<https://docs.github.com/en/issues/tracking-your-work-with-issues/assigning-issues-and-pull-requests-to-other-github-users>.  
+We  encourage users to report any bugs they find and request any features they'd like as a [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues>.  If you would like to tackle any issues, please volunteer by commenting in the issue or [assigning yourself]<https://docs.github.com/en/issues/tracking-your-work-with-issues/assigning-issues-and-pull-requests-to-other-github-users>.  
 
 
 ## Make a Tutorial
@@ -47,7 +47,7 @@ After the the code is cloned, navigate to the repository directory and add the u
 $git remote add upstream https://github.com/SCIInstitute/UncertainSCI.git
 ```
 
-You should be able to see both your and the original repositories when you use the command:     
+You should be able to see both your and the original repository when you use the command:     
 
 ```
 $git remote -v
