@@ -99,15 +99,18 @@ If you are editing code, take a few minutes to look at the code around you and d
     - One package per line (with or without multiple function/module/class imports from the package)
 - Avoid extraneous whitespaces
 
+### Demos and Usecases
+
+New demos and usecases are always welcome.  Please add self-contained scripts demonstrating core functionality to the [demos folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/demos>.   Demos that require external packages can be located in seperate repos, such as this [UQ BEM heart position usecase]<https://github.com/SCIInstitute/UQExampleBEMHeartPosition>
+
 ### Testing
 
-Please add unit testing to new function contributed to UncertainSCI using pytest.  Unit test should be placed in the [test folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/tests>, which contains several tests to use as examples.  To run the test, use the command: 
+In addition to demos, please add unit testing to new function contributed to UncertainSCI using pytest.  Unit test should be placed in the [test folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/tests>, which contains several tests to use as examples.  To run the test, use the command: 
 
 ```
 pytest --cov=UncertainSCI
 ```
-
-
+ 
 
 
 
