@@ -99,7 +99,7 @@ New demos and usecases are always welcome.  Please add self-contained scripts de
 In addition to demos, please add unit testing to new function contributed to UncertainSCI using pytest.  Unit test should be placed in the [test folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/tests>, which contains several tests to use as examples.  To run the test, use the command: 
 
 ```
-pytest --cov=UncertainSCI
+pytest tests
 ```
  
 
