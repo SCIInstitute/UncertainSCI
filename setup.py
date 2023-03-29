@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setup(
     name='UncertainSCI',
-    version='0.2.3-b0',
+    version='1.0-rc1',
     author='UncertainSCI Developers',
     author_email='uncertainsci@sci.utah.edu',
     packages=find_packages(),
@@ -17,9 +17,9 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
