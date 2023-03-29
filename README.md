@@ -6,7 +6,7 @@ A Python-based toolkit that harnesses modern techniques to estimate model and pa
 ![UncertainSCI](docs/_static/UncertainSCI.png "UncertainSCI")
 
 
-![build](https://github.com/SCIInstitute/UncertainSCI/workflows/pythonapp/badge.svg)
+![build](https://github.com/SCIInstitute/UncertainSCI/workflows/pythonapp-build/badge.svg?branch=joss_feedback)
 
 ![mac-build](https://github.com/SCIInstitute/UncertainSCI/workflows/mac-build/badge.svg)
 ![linux-build](https://github.com/SCIInstitute/UncertainSCI/workflows/linux-build/badge.svg)
