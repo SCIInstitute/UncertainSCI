@@ -23,6 +23,6 @@ Alternatively, you can call the script with `python setup.py install`.  pip is s
 
 There are a number of demos included with UncertainSCI to test it's installation and to demonstrate its use.  
 
-`demos/build_pce.py`  is particularly useful for a quick demonstration of parametric uncertainty quantification using polynomial chaos methods.  To run this demo, make sure that UncertainSCI is [installed](#getting-uncertainsci), then simply call the script with python using the command `python demo/build_pce.py`.  Other demos can be run similarily.  
+`demos/build_pce.py`  is particularly useful for a quick demonstration of parametric uncertainty quantification using polynomial chaos methods.  To run this demo, make sure that UncertainSCI is [installed](#getting-uncertainsci), then simply call the script with python using the command `python demos/build_pce.py`.  Other demos can be run similarily.  
 
 We have included a number of demos and [tutorials](../tutorials/index.html) to teach users how to use UncertainSCI with your own applications.  The [API documentation](../api_docs/index.html) explains the implementation of UncertainSCI in more detail. 

@@ -108,3 +108,15 @@ u = laplace_ode(left=xminus, right=xplus, N=N, diffusion=a, f=f)
 ```
 
 This model can be queried using the syntax `u(p)`, where `p` is a `d`-dimensional parameter vector.
+
+# Using UncertainSCI with External Simulation Software
+
+UncertainSCI's non-invasive methods and architecture allow it to be used with simulations run with a variety of software.  The only requirements is to take parameter sets from UncertainSCI and to generate a set of solutions for UncertainSCI to use.  This can be acheived with software that is implemented in Python or contains a Python API, or by creating a hard disk data passing system.  We will include some examples on how to use these systems to integrate simulations with UncertainSCI.   
+
+We most often interface UncertainSCI with [SCIRun](https://github.com/SCIInstitute/SCIRun), a simulation software we also produce, to UQ predictions on Bioelectric field simulations.  
+
+## SCIRun/UncertainSCI ECG uncertainty due to cardiac postion
+
+An uncertainty quantification (UQ) example computing the effect of heart position on boundary element method (BEM) ECG forward computations.  This example is similar to the work of [Swenson, etal.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3362042/) but is implemented in UncertainSCI and SCIRun.  
+
+Code and example data are found on GitHub: <https://github.com/SCIInstitute/UQExampleBEMHeartPosition>
