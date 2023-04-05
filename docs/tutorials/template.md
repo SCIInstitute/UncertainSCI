@@ -104,7 +104,7 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 
 
 ### Referencing Sphynx
-TODO
+
 
 To link the UncertainSCI API generated using Sphynx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions)
 

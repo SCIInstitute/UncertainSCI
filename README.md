@@ -6,8 +6,8 @@ A Python-based toolkit that harnesses modern techniques to estimate model and pa
 ![UncertainSCI](docs/_static/UncertainSCI.png "UncertainSCI")
 
 
-![Linux build](https://github.com/SCIInstitute/UncertainSCI/workflows/Linux%20build/badge.svg)
-
+![All Builds](https://github.com/SCIInstitute/UncertainSCI/workflows/Build/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/SCIInstitute/UncertainSCI/badge.svg?branch=master)](https://coveralls.io/github/SCIInstitute/UncertainSCI?branch=master)
 [![status](https://joss.theoj.org/papers/660d2fe53fbf67dd2714e9546251bd33/status.svg)](https://joss.theoj.org/papers/660d2fe53fbf67dd2714e9546251bd33)
 
 

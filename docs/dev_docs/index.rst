@@ -5,5 +5,6 @@ Developer Documentation
    :maxdepth: 2
    :caption: Contents:
 
+   contribute
    HowToTutorial
 
