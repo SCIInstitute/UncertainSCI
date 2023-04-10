@@ -27,7 +27,7 @@ author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sum
 github_doc_root = 'https://github.com/SCIInstitute/UncertainSCI/tree/master/docs'
 
 # The full version, including alpha/beta/rc tags
-release = '0.01'
+release = '1.0rc2'
 
 
 # -- General configuration ---------------------------------------------------
