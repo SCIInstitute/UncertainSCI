@@ -27,6 +27,9 @@ python:
       path: .
       extra_requirements:
         - docs
+    - method: pip
+      path: .
+      
 #    - requirements: requirements.txt
 #    - requirements: docs/requirements.txt
 #    - path: .
