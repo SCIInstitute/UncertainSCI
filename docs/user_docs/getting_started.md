@@ -17,13 +17,11 @@ The source code for UncertainSCI can be downloaded from the [Github page](https:
 
 UncertainSCI can be built from source code using the `setup.py` script.  To call this script, navagate to the source root directory in a terminal window and run the command `pip install .` or `python -m pip install .`  
 
-Alternatively, you can call the script with `python setup.py install`.  pip is still called to install the dependencies, but they could be installed manually instead.
-
 ### Quick Guide
 
 Users can evaluate the effect of input uncertainty on forward models with UncertainSCI's implementation of [polynomial Chaos expansion (PCE)](../api_docs/pce.html).  The pipeline for the process is shown in  \autoref{fig:qg_pipeline}.
 
-![User pipeline for UncertainSCI.  After the user inputs parameter distributions, UncertainSCI will compute an efficient sampling scheme.  The parameter samples are run through the targeted modeling pipeline, which can be implemented in external software tools.  The computed solutions are collected and compiled into relevant statistics with UncertainSCI. \label{fig:qg_pipeline}](../paper/UncertainSCI_pipeline.png){ width=70% }
+![User pipeline for UncertainSCI.  After the user inputs parameter distributions, UncertainSCI will compute an efficient sampling scheme.  The parameter samples are run through the targeted modeling pipeline, which can be implemented in external software tools.  The computed solutions are collected and compiled into relevant statistics with UncertainSCI. \label{fig:qg_pipeline}](../../paper/UncertainSCI_pipeline.png)
 
 #### Before Using UncertainSCI
 
