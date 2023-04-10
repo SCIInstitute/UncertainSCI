@@ -16,6 +16,14 @@ UncertainSCI is an open-source tool designed to make modern uncertainty quantifi
 
 ## Publications
 
+- Akil Narayan, Zexin Liu, Jake Bergquist, Chantel Charlebois, Sumientra Rampersad, Lindsay Rupp, Dana Brooks, Dan White, Jess Tate, and Rob S MacLeod. UncertainSCI: Uncertainty quantification for com- putational models in biomedicine and bioengineering. Available at SSRN 4049696, 2022.
+- Kyle M. Burk, Akil Narayan, and Joseph A. Orr. Efficient sampling for polynomial chaos-based uncertainty quantification and sensitivity analysis using weighted approximate fekete points. International Journal for Numerical Methods in Biomedical Engineering, 36(11):e3395, 2020.
+- Jake Bergquist, Brian Zenger, Lindsay Rupp, Akil Narayan, Jess Tate, and Rob MacLeod. Uncertainty quantification in simulations of myocardial ischemia. In Computing in Cardiology, volume 48, September 2021.
+- Lindsay C Rupp, Jake A Bergquist, Brian Zenger, Karli Gillette, Akil Narayan, Jess Tate, Gernot Plank, and Rob S. MacLeod. The role of myocardial fiber direction in epicardial activation patterns via uncertainty quantification. In Computing in Cardiology, volume 48, September 2021.
+- Lindsay C Rupp, Zexin Liu, Jake A Bergquist, Sumientra Rampersad, Dan White, Jess D Tate, Dana H. Brooks, Akil Narayan, and Rob S. MacLeod. Using uncertainSCI to quantify uncertainty in cardiac simu- lations. In Computing in Cardiology, volume 47, September 2020.
+- Jess Tate, Sumientra Rampersad, Chantel Charlebois, Zexin Liu, Jake Bergquist, Dan White, Lindsay Rupp, Dana Brooks, Akil Narayan, and Rob MacLeod. Uncertainty quantification in brain stimulation using uncertainSCI. Brain Stimulation: Basic, Translational, and Clinical Research in Neuromodulation, 14(6):1659–1660, January 2021.
+- Jess D. Tate, Wilson W. Good, Nejib Zemzemi, Machteld Boonstra, Peter van Dam, Dana H. Brooks, Akil Narayan, and Rob S. MacLeod. Uncertainty quantification of the effects of segmentation variability in ECGI. In Functional Imaging and Modeling of the Heart, pages 515–522. Springer-Cham, Palo Alto, USA, 2021.
+- Jess D Tate, Nejib Zemzemi, Shireen Elhabian, Beáta Ondrusǔvá, Machteld Boonstra, Peter van Dam, Akil Narayan, Dana H Brooks, and Rob S MacLeod. Segmentation uncertainty quantification in cardiac propagation models. In 2022 Computing in Cardiology (CinC), volume 498, pages 1–4, 2022.
 
 
 ## Documentation
