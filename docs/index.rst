@@ -24,7 +24,7 @@ Currently implemented in UncertainSCI is Polynomial Chaos Expansion (PCE) with a
    :caption: Contents:
 
    user_docs/getting_started
-   notebooks/build_pce
+   .. include:: ../notebooks/build_pce
    user_docs/support
    tutorials/index
    dev_docs/index
