@@ -7,3 +7,4 @@ Demos
 
    simple_boxplots
    pce_statistics
+   ../../notebooks/adapt_pce

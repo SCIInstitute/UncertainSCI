@@ -40,7 +40,8 @@ extensions = [
         'sphinx.ext.napoleon',
         'recommonmark',
         'sphinxcontrib.bibtex',
-        'sphinx_markdown_tables'
+        'sphinx_markdown_tables',
+        'nbsphinx'
 ]
 
 # Path for bibtex files
@@ -59,6 +60,10 @@ source_suffix = {
     '.rst': 'restructuredtext',
     '.md': 'markdown',
 }
+
+suppress_warnings = [
+    'nbsphinx',
+]
 
 # the master toctree doc
 master_doc = 'index'
