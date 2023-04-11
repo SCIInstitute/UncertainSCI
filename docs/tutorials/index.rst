@@ -5,9 +5,9 @@ Tutorials
    :maxdepth: 2
    :caption: Contents:
 
-   build_pce
+   notebooks/build_pce
    demos/index
-   adapt_pce
+   notebooks/adapt_pce
    models
    parameters
    template
