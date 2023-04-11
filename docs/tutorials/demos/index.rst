@@ -5,6 +5,6 @@ Demos
    :maxdepth: 2
    :caption: Contents:
 
+   notebook_links
    simple_boxplots
    pce_statistics
-   .. include:: ../../notebooks/adapt_pce
