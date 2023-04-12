@@ -109,7 +109,7 @@ global_sensitivity, variable_interactions = pce.global_sensitivity()
 quantiles = pce.quantile([0.25, 0.5, 0.75]) #  0.25, median, 0.75 quantile
 ```
 There are also built in ploting functions (with matplotlib) for 1D data:
-```ptyhon
+```Python
 from matplotlib import pyplot as plt
 mean_stdev_plot(pce, ensemble=50)
 quantile_plot(pce, bands=3, xvals=x, xlabel='$x$')
