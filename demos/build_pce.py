@@ -13,7 +13,7 @@ from UncertainSCI.vis import piechart_sensitivity, quantile_plot, mean_stdev_plo
 # - A parameter distribution
 # - The capacity of the PCE model (here, polynomial space)
 # - The physical model
-
+#
 # # Distribution setup
 
 # Number of parameters
@@ -35,7 +35,7 @@ order = 5
 # with x in [-1,1] discretized with N points, where a(x,p) is a
 # Fourier-Series-parameterized diffusion model with the variables pj.
 # See the laplace_ode_1d method in UncertainSCI/model_examples.py for
-# deatils.
+# details.
 
 N = 100
 x, model = laplace_ode_1d(Nparams, N=N)

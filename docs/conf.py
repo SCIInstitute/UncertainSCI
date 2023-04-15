@@ -27,7 +27,7 @@ author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sum
 github_doc_root = 'https://github.com/SCIInstitute/UncertainSCI/tree/master/docs'
 
 # The full version, including alpha/beta/rc tags
-release = '0.01'
+release = '1.0rc2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,7 +40,8 @@ extensions = [
         'sphinx.ext.napoleon',
         'recommonmark',
         'sphinxcontrib.bibtex',
-        'sphinx_markdown_tables'
+        'sphinx_markdown_tables',
+        'nbsphinx'
 ]
 
 # Path for bibtex files
@@ -59,6 +60,10 @@ source_suffix = {
     '.rst': 'restructuredtext',
     '.md': 'markdown',
 }
+
+suppress_warnings = [
+    'nbsphinx',
+]
 
 # the master toctree doc
 master_doc = 'index'

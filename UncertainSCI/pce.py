@@ -264,7 +264,7 @@ class PolynomialChaosExpansion():
 
     def integration_weights(self):
         """
-        Generates sample weights associated to integration."
+        Generates sample weights associated to integration.
         """
 
         if self.training == 'wlsq':
@@ -779,7 +779,7 @@ class PolynomialChaosExpansion():
 
         .. math::
 
-          S_i \\coloneqq E \\left[ p(Z) \\right] = \\int p(z) \\omega(z) d z,
+          S_i \\colon = E \\left[ p(Z) \\right] = \\int p(z) \\omega(z) d z,
 
         where :math:`E[\\cdot]` it expectation operator, :math:`p` is the PCE
         emulator, and :math:`\\omega` is the probability density function for
