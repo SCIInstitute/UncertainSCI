@@ -36,11 +36,12 @@ jobs:
     - name: Test build
       run: |
         pip install --editable ./
-      env:
+      
   tests:
     name: test code and coverage
     needs: build
     runs-on: ${{ matrix.os }}
+    steps:
     - name: Run tests with pytest
       continue-on-error: true
       run: |
