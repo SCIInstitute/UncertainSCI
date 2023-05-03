@@ -68,8 +68,8 @@ jobs:
     steps:
     - name: Finished
       run: |
-#        pip3 install --upgrade pip
-#        pip3 install --upgrade coveralls
+        pip3 install --upgrade pip
+        pip3 install --upgrade coveralls
         coveralls --service=github --finish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
