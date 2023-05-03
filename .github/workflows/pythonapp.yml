@@ -37,6 +37,7 @@ jobs:
       continue-on-error: true
       run: |
         pip install --editable ./
+        pytest
         pytest --cov=UncertainSCI
     - name: Upload coverage data to coveralls.io
       run: |

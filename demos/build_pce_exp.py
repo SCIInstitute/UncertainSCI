@@ -10,7 +10,7 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 # # Distribution setup
 
 # Number of parameters
-dimension = 1
+dimension = 3
 
 # Specifies exponential distribution
 lbd = 3*np.ones(dimension)
