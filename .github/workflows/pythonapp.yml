@@ -61,7 +61,7 @@ jobs:
         
   coveralls:
     name: confirm coveralls upload
-    needs: build, tests
+    needs: [build, tests]
     runs-on: ubuntu-latest
     container: python:3-slim
     
