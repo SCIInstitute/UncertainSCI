@@ -58,11 +58,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_FLAG_NAME: ${{ matrix.os }}
         COVERALLS_PARALLEL: true
+        
   coveralls:
     name: confirm coveralls upload
     needs: build, tests
     runs-on: ubuntu-latest
     container: python:3-slim
+    
     steps:
     - name: Finished
       run: |
