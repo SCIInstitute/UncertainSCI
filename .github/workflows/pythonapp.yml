@@ -36,12 +36,6 @@ jobs:
     - name: Test build
       run: |
         pip install --editable ./
-      
-  tests:
-    name: test code and coverage
-    needs: build
-    runs-on: ${{ matrix.os }}
-    steps:
     - name: Run tests with pytest
       continue-on-error: true
       run: |
@@ -61,7 +55,7 @@ jobs:
         
   coveralls:
     name: confirm coveralls upload
-    needs: [build, tests]
+    needs: build
     runs-on: ubuntu-latest
     container: python:3-slim
     
