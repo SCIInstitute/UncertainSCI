@@ -33,7 +33,7 @@ jobs:
         run: >-
           check-wheel-contents
           dist/*.whl
-      - uses actions/upload-artifact@release/latest
+      - uses: actions/upload-artifact@release/latest
         with:
           path: ./dist/*
           
