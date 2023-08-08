@@ -35,7 +35,7 @@ jobs:
           dist/*.whl
       - uses actions/upload-artifact@release/latest
         with:
-          path: .dist/*
+          path: ./dist/*
           
   upload_pypi:
     needs: build-wheel
