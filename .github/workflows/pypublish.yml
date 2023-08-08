@@ -35,14 +35,24 @@ jobs:
           dist/*.whl
       - name: Publish distribution to TestPyPI
         if: startsWith(github.event.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
+        environment:
+          name: pypi
+          url: https://pypi.org/p/UncertainSCI
+        permissions:
+          id-token: write
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.TESTPYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
       - name: Publish distribution to PyPI
         if: startsWith(github.event.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
+        environment:
+          name: pypi
+          url: https://pypi.org/p/UncertainSCI
+        permissions:
+          id-token: write
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
