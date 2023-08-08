@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build-wheel:
-    name: Publish Python distribution to PyPI and TestPyPI
+    name: build wheel for testing
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -39,7 +39,7 @@ jobs:
           
   upload_pypi:
     needs: build-wheel
-    name: Publish distribution to TestPyPI and PyPI
+    name: Publish build to TestPyPI and PyPI
     runs-on: ubuntu-latest
     environment:
       name: pypi
