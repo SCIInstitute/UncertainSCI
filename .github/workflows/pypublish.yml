@@ -2,7 +2,7 @@ name: Publish Python distribution to PyPI and TestPyPI
 on: push
 
 jobs:
-  build-n-publish:
+  build-wheel:
     name: Publish Python distribution to PyPI and TestPyPI
     runs-on: ubuntu-latest
     steps:
@@ -33,26 +33,28 @@ jobs:
         run: >-
           check-wheel-contents
           dist/*.whl
-      - name: Publish distribution to TestPyPI
-        if: startsWith(github.event.ref, 'refs/tags')
-        environment:
-          name: pypi
-          url: https://pypi.org/p/UncertainSCI
-        permissions:
-          id-token: write
+      - uses actions/upload-artifact@release/latest
+        with:
+          path: .dist/*
+          
+  upload_pypi:
+    needs: build-wheel
+    name: Publish distribution to TestPyPI and PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/UncertainSCI
+    permissions:
+      id-token: write
+    if: startsWith(github.event.ref, 'refs/tags')
+    steps:
+      - uses: actions/download-artifact@release/latest
+        with:
+          name: artifact
+          path: dist
+      - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TESTPYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
-      - name: Publish distribution to PyPI
-        if: startsWith(github.event.ref, 'refs/tags')
-        environment:
-          name: pypi
-          url: https://pypi.org/p/UncertainSCI
-        permissions:
-          id-token: write
+      - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
