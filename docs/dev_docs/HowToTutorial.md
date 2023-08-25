@@ -210,17 +210,12 @@ The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`.
 The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
 ```
 
-add a bibliography section
+add a [bibliography section at the end of the file](#bibliography)
 ````
 ```eval_rst
 .. bibliography::
 ```
 ````
-
-#### Bibliography
-```eval_rst
-.. bibliography::
-```
 
 ### Snippets
 
@@ -325,3 +320,7 @@ With the embed link, just include the html into the markdown file.
 
 Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
+## Bibliography
+```eval_rst
+.. bibliography::
+```
