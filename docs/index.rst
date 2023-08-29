@@ -43,6 +43,7 @@ This project was supported by grants from the National Institute of Biomedical I
 Bibliography
 ================
 .. bibliography::
+  :cited:
 
 
 Indices and Tables
