@@ -1,7 +1,7 @@
 docutils>=0.20.1
 pygments
-recommonmark
-sphinx
+recommonmark>= 0.7.1
+sphinx>=7.2.4
 sphinx-issues
 sphinx-markdown-tables
 sphinx-notfound-page
