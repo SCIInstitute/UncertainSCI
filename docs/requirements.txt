@@ -1,4 +1,4 @@
-docutils
+docutils>=0.20.1
 pygments
 recommonmark
 sphinx

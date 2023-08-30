@@ -217,6 +217,11 @@ add a bibliography section
 ```
 ````
 
+#### Bibliography
+```eval_rst
+.. bibliography:: ../references.bib
+```
+
 ### Snippets
 
 Basic markdown ``some snippet``
@@ -319,10 +324,3 @@ With the embed link, just include the html into the markdown file.
 ### Datasets
 
 Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
-
-
-
-### Bibliography
-```eval_rst
-.. bibliography:: ../references.bib
-```
