@@ -40,15 +40,16 @@ Acknowledgements
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
 
 
-Bibliography
-================
-.. bibliography::
-  :cited:
-
-
 Indices and Tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+Bibliography
+================
+.. bibliography:: ./references.bib
+  :cited:
+
