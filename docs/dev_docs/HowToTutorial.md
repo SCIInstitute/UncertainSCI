@@ -216,11 +216,15 @@ add a bibliography section
 .. bibliography:: ../references.bib
 ```
 ````
+<!---
+TODO: move bibliography section back here when docutils and rtd theme play nicely together
 
 #### Bibliography
 ```eval_rst
 .. bibliography:: ../references.bib
 ```
+
+-->
 
 ### Snippets
 
@@ -324,3 +328,10 @@ With the embed link, just include the html into the markdown file.
 ### Datasets
 
 Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
+
+<!--- TODO: see above Bibliography note -->
+
+### Bibliography
+```eval_rst
+.. bibliography:: ../references.bib
+```

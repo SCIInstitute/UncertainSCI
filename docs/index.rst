@@ -39,11 +39,8 @@ Acknowledgements
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
 
-
-Bibliography
-================
-.. bibliography:: ./references.bib
-  :cited:
+..
+  TODO: move bibliography back here when the docutils and sphinx_rtd_theme play nicely together
 
 
 Indices and Tables
@@ -53,4 +50,9 @@ Indices and Tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+Bibliography
+================
+.. bibliography:: ./references.bib
+  :cited:
 
