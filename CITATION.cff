@@ -1,4 +1,4 @@
-cff-version: 1.0
+cff-version: 1.0.1rc1
 message: "If you use this software, please cite it as below."
 authors:
   - family-names: Tate
@@ -31,6 +31,6 @@ authors:
   - family-names: Narayan
     given-names: Akil
     orcid: https://orcid.org/0000-0002-5914-4207
-title: SCIInstitute/UncertainSCI: v1.0
-version: v1.0
+title: SCIInstitute/UncertainSCI: v1.0.1rc1
+version: v1.0.1rc1
 date-released: 2023-08-08
