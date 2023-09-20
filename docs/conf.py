@@ -12,6 +12,8 @@
 #
 import os
 import sys
+import shlex
+
 sys.path.insert(0, os.path.abspath('../'))
 
 import recommonmark
@@ -27,7 +29,8 @@ author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sum
 github_doc_root = 'https://github.com/SCIInstitute/UncertainSCI/tree/master/docs'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0rc2'
+version = '1.0'
+release = '1.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,6 +49,8 @@ extensions = [
 
 # Path for bibtex files
 bibtex_bibfiles = ['references.bib']
+bibtex_default_style = 'unsrt'
+bibtex_encoding = 'latin'
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -64,6 +69,8 @@ source_suffix = {
 suppress_warnings = [
     'nbsphinx',
 ]
+
+pygments_style = 'sphinx'
 
 # the master toctree doc
 master_doc = 'index'
@@ -88,14 +95,16 @@ language = 'python'
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+#if not on_rtd:
+import sphinx_rtd_theme
+  
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
+
 
 
 html_static_path = ['_static']
@@ -112,14 +121,14 @@ html_theme_options = {
 
 
 def setup(app):
-    app.add_config_value('recommonmark_config', {
-        #'url_resolver': lambda url: github_doc_root + url,
-        'auto_toc_tree_section': 'Contents',
-        'enable_math': False,
-        'enable_inline_math': False,
-        'enable_eval_rst': True,
-    }, True)
-    app.add_transform(AutoStructify)
+  app.add_config_value('recommonmark_config', {
+      #'url_resolver': lambda url: github_doc_root + url,
+      'auto_toc_tree_section': 'Contents',
+      'enable_math': False,
+      'enable_inline_math': False,
+      'enable_eval_rst': True,
+  }, True)
+  app.add_transform(AutoStructify)
 
 
 

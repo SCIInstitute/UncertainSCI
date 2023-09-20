@@ -213,14 +213,18 @@ The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`.
 add a bibliography section
 ````
 ```eval_rst
-.. bibliography::
+.. bibliography:: ../references.bib
 ```
 ````
+<!---
+TODO: move bibliography section back here when docutils and rtd theme play nicely together
 
 #### Bibliography
 ```eval_rst
-.. bibliography::
+.. bibliography:: ../references.bib
 ```
+
+-->
 
 ### Snippets
 
@@ -325,3 +329,9 @@ With the embed link, just include the html into the markdown file.
 
 Datasets should be located serperately, unless the size is small.  Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
+<!--- TODO: see above Bibliography note -->
+
+### Bibliography
+```eval_rst
+.. bibliography:: ../references.bib
+```
