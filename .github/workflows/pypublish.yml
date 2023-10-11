@@ -17,14 +17,14 @@ jobs:
     permissions:
       id-token: write
     steps:
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: artifact
-#          path: dist
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist
+          packages-dir: dist/actions
           repository-url: https://test.pypi.org/legacy/
           password: ${{ secrets.TESTPYPI_API_TOKEN }}
 #          configuration-path: ${{ inputs.config-path }}
@@ -32,7 +32,7 @@ jobs:
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist
+          packages-dir: dist/actions
 #        with:
 #          configuration-path: ${{ inputs.config-path }}
 #          secrets: inherit
