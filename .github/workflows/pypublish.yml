@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-wheel:
-    uses: .github/workflows/pypackage.yml
+    uses: ./.github/workflows/pypackage.yml
   upload_pypi:
     name: Publish build to TestPyPI and PyPI
     needs: [build-wheel]
@@ -16,12 +16,14 @@ jobs:
       url: https://pypi.org/p/UncertainSCI
     permissions:
       id-token: write
-    if: startsWith(github.event.ref, 'refs/tags')
     steps:
       - uses: actions/download-artifact@v3
         with:
           name: artifact
           path: dist
+          configuration-path: ${{ inputs.config-path }}
+          secrets:
+            envPAT: ${{ secrets.envPAT }}
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
