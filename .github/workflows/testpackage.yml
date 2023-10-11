@@ -4,8 +4,3 @@ on: #[push, pull_request]
 jobs:
   buildwheel:
     uses: ./.github/workflows/pypackage.yml
-#      with:
-#        configuration-path: ${{ inputs.config-path }}
-#      secrets:
-#        envPAT: ${{ secrets.envPAT }}
-
