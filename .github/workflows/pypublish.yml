@@ -21,11 +21,15 @@ jobs:
         with:
           name: artifact
           path: dist
-          configuration-path: ${{ inputs.config-path }}
-          secrets: inherit
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TESTPYPI_API_TOKEN }}
+#          configuration-path: ${{ inputs.config-path }}
+#          secrets: inherit
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+#          configuration-path: ${{ inputs.config-path }}
+#          secrets: inherit
