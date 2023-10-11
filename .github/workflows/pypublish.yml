@@ -21,9 +21,9 @@ jobs:
         with:
           name: artifact
           path: dist
-          configuration-path: ${{ inputs.config-path }}
-          secrets:
-            envPAT: ${{ secrets.envPAT }}
+#          configuration-path: ${{ inputs.config-path }}
+#          secrets:
+#            envPAT: ${{ secrets.envPAT }}
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
