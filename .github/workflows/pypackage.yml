@@ -3,11 +3,11 @@ on: [workflow_call]
 #  workflow_call:
 #    inputs:
 #      config-path:
-#        required: true
+#        required: false
 #        type: string
 #    secrets:
 #      envPAT:
-#        required: true
+#        required: false
         
 jobs:
   build-wheel:
@@ -44,4 +44,6 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./dist/*
+#          repo-token: ${{ secrets.token }}
+#          configuration-path: ${{ inputs.config-path }}
           
