@@ -5,9 +5,11 @@ on:
       - '*'
 
 jobs:
+  build-wheel:
+    uses: .github/workflows/pypackage.yml
   upload_pypi:
-    needs: build-wheel
     name: Publish build to TestPyPI and PyPI
+    needs: [build-wheel]
     runs-on: ubuntu-latest
     environment:
       name: pypi
