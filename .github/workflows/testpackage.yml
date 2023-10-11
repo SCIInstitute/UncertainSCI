@@ -1,5 +1,5 @@
 name: Build and Test Package
-on: push
+on: [push, pull_request]
 
 jobs:
   buildwheel:
