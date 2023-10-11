@@ -30,6 +30,6 @@ jobs:
 #          secrets: inherit
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
+#        with:
 #          configuration-path: ${{ inputs.config-path }}
 #          secrets: inherit
