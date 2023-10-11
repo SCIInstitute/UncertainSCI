@@ -1,4 +1,4 @@
-cff-version: 1.0
+cff-version: 1.0.1
 message: "If you use this software, please cite it as below."
 authors:
   - family-names: Tate
@@ -32,5 +32,5 @@ authors:
     given-names: Akil
     orcid: https://orcid.org/0000-0002-5914-4207
 title: UncertainSCI: A Python Package for Noninvasive Parametric Uncertainty Quantification of Simulation Pipelines
-version: v1.0
-date-released: 2023-08-08
+version: v1.0.1
+date-released: 2023-10-11
