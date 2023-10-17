@@ -1,52 +1,21 @@
 name: Publish Python distribution to PyPI and TestPyPI
-on: push
+on:
+  push:
+    tags:
+      - '*'
 
 jobs:
   build-wheel:
-    name: build wheel for testing
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v3
-        with:
-          python-version: 3.9
-      - name: Install pypa/build
-        run: >-
-          python -m
-          pip install
-          build
-          --user
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
-      - name: install check-wheel-contents
-        run: >-
-          python3 -m
-          pip install
-          check-wheel-contents
-      - name: check wheel
-        run: >-
-          check-wheel-contents
-          dist/*.whl
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./dist/*
-          
-  upload_pypi:
-    needs: build-wheel
-    name: Publish build to TestPyPI and PyPI
+    uses: ./.github/workflows/pypackage.yml
+  upload_testpypi:
+    name: Publish build to TestPyPI
+    needs: [build-wheel]
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/UncertainSCI
+      url: https://test.pypi.org/p/UncertainSCI
     permissions:
       id-token: write
-    if: startsWith(github.event.ref, 'refs/tags')
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -55,6 +24,22 @@ jobs:
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository_url: https://test.pypi.org/legacy/
+          packages-dir: dist
+  upload_pypi:
+    name: Publish build to PyPI
+    needs: [build-wheel, upload_testpypi]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/UncertainSCI
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

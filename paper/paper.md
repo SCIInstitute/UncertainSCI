@@ -32,7 +32,7 @@ authors:
     affiliation: 6
   - name: Rob S MacLeod
     orcid: 0000-0002-0000-0356
-    affiliation: "1, 3"
+    affiliation: "1, 3, 4"
   - name: Akil Narayan
     orcid: 0000-0002-5914-4207
     affiliation: "1, 2"
