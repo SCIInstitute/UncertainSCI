@@ -9,8 +9,7 @@ A Python-based toolkit that harnesses modern techniques to estimate model and pa
 ![All Builds](https://github.com/SCIInstitute/UncertainSCI/workflows/Build/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/SCIInstitute/UncertainSCI/badge.svg?branch=master)](https://coveralls.io/github/SCIInstitute/UncertainSCI?branch=master)
 [![status](https://joss.theoj.org/papers/660d2fe53fbf67dd2714e9546251bd33/status.svg)](https://joss.theoj.org/papers/660d2fe53fbf67dd2714e9546251bd33)
-[![DOI](https://zenodo.org/badge/253562805.svg)](https://zenodo.org/badge/latestdoi/253562805)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8226382.svg)](10.5281/zenodo.8226382)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8226382.svg)](https://doi.org/10.5281/zenodo.8226382)
 
 ## Overview
 
