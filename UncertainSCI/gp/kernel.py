@@ -335,15 +335,15 @@ class MatrixKernel():
 
         # TODO: add dim checks on x, y
         # TODO: use ignore_close_y
-        return self._core(x, y if y is not None else x)
+        return self._core(x, y)
 
-    def _core(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def _core(self, x: np.ndarray, y: np.ndarray | None = None) -> np.ndarray:
         """Bivariate matrix-valued kernel function.
 
         Arguments:
             x (2-d array):
                 x coordinates over which to evaluate kernel
-            y (2-d array):
+            y (2-d array or None):
                 y coordinates over which to evaluate kernel
 
         Returns:
@@ -394,13 +394,13 @@ class Kronecker(MatrixKernel):
         self.a = a
         self.k = k
 
-    def _core(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def _core(self, x: np.ndarray, y: np.ndarray | None = None) -> np.ndarray:
         """Evaluate simple Kronecker kernel.
 
         Arguments:
             x (2-d array):
                 x coordinates over which to evaluate kernel
-            y (2-d array):
+            y (2-d array or None):
                 y coordinates over which to evaluate kernel
 
         Returns:
