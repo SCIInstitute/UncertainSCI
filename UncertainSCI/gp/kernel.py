@@ -118,38 +118,38 @@ class ScalarKernel():
                 f'expected <= 2, got y.ndim = {y.ndim}'
             )
 
-        match x.shape:
-            case (_,):
-                if self.dim > 1 and x.shape[0] != self.dim:
-                    raise ValueError(
-                        f'Dimension mismatch: for dim = {self.dim} and '
-                        f'x.ndim = {x.ndim}, expected x.shape = '
-                        f'({self.dim},), got x.shape = {x.shape}'
-                    )
-            case (_, _):
-                if x.shape[1] != self.dim:
-                    raise ValueError(
-                        f'Dimension mismatch: for dim = {self.dim} and '
-                        f'x.ndim = {x.ndim}, expected x.shape = '
-                        f'(_, {self.dim}), got x.shape = {x.shape}'
-                    )
+        # check x shape
+        if x.ndim == 1:
+            if self.dim > 1 and x.shape[0] != self.dim:
+                raise ValueError(
+                    f'Dimension mismatch: for dim = {self.dim} and '
+                    f'x.ndim = {x.ndim}, expected x.shape = '
+                    f'({self.dim},), got x.shape = {x.shape}'
+                )
+        else:  # x.ndim == 2
+            if x.shape[1] != self.dim:
+                raise ValueError(
+                    f'Dimension mismatch: for dim = {self.dim} and '
+                    f'x.ndim = {x.ndim}, expected x.shape = '
+                    f'(_, {self.dim}), got x.shape = {x.shape}'
+                )
 
+        # check y shape
         if y is not None:
-            match y.shape:
-                case (_,):
-                    if self.dim > 1 and y.shape[0] != self.dim:
-                        raise ValueError(
-                            f'Dimension mismatch: for dim = {self.dim} and '
-                            f'y.ndim = {y.ndim}, expected y.shape = '
-                            f'({self.dim},), got y.shape = {y.shape}'
-                        )
-                case (_, _):
-                    if y.shape[1] != self.dim:
-                        raise ValueError(
-                            f'Dimension mismatch: for dim = {self.dim} and '
-                            f'y.ndim = {y.ndim}, expected y.shape = '
-                            f'(_, {self.dim}), got y.shape = {y.shape}'
-                        )
+            if y.ndim == 1:
+                if self.dim > 1 and y.shape[0] != self.dim:
+                    raise ValueError(
+                        f'Dimension mismatch: for dim = {self.dim} and '
+                        f'y.ndim = {y.ndim}, expected y.shape = '
+                        f'({self.dim},), got y.shape = {y.shape}'
+                    )
+            else:  # y.dim == 2
+                if y.shape[1] != self.dim:
+                    raise ValueError(
+                        f'Dimension mismatch: for dim = {self.dim} and '
+                        f'y.ndim = {y.ndim}, expected y.shape = '
+                        f'(_, {self.dim}), got y.shape = {y.shape}'
+                    )
 
         if y is not None and not ignore_close_y:
             if (x.reshape((-1, self.dim)).shape[0] ==
