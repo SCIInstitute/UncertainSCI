@@ -65,12 +65,12 @@ class ScalarGaussianProcess():
             self.k(x1, self.x_obs) @ self.inv @ \
             (self.k(self.x_obs, x1) if x2 is None else self.k(self.x_obs, x2))
 
-    def prior(self, x: np.ndarray, n: int = 1) -> np.ndarray:
+    def sample_prior(self, x: np.ndarray, n: int = 1) -> np.ndarray:
         ell = np.linalg.cholesky(self.k(x) + NUGGET * np.eye(len(x)))
         return (self.mu(x)[:, None] if n > 1 else self.mu(x)) + \
             ell @ np.random.normal(0, 1, (len(x), n) if n > 1 else len(x))
 
-    def posterior(self, x: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    def sample_posterior(self, x: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
         ell = np.linalg.cholesky(self.k_posterior(x) + NUGGET * np.eye(len(x)))
         return (self.mu_posterior(x)[:, None] if n > 1 else self.mu_posterior(x)) + \
             ell @ np.random.normal(0, 1, (len(x), n) if n > 1 else len(x))
@@ -139,7 +139,7 @@ class VectorGaussianProcess():
         return (self.k(x1) if x2 is None else self.k(x1, x2)) - \
             self.k(x1, self.x_obs) @ self.inv @ (self.k(self.x_obs, x1) if x2 is None else self.k(self.x_obs, x2))
 
-    def prior(self, x: np.ndarray, n: int = 1) -> np.ndarray:
+    def sample_prior(self, x: np.ndarray, n: int = 1) -> np.ndarray:
         if n > 1:
             sn = (len(x) * self.cdim, n)
             sr = (len(x), self.cdim, n)
@@ -152,7 +152,7 @@ class VectorGaussianProcess():
             (ell @ np.random.normal(0, 1, sn)).reshape(sr)
         return y
 
-    def posterior(self, x: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    def sample_posterior(self, x: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
         if n > 1:
             sn = (len(x) * self.cdim, n)
             sr = (len(x), self.cdim, n)
