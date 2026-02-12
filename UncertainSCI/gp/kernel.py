@@ -12,6 +12,17 @@ class ScalarKernel():
     """
     dim: int
     """dimension of the domain"""
+    tunables: list[tuple]
+    """tunable parameters of the kernel
+    
+    each tuple like::
+
+        (
+            <self (object needed to be modified)>,
+            <attr name as str>,
+            <default value for optimization>
+        )
+    """
 
     def __init__(self, dim: int):
         """Initialize a generic scalar-valued kernel.
@@ -190,8 +201,10 @@ class SquareExponential(ScalarKernel):
     """dimension of the domain"""
     gamma: float
     """length-scale of kernel"""
+    a: np.ndarray
+    """matrix of the quadratic form defining distance, i.e., `a` in :math:`x^T a x`"""
 
-    def __init__(self, dim: int, gamma: float = 1.):
+    def __init__(self, dim: int, gamma: float = 1., a: np.ndarray | None = None):
         """Initialize a square-exponential kernel.
 
         .. math::
@@ -204,9 +217,16 @@ class SquareExponential(ScalarKernel):
         Arguments:
             dim (int): dimension of the domain
             gamma (float, optional): length-scale of kernel
+            a (array, optional): matrix of the quadratic form :math:`x^T a x`
         """
         super().__init__(dim)
+
         self.gamma = gamma
+        if a is None: a = np.eye(dim)
+        self.a = a
+
+        self.tunables = [(self, 'gamma', self.gamma),
+                         (self, 'a', self.a)]
 
     def _core(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """Bivariate kernel function.
@@ -284,8 +304,12 @@ class Matern(ScalarKernel):
                                       f'got alpha = {alpha}')
 
         super().__init__(dim)
+
         self.alpha = alpha
         self.h = h
+
+        self.tunables = [(self, 'alpha', self.alpha),
+                         (self, 'h', self.h)]
 
     def _core(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """Bivariate kernel function.
@@ -317,6 +341,17 @@ class MatrixKernel():
     """dimension of the domain"""
     cdim: int
     """dimension of the codomain"""
+    tunables: list[tuple]
+    """tunable parameters of the kernel
+    
+    each tuple like::
+
+        (
+            <self (object needed to be modified)>,
+            <attr name as str>,
+            <default value for optimization>
+        )
+    """
 
     def __init__(self, dim: int, cdim: int):
         if dim < 1:
@@ -391,8 +426,11 @@ class Kronecker(MatrixKernel):
             k (scalar kernel): coordinate covariance
         """
         super().__init__(dim, cdim)
+
         self.a = a
         self.k = k
+
+        self.tunables = [(self, 'a', self.a)] + k.tunables
 
     def _core(self, x: np.ndarray, y: np.ndarray | None = None) -> np.ndarray:
         """Evaluate simple Kronecker kernel.
