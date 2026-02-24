@@ -24,7 +24,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
-          name: artifact
+          name: uncertainsci-packages
           path: dist
 
       - name: Upload to TestPyPI
@@ -45,7 +45,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
-          name: artifact
+          name: uncertainsci-packages
           path: dist
 
       - name: Upload to PyPI
