@@ -8,9 +8,12 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
 
+  test:
+    uses: ./.github/workflows/test.yml
+
   upload_testpypi:
     name: Publish build to TestPyPI
-    needs: [build]
+    needs: [build, test]
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -31,7 +34,7 @@ jobs:
 
   upload_pypi:
     name: Publish build to PyPI
-    needs: [build, upload_testpypi]
+    needs: [build, test, upload_testpypi]
     runs-on: ubuntu-latest
     environment:
       name: pypi
