@@ -1,8 +1,11 @@
-name: Build
+name: Test
 on: [push, pull_request]
 
 jobs:
   build:
+    uses: ./.github/workflows/build.yml
+
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -60,7 +63,7 @@ jobs:
 
   coveralls:
     name: confirm coveralls upload
-    needs: build
+    needs: [build, test]
     runs-on: ubuntu-latest
     container: python:3-slim
     
