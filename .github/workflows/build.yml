@@ -44,5 +44,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v6
         with:
-          name: python-dist-packages
-          path: dist/
+          name: uncertainsci-packages
+          path: dist
