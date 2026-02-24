@@ -1,16 +1,16 @@
-name: Publish Python distribution to PyPI and TestPyPI
+name: Publish Package
 on:
   push:
     tags:
       - '*'
 
 jobs:
-  build-wheel:
-    uses: ./.github/workflows/pypackage.yml
+  build:
+    uses: ./.github/workflows/build.yml
 
   upload_testpypi:
     name: Publish build to TestPyPI
-    needs: [build-wheel]
+    needs: [build]
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -31,7 +31,7 @@ jobs:
 
   upload_pypi:
     name: Publish build to PyPI
-    needs: [build-wheel, upload_testpypi]
+    needs: [build, upload_testpypi]
     runs-on: ubuntu-latest
     environment:
       name: pypi

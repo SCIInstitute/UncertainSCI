@@ -1,9 +1,9 @@
-name: Build Wheel
+name: Build
 on: [workflow_call]
 
 jobs:
-  build-wheel:
-    name: Build Wheel for Testing
+  build:
+    name: Build UncertainSCI wheel and tarball
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

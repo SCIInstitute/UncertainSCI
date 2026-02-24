@@ -1,6 +1,0 @@
-name: Build and Test Package
-on: [push, pull_request]
-
-jobs:
-  buildwheel:
-    uses: ./.github/workflows/pypackage.yml
