@@ -42,12 +42,7 @@ jobs:
       run: |
         pip install --editable ./
 
-    - name: Run tests with pytest
-      continue-on-error: true
-      run: |
-        pytest
-
-    - name: Test coverage with pytest
+    - name: Run tests with pytest and compute coverage
       continue-on-error: true
       run: |
         pytest --cov=UncertainSCI
