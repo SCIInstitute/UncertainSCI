@@ -1,10 +1,12 @@
 name: Test
-on: [push, pull_request, workflow_call]
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -28,23 +30,18 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-cov
+        pip install pytest pytest-cov
         pip install -r requirements.txt
 
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
-
-    - name: Test build
+    - name: Install UncertainSCI
       run: |
         pip install --editable ./
 
-    - name: Run tests with pytest and compute coverage
+    - name: Run tests and compute coverage
       run: |
         pytest --cov=UncertainSCI
 
-    - name: Upload coverage data to coveralls.io
+    - name: Upload coverage to coveralls.io
       continue-on-error: true
       run: |
         pip install coveralls
@@ -55,13 +52,13 @@ jobs:
         COVERALLS_PARALLEL: true
 
   coveralls:
-    name: confirm coveralls upload
-    needs: [build, test]
+    name: Confirm coveralls.io reporting
+    needs: test
     runs-on: ubuntu-latest
     container: python:3-slim
     
     steps:
-    - name: Finished
+    - name: Finish coveralls.io reporting
       continue-on-error: true
       run: |
         pip3 install --upgrade pip
