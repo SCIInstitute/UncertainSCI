@@ -1,9 +1,10 @@
-name: Publish Package
+name: Publish Package (TestPyPI/dry run)
 on:
   workflow_dispatch:
   push:
     tags:
-      - 'v[0-9]+'
+      - 'v[0-9]+*test*'
+      - '*test*-v[0-9]+'
 
 jobs:
   lint:
@@ -15,16 +16,13 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
 
-  publish-test:
-    uses: ./.github/workflows/publish-test.yml
-
-  upload_pypi:
-    name: Publish build to PyPI
-    needs: [lint, build, test, publish-test]
+  upload_testpypi:
+    name: Publish build to TestPyPI
+    needs: [lint, build, test]
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/UncertainSCI
+      url: https://test.pypi.org/p/UncertainSCI
     permissions:
       id-token: write
     steps:
@@ -34,7 +32,7 @@ jobs:
           name: uncertainsci-packages
           path: dist
 
-      - name: Upload to PyPI
+      - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
