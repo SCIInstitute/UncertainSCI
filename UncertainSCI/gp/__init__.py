@@ -3,54 +3,87 @@
 __version__ = "0.0.1"
 
 
-from . import wrapper
 from . import kernel
+from . import tunable
+from . import wrapper
 
 import numpy as np
 from scipy import linalg
+from scipy import optimize
+import typing
+import warnings
 
 NUGGET = 1e-6
 
 
-class ScalarGaussianProcess():
-    mu: wrapper.ScalarFunction
-    k: kernel.ScalarKernel
-    x_obs: np.ndarray | None = None
-    y_obs: np.ndarray | None = None
-    sigma: np.ndarray | None = None
-    cho_factor: tuple[np.ndarray, bool] | None = None
-
-    def __init__(self,
-                 mu: wrapper.ScalarFunction,
-                 k: kernel.ScalarKernel,
-                 discretized: bool | np.ndarray = False):
+class GaussianProcess(tunable.HasTunableParameters):
+    dim: int
+    cdim: int
+    mu: wrapper.Function
+    k: kernel.Kernel
+    x_obs: np.ndarray
+    y_obs: np.ndarray
+    s_obs: np.ndarray
+    cho_factor: tuple[np.ndarray, bool]
+    def __init__(self, mu: wrapper.Function, k: kernel.Kernel, discretized: bool | np.ndarray = False):
         if discretized is not False:
             raise NotImplementedError
 
+        self.tunables = []
+
         self.mu = mu
+        if isinstance(mu, tunable.HasTunableParameters):
+            self.tunables.extend(mu.tunables)
         self.k = k
+        if isinstance(k, tunable.HasTunableParameters):
+            self.tunables.extend(k.tunables)
 
         if k.dim != mu.dim:
-            raise ValueError('Dims of mu and k do not match!')
+            raise ValueError('Domain dimension of mu and k do not match!')
+        self.dim = mu.dim
 
-    def condition(self, x: np.ndarray,
-                  y: np.ndarray,
-                  sigma: np.ndarray | float):
-        sigma = np.asarray(sigma)
-        if sigma.ndim > 1:
+    def tune(self, callback: typing.Callable[[np.ndarray], None] | None = None) -> optimize.OptimizeResult:
+        x = []  # collect tunable values and indices
+        idx = np.zeros(len(self.tunables) + 1, dtype=int)
+        for i, t in enumerate(self.tunables):
+           idx[i + 1] = t.n + idx[i]
+           x.append(t.get_tunable())
+        x = np.concat(x)
+
+        def loss(x: np.ndarray) -> np.ndarray:
+            for i, t in enumerate(self.tunables):  # set tunables
+                t.set_tunable(x[idx[i]:idx[i + 1]])
+
+            self.cho_factor = linalg.cho_factor(self.k(self.x_obs) + self.s_obs.flatten() * np.eye(len(self.x_obs) * self.cdim))
+            d = (self.y_obs - self.mu(self.x_obs)).flatten()
+            return 1 / 2 * d @ linalg.cho_solve(self.cho_factor, d) + 1 / 2 * np.sum(np.log(np.diag(self.cho_factor[0])))
+    
+        r: optimize.OptimizeResult = optimize.minimize(loss, x, callback=(callback if callback else None)) 
+        if not r.success:
+            warnings.warn('GP tuning did not succeed!\n'
+                          'Received message:\n\t' + r.message.replace('\n', '\n\t'))
+
+        return r
+
+
+class ScalarGaussianProcess(GaussianProcess):
+    cdim: int = 1
+    def __init__(self, mu: wrapper.ScalarFunction, k: kernel.ScalarKernel, discretized: bool | np.ndarray = False):
+        super().__init__(mu, k, discretized)
+
+    def condition(self, x: np.ndarray, y: np.ndarray, s: np.ndarray | float):
+        s = np.asarray(s)
+        if s.ndim > 1:
             raise ValueError('Sigma has too many dimensions!')
-        elif sigma.ndim == 1 and len(sigma) != len(x):
+        elif s.ndim == 1 and len(s) != len(x):
             raise ValueError('Sigma has the wrong size!')
         else:
-            sigma = sigma * np.ones(len(x))
+            s = s * np.ones(len(x))
 
         self.x_obs = x
         self.y_obs = y
-        self.sigma = sigma
-        self.cho_factor = linalg.cho_factor(self.k(x) + sigma * np.eye(len(x)))
-
-    def tune(self):
-        pass
+        self.s_obs = s
+        self.cho_factor = linalg.cho_factor(self.k(x) + s * np.eye(len(x)))
 
     def mu_posterior(self, x: np.ndarray):
         if (self.x_obs is None) or (self.y_obs is None) or (self.cho_factor is None):
@@ -79,55 +112,34 @@ class ScalarGaussianProcess():
             ell @ np.random.normal(0, 1, (len(x), n) if n > 1 else len(x))
 
 
-class VectorGaussianProcess():
-    dim: int
-    cdim: int
-    mu: wrapper.VectorFunction
-    k: kernel.MatrixKernel
-    x_obs: np.ndarray | None = None
-    y_obs: np.ndarray | None = None
-    sigma: np.ndarray | None = None
-    cho_factor: tuple[np.ndarray, bool] | None = None
-
-    def __init__(self,
-                 mu: wrapper.VectorFunction,
-                 k: kernel.MatrixKernel,
-                 discretized: bool | np.ndarray = False):
+class VectorGaussianProcess(GaussianProcess):
+    def __init__(self, mu: wrapper.VectorFunction, k: kernel.MatrixKernel, discretized: bool | np.ndarray = False):
         if discretized is not False:
             raise NotImplementedError
-
-        self.mu = mu
-        self.k = k
-
-        if k.dim != mu.dim:
-            raise ValueError('Dims of mu and k do not match!')
-        self.dim = mu.dim
+        super().__init__(mu, k, discretized)
 
         if k.cdim != mu.cdim:
-            raise ValueError('Codomain dim of mu and k do not match!')
+            raise ValueError('Codomain dimension of mu and k do not match!')
         self.cdim = mu.cdim
 
     def condition(self, x: np.ndarray,
                   y: np.ndarray,
-                  sigma: np.ndarray | float):
+                  s: np.ndarray | float):
         # TODO: add dim checks on x_obs and y_obs:
         #   x_obs should be (n_obs x self.dim)
         #   y_obs should be (n_obs x self.cdim)
         #   sigma should be (n_obs x self.cdim)
         # note that n_obs = len(x)
-        sigma = np.asarray(sigma)
-        if not sigma.shape == y.shape:
+        s = np.asarray(s)
+        if not s.shape == y.shape:
             raise ValueError('Sigma has the wrong size!')
         else:
-            sigma = sigma * np.ones_like(y)
+            s = s * np.ones_like(y)
 
         self.x_obs = x
         self.y_obs = y
-        self.sigma = sigma
-        self.cho_factor = linalg.cho_factor(self.k(x) + sigma.flatten() * np.eye(len(x) * self.cdim))
-
-    def tune(self):
-        pass
+        self.s_obs = s
+        self.cho_factor = linalg.cho_factor(self.k(x) + s.flatten() * np.eye(len(x) * self.cdim))
 
     def mu_posterior(self, x: np.ndarray):
         if (self.x_obs is None) or (self.y_obs is None) or (self.cho_factor is None):
@@ -146,6 +158,13 @@ class VectorGaussianProcess():
             self.k(x1, self.x_obs) @ linalg.cho_solve(self.cho_factor, self.k(self.x_obs, x1) if x2 is None else self.k(self.x_obs, x2))
 
     def sample_prior(self, x: np.ndarray, n: int = 1) -> np.ndarray:
+        if x.ndim < 2:
+            raise NotImplementedError('Not implemented to handle 1-d array input!')
+        # len(x) SUPPOSED_TO_BE <n_xlocs = number of x-locations where evaluating gp)
+        # if x.ndim > 1 (==> x.ndim = 2):
+        #   n_xlocs = len(x)
+        # elif x.dim == 1:
+        #   n_xlocs = 1
         if n > 1:
             sn = (len(x) * self.cdim, n)
             sr = (len(x), self.cdim, n)
@@ -160,6 +179,8 @@ class VectorGaussianProcess():
         return y
 
     def sample_posterior(self, x: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
+        if x.ndim < 2:
+            raise NotImplementedError('Not implemented to handle 1-d array input!')
         if n > 1:
             sn = (len(x) * self.cdim, n)
             sr = (len(x), self.cdim, n)

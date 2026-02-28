@@ -1,19 +1,16 @@
+import numpy as np
 import typing
 
 
-class ScalarFunction:
-    """Wrapper with some attributes for use with the gp module.
-
-    Parameters:
-        dim (int): dimension of the domain
-    """
+class Function:
+    """Wrapper with some attributes for use with the gp module."""
     dim: int
-    """dimension of the domain"""
+    """Dimension of the domain."""
     _core: typing.Callable
-    """core function"""
+    """Core function."""
 
     def __init__(self, dim: int, f: typing.Callable):
-        """Initialize the callable wrapper.
+        """Create function wrapper.
 
         Arguments:
             dim (int): dimension of the domain
@@ -22,35 +19,27 @@ class ScalarFunction:
         self.dim = dim
         self._core = f
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> np.ndarray:
         return self._core(*args, **kwargs)
 
 
-class VectorFunction:
-    """Wrapper with some attributes for use with the gp module.
+class ScalarFunction(Function):
+    """Wrapper for scalar function."""
+    pass
 
-    Parameters:
-        dim (int): dimension of the domain
-        cdim (int): dimension of the codomain
-    """
-    dim: int
-    """dimension of the domain"""
+
+class VectorFunction(Function):
+    """Wrapper for vector-valued function."""
     cdim: int
-    """dimension of the codomain"""
-    _core: typing.Callable
-    """core function"""
+    """Dimension of the codomain."""
 
     def __init__(self, dim: int, cdim: int, f: typing.Callable):
-        """Initialize the callable wrapper.
+        """Create function wrapper.
 
         Arguments:
             dim (int): dimension of the domain
             cdim (int): dimension of the codomain
             f (callable): the function to wrap
         """
-        self.dim = dim
+        super().__init__(dim, f)
         self.cdim = cdim
-        self._core = f
-
-    def __call__(self, *args, **kwargs):
-        return self._core(*args, **kwargs)
