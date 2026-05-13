@@ -24,7 +24,7 @@ class JacobiTestCase(unittest.TestCase):
         beta = -1. + 10*np.random.rand(1)[0]
         J = JacobiPolynomials(alpha=alpha, beta=beta)
 
-        N = int(np.ceil(60*np.random.rand(1)))
+        N = int(np.ceil(60*np.random.rand()))
         x = (1 + 5*np.random.rand(1)) * (1 + np.random.rand(50))
         y = (1 + 5*np.random.rand(1)) * (-1 - np.random.rand(50))
         x = np.concatenate([x, y])
@@ -53,7 +53,7 @@ class JacobiTestCase(unittest.TestCase):
         beta = -1. + 10*np.random.rand(1)[0]
 
         J = JacobiPolynomials(alpha=alpha, beta=beta)
-        N = int(np.ceil(60*np.random.rand(1)))
+        N = int(np.ceil(60*np.random.rand()))
 
         x, w = J.gauss_quadrature(N)
         w /= w.sum()    # Force probability measure
@@ -89,7 +89,8 @@ class IDistTestCase(unittest.TestCase):
         F2 = np.zeros(F1.shape)
         for xind, xval in enumerate(x):
             yquad = (y+1)/2.*(xval+1) - 1.
-            F2[xind] = np.dot(w, J.eval(yquad, n)**2) * (xval+1)/2
+            integral = np.dot(w, J.eval(yquad, n)**2) * (xval+1)/2
+            F2[xind] = np.asarray(integral).item()
 
         self.assertAlmostEqual(np.linalg.norm(F1-F2, ord=np.inf), 0.)
 

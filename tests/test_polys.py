@@ -47,7 +47,7 @@ class PolysTestCase(unittest.TestCase):
         beta = 10*np.random.rand(dim)[0]
 
         N = np.random.randint(5, 10)
-        Inds = LpSet(dim=dim, order=N-1, p=np.Inf)
+        Inds = LpSet(dim=dim, order=N-1, p=np.inf)
 
         J = [None,]*dim
         for q in range(dim):
