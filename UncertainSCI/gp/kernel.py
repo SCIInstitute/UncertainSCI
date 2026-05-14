@@ -389,7 +389,8 @@ class Kronecker(MatrixKernel, tunable.HasTunableParameters):
         self.tunables = []
 
         self.chol_C = np.eye(cdim) if C is None else np.linalg.cholesky(C)
-        if C_is_tunable:
+        # TODO: also only want covariance to be tunable if NOT diagonal/identity
+        if C is not None and C_is_tunable:
             self.tunables.append(tunable.TunableParameter(self, 'chol_C', 'tril'))
 
         self.k = k
