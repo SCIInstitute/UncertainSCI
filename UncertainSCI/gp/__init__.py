@@ -42,7 +42,29 @@ class GaussianProcess(tunable.HasTunableParameters):
             raise ValueError('Domain dimension of mu and k do not match!')
         self.dim = mu.dim
 
-    def tune(self, callback: typing.Callable[[np.ndarray], None] | None = None) -> optimize.OptimizeResult:
+    def tune(self,
+             callback: typing.Callable | None = None,
+             options: dict | None = None) -> optimize.OptimizeResult:
+        """Tune the hyperparameters Gaussian process.
+        
+        Note that this method only attempts to modify parameters identified
+        by inclusion in the self.tunables list.  See notes in initialization method
+        for more details.
+
+        See the `optimize.minimize docs <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+        for more details on the arguments for this function.
+
+        Arguments:
+            callback (callable):
+                Callback function used for printing intermediate results/status of optimization on each iteration.
+                Function signature is *very specific*; see minimize docs for more details.
+            options (dict):
+                Options dict to pass to :func:`scipy.optimize.minimize`.  See minimize docs for more details.
+
+        Returns:
+            result (OptimizeResult):
+                Result of the optimization.  See minimize docs for more details.
+        """
         x = []  # collect tunable values and indices
         idx = np.zeros(len(self.tunables) + 1, dtype=int)
         for i, t in enumerate(self.tunables):
@@ -58,7 +80,9 @@ class GaussianProcess(tunable.HasTunableParameters):
             d = (self.y_obs - self.mu(self.x_obs)).flatten()
             return 1 / 2 * d @ linalg.cho_solve(self.cho_factor, d) + 1 / 2 * np.sum(np.log(np.diag(self.cho_factor[0])))
     
-        r: optimize.OptimizeResult = optimize.minimize(loss, x, callback=(callback if callback else None)) 
+        r: optimize.OptimizeResult = optimize.minimize(loss, x,
+                                                       callback=(callback if callback else None),
+                                                       options=(options if options else None)) 
         if not r.success:
             warnings.warn('GP tuning did not succeed!\n'
                           'Received message:\n\t' + r.message.replace('\n', '\n\t'))
