@@ -1,10 +1,14 @@
 # UncertainSCI Python Environment
-I couldn't find complete environment installation instructions, so I went ahead and created my own.
+People that install UncertainSCI can be sensibly categorized as follows:
+- **Users**: people who want to use UncertainSCI but do not need to meddle with its internals
+- **Developers**: people who want to meddle with UncertainSCI's internals
 
-**Python Versions:** UncertainSCI officially supports Python versions 3.9 to 3.11.  Newer Python may incidentally work, but at this time its support has not been tested.  The team is in the midst of the discussion of providing formal support for newer Python.
+These instructions explain how to install UncertainSCI for both of these use cases.
+
+**Python Versions:** UncertainSCI officially supports Python versions 3.9 to 3.11.  Newer Python may incidentally work, but at this time its support has not been tested.
 
 ## Dependency Overview
-This is an overview of the dependencies for various purposes for UncertainSCI.
+This is an overview of the dependencies for UncertainSCI for various use cases.
 
 ### Base Dependencies
 At a minimum, UncertainSCI requires all packages in the project's requirements.txt.
