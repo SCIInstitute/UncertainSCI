@@ -5,6 +5,35 @@ from . import tunable
 
 
 import numpy as np
+import numpy.typing as npt
+import scipy.linalg as linalg
+
+
+class HasSolve:
+    """Dummy class used to detect if a kernel has a solve method for the problem :math:`K v = y`."""
+    def solve(
+        self,
+        x: npt.NDArray,
+        y: npt.NDArray,
+        z: npt.NDArray
+    ) -> npt.NDArray:
+        """Solve the problem :math:`K(x, y) v = z` for v for covariance matrix K
+        evaluated at points x and y; in particular, :math:`K_{ij} = k(x_i, y_j)`.
+
+        Arguments:
+            x (2-d array):
+                x coordinates over which to evaluate kernel
+            y (2-d array):
+                y coordinates over which to evaluate kernel
+            z (array):
+                Data against which to solve.
+
+        Returns:
+            v (array):
+                Solution to the problem :math:`K v = z`.
+        """
+        raise NotImplementedError('Called kernel solve function in parent class.  '
+                                  'Use implementations to solve inverse problems.')
 
 
 class Kernel:
@@ -91,7 +120,7 @@ class Kernel:
             covariance (2-d array):
                 covariance kernel evaluated at locations x, y
         """
-        # FIXME: can I remove this?
+        # FIXME: can I remove this dummy method without breaking hinting?
         raise NotImplementedError('Called covariance kernel function in parent class.  '
                                   'Use implementations to compute covariances.')
 
@@ -350,7 +379,7 @@ class MatrixKernel(Kernel):
         self.cdim = cdim
 
 
-class Kronecker(MatrixKernel, tunable.HasTunableParameters):
+class Kronecker(MatrixKernel, tunable.HasTunableParameters, HasSolve):
     """Simple Kronecker Kernel
 
     The simple Kronecker kernel is defined here as
@@ -411,3 +440,44 @@ class Kronecker(MatrixKernel, tunable.HasTunableParameters):
                 covariance matrix
         """
         return np.kron(self.k._core(x, y), self.chol_C @ self.chol_C.T)
+
+    def solve(
+        self,
+        x: npt.NDArray,
+        y: npt.NDArray,
+        z: npt.NDArray
+    ) -> npt.NDArray:
+        """Solve the problem :math:`K(x, y) v = z` for v for covariance matrix K
+        evaluated at points x and y; in particular, :math:`K_{ij} = k(x_i, y_j)`.
+
+        Arguments:
+            x (2-d array):
+                x coordinates over which to evaluate kernel
+            y (2-d array):
+                y coordinates over which to evaluate kernel
+            z (array):
+                Data against which to solve.
+
+        Returns:
+            v (array):
+                Solution to the problem :math:`K v = z`.
+        """
+        # FIXME: fix the notation in this method
+        A = self.k._core(x, y)
+        chol_A = np.linalg.cholesky(self.k._core(x, y))
+
+        B = self.chol_C @ self.chol_C.T
+        chol_B = self.chol_C
+
+        Z = np.reshape(
+            z,
+            (B.shape[0], A.shape[0])
+        )
+
+        Y = linalg.cho_solve((chol_B, True), Z)
+        T = linalg.cho_solve((chol_B.T, False), Y)
+
+        U = linalg.cho_solve((chol_A, True), T.T)
+        v = linalg.cho_solve((chol_A.T, False), U.T).T.flatten()
+
+        return v
