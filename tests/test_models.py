@@ -1,8 +1,7 @@
+import numpy as np
 import unittest
 
-import numpy as np
-
-import UncertainSCI.model_examples as models
+import UncertainSCI.model_examples as model_examples
 
 
 class ModelTestCase(unittest.TestCase):
@@ -14,30 +13,30 @@ class ModelTestCase(unittest.TestCase):
         self.longMessage = True
 
     def test_genz_oscillatory(self):
-        """ Genz oscillatory model.  """
+        """Test the Genz oscillatory model."""
+        d = int(np.ceil(10 * np.random.random()))
+        N = int(np.ceil(100 * np.random.random()))
 
-        d = int(np.ceil(10*np.random.random()))
-        N = int(np.ceil(100*np.random.random()))
-
-        # Function inputs
+        # Generate function inputs.
         p = np.random.randn(N, d)
 
-        # Function parameters
-        w = np.random.randn(1)
+        # Generate function parameters.
+        w = np.atleast_1d(np.random.randn())
         c = np.random.randn(d)
 
-        g = models.genz_oscillatory(w=w, c=c)
+        g = model_examples.genz_oscillatory(w=w, c=c)
 
         g_model = np.zeros(N)
         g_exact = np.zeros(N)
 
         for n in range(N):
             g_model = g(p[n, :])
-            g_exact = np.cos(2*np.pi*w + np.dot(c, p[n, :]))
+            g_exact = np.cos(2 * np.pi * w + np.dot(c, p[n, :]))
 
         delta = 1e-6
         errs = np.abs(g_model - g_exact)
-        i = np.where(errs > delta)[0]
+
+        i = np.nonzero(errs > delta)[0]
         if i.size > 0:
             errstr = 'Failed for p = ' + np.array2string(p[i, :])
         else:
@@ -47,5 +46,4 @@ class ModelTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-
     unittest.main(verbosity=2)

@@ -1,8 +1,7 @@
+import numpy as np
 import unittest
 
-import numpy as np
-
-from UncertainSCI.transformations import AffineTransform
+import UncertainSCI.transformations as transformations
 
 
 class AffineMapTestCase(unittest.TestCase):
@@ -14,10 +13,9 @@ class AffineMapTestCase(unittest.TestCase):
         self.longMessage = True
 
     def test_map(self):
-        """ Forward affine map. """
-
-        d = int(np.ceil(10*np.random.random()))
-        N = int(np.ceil(100*np.random.random()))
+        """Test the forward affine map."""
+        d = int(np.ceil(10 * np.random.random()))
+        N = int(np.ceil(100 * np.random.random()))
 
         domain = np.random.randn(2, d)
         image = np.random.randn(2, d)
@@ -25,7 +23,7 @@ class AffineMapTestCase(unittest.TestCase):
         domain.sort(axis=0)
         image.sort(axis=0)
 
-        M = AffineTransform(domain=domain, image=image)
+        M = transformations.AffineTransform(domain=domain, image=image)
 
         x = np.random.randn(N, d)
 
@@ -34,7 +32,12 @@ class AffineMapTestCase(unittest.TestCase):
         y_map2 = np.zeros([N, d])
 
         for q in range(d):
-            y_map2[:, q] = (x[:, q] - domain[0, q]) / (domain[1, q] - domain[0, q]) * (image[1, q] - image[0, q]) + image[0, q]
+            y_map2[:, q] = (
+                (x[:, q] - domain[0, q]) /
+                (domain[1, q] - domain[0, q]) *
+                (image[1, q] - image[0, q]) +
+                image[0, q]
+            )
 
         errs = np.abs(y_map1 - y_map2)
 
@@ -42,10 +45,9 @@ class AffineMapTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta)
 
     def test_mapinv(self):
-        """ Inverse affine map. """
-
-        d = int(np.ceil(10*np.random.random()))
-        N = int(np.ceil(100*np.random.random()))
+        """Test the inverse affine map."""
+        d = int(np.ceil(10 * np.random.random()))
+        N = int(np.ceil(100 * np.random.random()))
 
         domain = np.random.randn(2, d)
         image = np.random.randn(2, d)
@@ -53,7 +55,7 @@ class AffineMapTestCase(unittest.TestCase):
         domain.sort(axis=0)
         image.sort(axis=0)
 
-        M = AffineTransform(domain=domain, image=image)
+        M = transformations.AffineTransform(domain=domain, image=image)
 
         y = np.random.randn(N, d)
 
@@ -62,7 +64,12 @@ class AffineMapTestCase(unittest.TestCase):
         x_map2 = np.zeros([N, d])
 
         for q in range(d):
-            x_map2[:, q] = (y[:, q] - image[0, q]) / (image[1, q] - image[0, q]) * (domain[1, q] - domain[0, q]) + domain[0, q]
+            x_map2[:, q] = (
+                (y[:, q] - image[0, q]) /
+                (image[1, q] - image[0, q]) *
+                (domain[1, q] - domain[0, q]) +
+                domain[0, q]
+            )
 
         errs = np.abs(x_map1 - x_map2)
 
@@ -71,5 +78,4 @@ class AffineMapTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-
     unittest.main(verbosity=2)
