@@ -24,6 +24,7 @@ class JacobiTestCase(unittest.TestCase):
         N = np.random.randint(1, 60 + 1)
         x = (1 + 5 * np.random.rand()) * (1 + np.random.rand(50))
         y = (1 + 5 * np.random.rand()) * (-1 - np.random.rand(50))
+
         x = np.concatenate([x, y])
 
         P = J.eval(x, range(N + 1))
