@@ -109,8 +109,10 @@ class TTRTestCase(unittest.TestCase):
             ab = np.zeros([N, 2])
             ab[1:, 0] = (N - 1) / (2 * N)
             ab[0, 1] = 1.
-            ab[1:, 1] = np.sqrt(1 / 4 * (1 - (np.arange(1, N) / N)**2)
-                                / (4 - (1 / np.arange(1, N)**2)))
+            ab[1:, 1] = np.sqrt(
+                1 / 4 * (1 - (np.arange(1, N) / N)**2) /
+                (4 - (1 / np.arange(1, N)**2))
+            )
 
             return ab
 

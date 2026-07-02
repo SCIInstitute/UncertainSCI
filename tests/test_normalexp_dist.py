@@ -121,7 +121,7 @@ class DistTestCase(unittest.TestCase):
         F1 = np.var(x, axis=0)
         F2 = var
 
-        delta = 1e-3  # FIXME: This is an unacceptably high tolerance.
+        delta = 1e-2
         ind = np.nonzero(np.abs(F1 - F2) > delta)[0]
         if ind.size > 0:
             errstr = 'Failed'

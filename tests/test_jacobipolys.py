@@ -21,7 +21,7 @@ class JacobiTestCase(unittest.TestCase):
         beta = -1. + 10 * np.random.rand()
         J = families.JacobiPolynomials(alpha=alpha, beta=beta)
 
-        N = int(np.ceil(60 * np.random.rand()))
+        N = np.random.randint(1, 60 + 1)
         x = (1 + 5 * np.random.rand()) * (1 + np.random.rand(50))
         y = (1 + 5 * np.random.rand()) * (-1 - np.random.rand(50))
         x = np.concatenate([x, y])

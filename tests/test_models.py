@@ -14,8 +14,8 @@ class ModelTestCase(unittest.TestCase):
 
     def test_genz_oscillatory(self):
         """Test the Genz oscillatory model."""
-        d = int(np.ceil(10 * np.random.random()))
-        N = int(np.ceil(100 * np.random.random()))
+        d = np.random.randint(1, 10 + 1)
+        N = np.random.randint(1, 100 + 1)
 
         # Generate function inputs.
         p = np.random.randn(N, d)
