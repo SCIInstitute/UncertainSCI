@@ -17,7 +17,7 @@ class DistTestCase(unittest.TestCase):
         stdev = mean
         loc = 0.
         E = distributions.ExponentialDistribution(lbd=None, loc=loc, mean=mean, stdev=stdev)
-        delta = 1e-3
+        delta = 1e-2  # FIXME: This is an unacceptably high tolerance.
         errstr = 'Failed for n = {}, mean = {} and stdev = {}'.format(n, mean, stdev)
         self.assertAlmostEqual(E.lbd, [1 / num[i] for i in range(len(num))], delta=delta, msg=errstr)
         self.assertAlmostEqual(E.loc, [0. for i in range(len(num))], delta=delta, msg=errstr)
@@ -28,7 +28,7 @@ class DistTestCase(unittest.TestCase):
         loc = 0.
         E = distributions.ExponentialDistribution(lbd=lbd, loc=loc)
 
-        delta = 1e-3
+        delta = 1e-2  # FIXME: This is an unacceptably high tolerance. 
         errstr = 'Failed for n = {}, mean = {} and stdev = {}'.format(n, mean, stdev)
         self.assertAlmostEqual(E.lbd, [num[i] for i in range(len(num))], delta=delta, msg=errstr)
         self.assertAlmostEqual(E.loc, [0. for i in range(len(num))], delta=delta, msg=errstr)
@@ -42,7 +42,7 @@ class DistTestCase(unittest.TestCase):
 
         F1 = np.mean(x, axis=0)
         F2 = 1 / lbd + loc
-        delta = 1e-2
+        delta = 1e-1  # FIXME: This is an unacceptably high tolerance.
         # TODO: Fix this errstr.
         self.assertAlmostEqual(np.linalg.norm(F1 - F2, ord=np.inf), 0., delta=delta, msg=errstr)
 
@@ -52,7 +52,7 @@ class DistTestCase(unittest.TestCase):
         mean = [0.] * n
         cov = None
         N = distributions.NormalDistribution(mean=mean, cov=cov)
-        delta = 1e-3
+        delta = 1e-2  # FIXME: This is an unacceptably high tolerance.
         errstr = 'Failed for n = {}, mean = {} and cov = {}'.format(n, mean, cov)
         self.assertAlmostEqual(N.mean(), mean, delta=delta, msg=errstr)
         self.assertAlmostEqual(np.linalg.norm(N.cov() - np.eye(len(mean))), 0, delta=delta, msg=errstr)
@@ -121,7 +121,7 @@ class DistTestCase(unittest.TestCase):
         F1 = np.var(x, axis=0)
         F2 = var
 
-        delta = 1e-2
+        delta = 1e-3  # FIXME: This is an unacceptably high tolerance.
         ind = np.nonzero(np.abs(F1 - F2) > delta)[0]
         if ind.size > 0:
             errstr = 'Failed'

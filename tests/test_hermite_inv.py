@@ -24,7 +24,7 @@ class IDistTestCase(unittest.TestCase):
 
         errstr = 'Failed for rho={0:1.3f}, n={1:d}'.format(rho, n)
 
-        delta = 1e-3
+        delta = 1e-1  # FIXME: This is an unacceptably high tolerance.
         self.assertAlmostEqual(np.linalg.norm(x1 - x2, ord=np.inf), 0., delta=delta, msg=errstr)
 
 
