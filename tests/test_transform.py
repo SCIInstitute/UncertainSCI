@@ -16,8 +16,8 @@ class AffineMapTestCase(unittest.TestCase):
     def test_map(self):
         """ Forward affine map. """
 
-        d = int(np.ceil(10*np.random.random(1)))
-        N = int(np.ceil(100*np.random.random(1)))
+        d = int(np.ceil(10*np.random.random()))
+        N = int(np.ceil(100*np.random.random()))
 
         domain = np.random.randn(2, d)
         image = np.random.randn(2, d)
@@ -44,8 +44,8 @@ class AffineMapTestCase(unittest.TestCase):
     def test_mapinv(self):
         """ Inverse affine map. """
 
-        d = int(np.ceil(10*np.random.random(1)))
-        N = int(np.ceil(100*np.random.random(1)))
+        d = int(np.ceil(10*np.random.random()))
+        N = int(np.ceil(100*np.random.random()))
 
         domain = np.random.randn(2, d)
         image = np.random.randn(2, d)

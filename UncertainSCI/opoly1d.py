@@ -264,10 +264,7 @@ def markov_stiltjies(u, n, ab, supp):
     W[np.where(W > 1)] = 1  # Just in case for machine eps issues
     W[-1] = 1
 
-    if isinstance(u, float) or isinstance(u, int):
-        u = np.asarray([u])
-    else:
-        u = np.asarray(u)
+    u = np.atleast_1d(u)
 
     j = np.digitize(u, W, right=False)  # bins[i-1] <= x < bins[i], left bin end is open
     jleft = j - 1
@@ -299,19 +296,15 @@ def idistinv_driver(u, n, primitive, ab, supp):
     The ouptut x = F_n^{-1}(u)
 
     """
+    u = np.atleast_1d(u)
 
-    if isinstance(u, float) or isinstance(u, int):
-        u = np.asarray([u])
+    n = np.atleast_1d(n)
+    if n.size == 1:
+        intervals = markov_stiltjies(u, int(n[0]), ab, supp)
     else:
-        u = np.asarray(u)
-
-    if isinstance(n, np.int64):
-        intervals = markov_stiltjies(u, int(n), ab, supp)
-    elif isinstance(n, int):
-        intervals = markov_stiltjies(u, n, ab, supp)
-    else:
+        assert n.size == u.size
         intervals = np.zeros((n.size, 2))
-        nmax = max(n)
+        nmax = int(max(n))
         ind = np.digitize(n, np.arange(-0.5, 0.5+nmax+1e-8), right=False)
         for i in range(nmax+1):
             flags = ind == i+1
@@ -319,7 +312,7 @@ def idistinv_driver(u, n, primitive, ab, supp):
 
     x = np.zeros(u.size,)
     for j in range(u.size):
-        x[j] = optimize.bisect(lambda xx: primitive(xx) - u[j], intervals[j, 0], intervals[j, 1])
+        x[j] = optimize.bisect(lambda xx: np.asarray(primitive(xx)).item() - u[j], intervals[j, 0], intervals[j, 1])
 
     return x
 
@@ -477,11 +470,8 @@ class OrthogonalPolynomialBasis1D:
         #
         # Returns a numel(x) x numel(n) x numel(d) array.
 
-        n = np.asarray(n)
-        if isinstance(x, int) or isinstance(x, float):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
+        n = np.atleast_1d(n)
+        x = np.atleast_1d(x)
 
         if n.size < 1 or x.size < 1:
             return np.zeros(0)
@@ -792,13 +782,9 @@ class OrthogonalPolynomialBasis1D:
 
         The output is a x.size x n.size array.
         """
+        n = np.atleast_1d(n)
 
-        n = np.asarray(n)
-
-        if isinstance(x, float) or isinstance(x, int):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
+        x = np.atleast_1d(x)
 
         if n.size < 1 or x.size < 1:
             return np.zeros(0)
@@ -826,13 +812,9 @@ class OrthogonalPolynomialBasis1D:
 
         Need {a_k, b_k} k up to n
         """
+        n = np.atleast_1d(n)
 
-        n = np.asarray(n)
-
-        if isinstance(x, float) or isinstance(x, int):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
+        x = np.atleast_1d(x)
 
         nmax = np.max(n)
         ab = self.recurrence(nmax+1)

@@ -81,14 +81,9 @@ def jacobi_recurrence_values(N, alpha, beta):
 
 
 def jacobi_idist_driver(x, n, alpha, beta, M):
-
     A = int(np.floor(np.abs(alpha)))
     Aa = alpha - A
-
-    if isinstance(x, float) or isinstance(x, int):
-        x = np.asarray([x])
-    else:
-        x = np.asarray(x)
+    x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
 
@@ -142,11 +137,7 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
 
 
 def fidistinv_setup_helper1(ug, exps):
-
-    if isinstance(ug, float) or isinstance(ug, int):
-        ug = np.asarray([ug])
-    else:
-        ug = np.asarray(ug)
+    ug = np.atleast_1d(ug)
 
     ug_mid = 1/2 * (ug[:-1] + ug[1:])
     ug = np.sort(np.append(ug, ug_mid))
@@ -211,16 +202,8 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
 
 
 def fidistinv_driver(u, n, data):
-
-    if isinstance(u, float) or isinstance(u, int):
-        u = np.asarray([u])
-    else:
-        u = np.asarray(u)
-
-    if isinstance(n, float) or isinstance(n, int):
-        n = np.asarray([n])
-    else:
-        n = np.asarray(n)
+    u = np.atleast_1d(u)
+    n = np.atleast_1d(n)
 
     if u.size == 0:
         return np.zeros(0)
@@ -228,12 +211,12 @@ def fidistinv_driver(u, n, data):
     if n.size != 1:
         assert u.size == n.size  # Inputs u and n must be the same size, or n must be a scalar
 
-    N = max(n)
+    N = int(max(n))
     assert len(data) >= N+1  # Input data does not cover range of n
 
     x = np.zeros(u.size)
     if n.size == 1:
-        x = driver_helper(u, data[int(n)])
+        x = driver_helper(u, data[int(n[0])])
     else:
         for q in range(N+1):
             nmask = (n == q)
@@ -243,7 +226,6 @@ def fidistinv_driver(u, n, data):
 
 
 def driver_helper(u, data):
-
     tol = 1e-12
 
     M = data.shape[0] - 6
@@ -325,10 +307,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         Computes the order-n induced distribution at the locations x using M=10
         quadrature nodes.
         """
-        if isinstance(x, float) or isinstance(x, int):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
+        x = np.atleast_1d(x)
 
         F = np.zeros(x.size, )
         mrs_centroid = self.idist_medapprox(n)
@@ -338,24 +317,17 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         return F
 
     def idistinv(self, u, n):
-
-        if isinstance(u, float) or isinstance(u, int):
-            u = np.asarray([u])
-        else:
-            u = np.asarray(u)
+        u = np.atleast_1d(u)
 
         x = np.zeros(u.size)
         supp = [-1, 1]
 
-        if isinstance(n, float) or isinstance(n, int):
-            n = np.asarray([n])
-        else:
-            n = np.asarray(n)
+        n = np.atleast_1d(n)
 
         M = 10
 
         if n.size == 1:
-            n = int(n)
+            n = int(n[0])
 
             def primitive(xx):
                 return self.idist(xx, n, M=M)
@@ -364,8 +336,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             x = idistinv_driver(u, n, primitive, ab, supp)
 
         else:
-
-            nmax = np.amax(n)
+            nmax = int(np.amax(n))
             ind = np.digitize(n, np.arange(-0.5, 0.5+nmax+1e-8), right=False)
 
             ab = self.recurrence_driver(2*nmax + M+1)
@@ -430,7 +401,6 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         return data
 
     def fidistinv(self, u, n):
-
         dirName = 'data_set'
         parent_dir = os.path.dirname(os.path.dirname(uSCI.__file__))
         path = os.path.join(parent_dir, dirName)
@@ -452,15 +422,13 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
             with open(os.path.join(path, filename), 'ab+') as f:
                 pickle.dump(data, f)
 
-        if isinstance(n, float) or isinstance(n, int):
-            n = np.asarray([n])
-        else:
-            n = np.asarray(n)
+        n = np.atleast_1d(n)
 
-        if len(data) < max(n[:]) + 1:
+        nmax = int(max(n))
+        if len(data) < nmax + 1:
             msg = 'Precomputing data for Jacobi parameters (alpha,beta) = ({0:1.6f}, {1:1.6f})...'
             print(msg.format(self.alpha, self.beta), end='', flush=True)
-            data = self.fidistinv_jacobi_setup(max(n[:]), data)
+            data = self.fidistinv_jacobi_setup(nmax, data)
             with open(os.path.join(path, filename), 'wb') as f:
                 pickle.dump(data, f)
             print('Done', flush=True)
@@ -475,12 +443,8 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         three-term recurrence coefficients ab
 
         """
-
-        n = np.asarray(n)
-        if isinstance(x, int) or isinstance(x, float):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
+        n = np.atleast_1d(n)
+        x = np.atleast_1d(x)
 
         if n.size < 1 or x.size < 1:
             return np.zeros(0)
@@ -510,7 +474,6 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         Evaluates tensorial orthonormal polynomials associated with the
         univariate recurrence coefficients ab
         """
-
         try:
             M, d = x.shape
         except Exception:
@@ -544,11 +507,7 @@ def freud_idist(x, n, alpha, rho):
     """
     for x <= 0
     """
-
-    if isinstance(x, float) or isinstance(x, int):
-        x = np.asarray([x])
-    else:
-        x = np.asarray(x)
+    x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
 
@@ -561,16 +520,8 @@ def freud_idist(x, n, alpha, rho):
 
 
 def freud_idistinv(u, n, alpha, rho):
-
-    if isinstance(u, float) or isinstance(u, int):
-        u = np.asarray([u])
-    else:
-        u = np.asarray(u)
-
-    if isinstance(n, float) or isinstance(n, int):
-        n = np.asarray([n])
-    else:
-        n = np.asarray(n)
+    u = np.atleast_1d(u)
+    n = np.atleast_1d(n)
 
     x = np.zeros(u.shape)
 
@@ -618,10 +569,7 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
         alpha = self.alpha
         rho = self.rho
 
-        if isinstance(x, float) or isinstance(x, int):
-            x = np.asarray([x])
-        else:
-            x = np.asarray(x)
+        x = np.atleast_1d(x)
 
         F = np.zeros(x.size)
         F[np.where(x <= 0)] = freud_idist(x[np.where(x <= 0)], n, alpha, rho)
@@ -660,10 +608,7 @@ def hfreud_idist_driver(x, n, alpha, rho, M=25):
     """
     Evaluates the integral, F = \\int_{0}^x p_n^2(x) \\dx{\\mu(x)} for x <= x0
     """
-    if isinstance(x, float) or isinstance(x, int):
-        x = np.asarray([x])
-    else:
-        x = np.asarray(x)
+    x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
 
@@ -727,10 +672,7 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
     """
     Evaluates the integral, F = \\int_{0}^x p_n^2(x) \\dx{\\mu(x)} for x >= x0
     """
-    if isinstance(x, float) or isinstance(x, int):
-        x = np.asarray([x])
-    else:
-        x = np.asarray(x)
+    x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
 
@@ -784,7 +726,6 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
 
 
 def hfreud_idist_medapprox(n, alpha, rho):
-
     if n > 0:
         a = rho + 2*n + 2*np.sqrt(n**2 + n*rho)  # maxapprox
         a = a ** (1/alpha)
@@ -806,11 +747,7 @@ def hfreud_idist_medapprox(n, alpha, rho):
 
 
 def hfreud_idist(x, n, alpha, rho):
-
-    if isinstance(x, float) or isinstance(x, int):
-        x = np.asarray([x])
-    else:
-        x = np.asarray(x)
+    x = np.atleast_1d(x)
 
     if alpha != 1:
         x0 = sum(hfreud_idist_medapprox(n, alpha, rho)) / 2
@@ -825,7 +762,6 @@ def hfreud_idist(x, n, alpha, rho):
 
 
 def hfreud_idistc(x, n, alpha, rho):
-
     return 1 - hfreud_idist(x, n, alpha, rho)
 
 #     if isinstance(x, float) or isinstance(x, int):
@@ -858,18 +794,10 @@ def hfreud_tolerance(n, alpha, rho, tol):
 
 
 def hfreud_idistinv(u, n, alpha, rho):
-
     eps = np.finfo(float).eps
 
-    if isinstance(u, float) or isinstance(u, int):
-        u = np.asarray([u])
-    else:
-        u = np.asarray(u)
-
-    if isinstance(n, float) or isinstance(n, int):
-        n = np.asarray([n])
-    else:
-        n = np.asarray(n)
+    u = np.atleast_1d(u)
+    n = np.atleast_1d(n)
 
     if n.size == 1:
         n = n[0]
@@ -892,7 +820,7 @@ def hfreud_idistinv(u, n, alpha, rho):
 
         x = idistinv_driver(u, n, primitive, ab, supp)
     else:
-        nmax = np.amax(n)
+        nmax = int(np.amax(n))
         ind = np.digitize(n, np.arange(-0.5, 0.5+nmax+1e-8), right=False)
         ab = laguerre_recurrence_values(2*nmax + max(100, nmax), alpha, rho)
 
@@ -940,21 +868,18 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
         return ab
 
     def idist_medapprox(self, n):
-
         alpha = self.alpha
         rho = self.rho
 
         return sum(hfreud_idist_medapprox(n, alpha, rho)) / 2
 
     def idist(self, x, n):
-
         alpha = self.alpha
         rho = self.rho
 
         return hfreud_idist(x, n, alpha, rho)
 
     def idistinv(self, u, n):
-
         alpha = self.alpha
         rho = self.rho
 
@@ -967,7 +892,6 @@ def discrete_chebyshev_recurrence_values(N, M):
     Chebyshev measure, the N-point discrete uniform measure with equispaced
     support on [0,1].
     """
-
     assert M > 0, N < M
 
     if N < 1:
@@ -1041,7 +965,6 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
         Optionally, add a nugget to ensure correct computation on the
         support points.
         """
-
         assert n >= 0
 
         x_standard = self.transform_to_standard.map(to_numpy_array(x))
@@ -1059,7 +982,6 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
         Computes the inverse order-n induced distribution at the locations
         u.
         """
-
         u = to_numpy_array(u)
         assert np.all(u >= 0), "Input u must contain numbers between 0 and 1"
         assert np.all(u <= 1), "Input u must contain numbers between 0 and 1"
@@ -1073,7 +995,7 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
             return discrete_chebyshev_idistinv_helper(u, self.support, self.idist(self.support, n[0], nugget=True))
 
         else:
-            nmax = np.amax(n)
+            nmax = int(np.amax(n))
             ind = np.digitize(n, np.arange(-0.5, 0.5+nmax+1e-8), right=False)
 
             for i in range(nmax+1):
@@ -1088,5 +1010,4 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
         (In this case, the "slow" routine is already very fast, so this
         is just an alias for idistinv.)
         """
-
         return self.idistinv(u, n)
