@@ -1,8 +1,7 @@
+import numpy as np
 import unittest
 
-import numpy as np
-
-from UncertainSCI import indexing
+import UncertainSCI.indexing as indexing
 
 
 class IndexingTestCase(unittest.TestCase):
@@ -14,12 +13,11 @@ class IndexingTestCase(unittest.TestCase):
         self.longMessage = True
 
     def test_margins(self):
-        """ Generating margins of index sets. """
-
+        """Generate margins of index sets."""
         dim = 2
         order = 3
 
-        # Total degree set
+        # Build the total-degree set.
         indset = indexing.TotalDegreeSet(dim=dim, order=order)
         margin = np.lexsort(indset.get_margin(), axis=0)
         rmargin = np.lexsort(indset.get_reduced_margin(), axis=0)
@@ -36,7 +34,7 @@ class IndexingTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(err, 0, delta=delta)
 
-        # Hyperbolic cross set
+        # Build the hyperbolic-cross comparison set.
         order = 3
 
         indset = indexing.TotalDegreeSet(dim=dim, order=order)
@@ -57,12 +55,11 @@ class IndexingTestCase(unittest.TestCase):
         self.assertAlmostEqual(err, 0, delta=delta)
 
     def test_zero_indices(self):
-        """ Detection of indices that are zero. """
-
+        """Detect indices that are zero."""
         dim = 3
         order = 4
 
-        # Total degree set
+        # Build the total-degree set.
         indset = indexing.TotalDegreeSet(dim=dim, order=order)
 
         exact_set_1 = [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0], [0, 4, 0]]
