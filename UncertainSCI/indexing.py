@@ -1,3 +1,7 @@
+"""
+Module containing indexing tools and families.
+"""
+
 from itertools import combinations
 
 import numpy as np
@@ -463,8 +467,3 @@ class HyperbolicCrossSet(MultiIndexSet):
             return super().get_indices()
         else:
             return hyperbolic_cross_indices(self.dim, self.order)
-
-
-if __name__ == "__main__":
-
-    pass

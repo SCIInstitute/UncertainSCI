@@ -29,8 +29,10 @@ release = '1.0.1'
 
 extensions = [
         'sphinx.ext.autodoc',
+        'sphinx.ext.autosummary',
         'sphinx.ext.intersphinx',
         'sphinx.ext.napoleon',
+        'sphinx.ext.viewcode',
         'myst_nb',
         'sphinx_copybutton',
         'sphinxcontrib.bibtex',
@@ -51,6 +53,9 @@ language = 'en'
 
 
 # -- Extension Configuration -------------------------------------------------
+
+autosummary_generate = True
+autosummary_imported_members = True
 
 # Path for bibtex files
 bibtex_bibfiles = ['references.bib']

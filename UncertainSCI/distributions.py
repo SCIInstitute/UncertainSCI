@@ -1,3 +1,19 @@
+"""
+Classes and tools to define probability distributions.
+
+For PCE (:ref:`pce`), these distributions are evolved through a forward model defining
+the stochastic variation of model parameters.
+
+Tensorizations within a distribution are possible across these families by
+instantiating the distribution appropriately. Tensorizations across distributions
+is also possible but requires individual instantiation of each distribution, followed
+by a constructor call to the :class:`TensorialDistribution` class.
+
+For example, a three-dimensional random variable :math:`Y = (Y_1, Y_2, Y_3)` can have
+independent components, with the distribution of :math:`Y_1` normal, :math:`Y_2` beta,
+and :math:`Y_3` exponential.
+"""
+
 import numpy as np
 import scipy as sp
 from scipy import sparse as sprs
