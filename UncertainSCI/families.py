@@ -1,8 +1,6 @@
 """
-Contains routines that specialize opoly1d things for classical orthogonal polynomial families
-- jacobi polys
-- hermite poly
-- laguerre polys
+Routines that specialize :mod:`UncertainSCI.opoly1d` for classical families of
+orthogonal polynomials.
 """
 import numpy as np
 

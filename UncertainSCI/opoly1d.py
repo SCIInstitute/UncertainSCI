@@ -1,9 +1,15 @@
 """
-Contains classes/methods for general univariate orthogonal polynomial families.
-- evaluation
-- gauss quadrature
-- ratio evaluations
-- linear/quadratic measure modifications
+Classes and methods for general univariate orthogonal polynomials.
+
+In particular, this module enables:
+- Evaluation
+- Gaussian quadrature
+- Rational evaluation
+- Linear/quadratic measure modifications
+
+See Also:
+    :mod:`UncertainSCI.families` for tooling for specific families of orthogonal
+    polynomials.
 """
 
 import numpy as np
@@ -412,7 +418,6 @@ class OrthogonalPolynomialBasis1D:
     def __init__(self, recurrence=[], probability_measure=True):
         self.probability_measure = probability_measure
         self.ab = np.zeros([0, 2])
-        pass
 
     def recurrence(self, N):
         """
