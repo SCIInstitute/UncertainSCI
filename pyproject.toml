@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "UncertainSCI"
+version = "1.0.1.1"
+description = "A Non-invasive Uncertainty Quantification tool"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.9,<3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "UncertainSCI Developers", email = "uncertainsci@sci.utah.edu" },
+]
+keywords = ["Uncertainty Quantification", "Simulation"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries",
+    "Operating System :: Android",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+]
+dependencies = [
+    "matplotlib>=3.1.3",
+    "numpy>=1.25,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*",
+    "packaging",
+    "scipy>=1.4.1",
+]
+
+[project.optional-dependencies]
+docs = [
+    "docutils",
+    "ipykernel",
+    "nbsphinx",
+    "pygments",
+    "recommonmark",
+    "sphinx",
+    "sphinx-issues",
+    "sphinx-markdown-tables",
+    "sphinx-notfound-page",
+    "sphinx_rtd_theme>=1.3.0",
+    "sphinxcontrib-bibtex",
+]
+interactive = [
+    "ipython",
+    "jupyter",
+]
+dev = [
+    "docutils",
+    "flake8",
+    "ipykernel",
+    "ipython",
+    "jupyter",
+    "nbsphinx",
+    "pygments",
+    "pytest",
+    "pytest-cov",
+    "recommonmark",
+    "sphinx",
+    "sphinx-issues",
+    "sphinx-markdown-tables",
+    "sphinx-notfound-page",
+    "sphinx_rtd_theme>=1.3.0",
+    "sphinxcontrib-bibtex",
+]
+
+[project.urls]
+Homepage = "https://sci.utah.edu/sci-software/simulation/uncertainsci.html"
+Documentation = "https://uncertainsci.readthedocs.io"
+Source = "https://github.com/SCIInstitute/UncertainSCI"
+Download = "https://github.com/SCIInstitute/UncertainSCI"
+
+[tool.setuptools]
+package-dir = { "" = "." }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["UncertainSCI*"]

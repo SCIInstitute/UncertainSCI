@@ -3,7 +3,7 @@
 
 ## System Requirements
 
-Requires Python 3 and modules listed in `requirements.txt`
+Requires Python 3.9, 3.10, or 3.11. Runtime dependencies are installed automatically when installing UncertainSCI.
 
 ## Getting UncertainSCI
 
@@ -15,7 +15,7 @@ The source code for UncertainSCI can be downloaded from the [Github page](https:
 
 ### Installing UncertainSCI From Source 
 
-UncertainSCI can be built from source code using the `setup.py` script.  To call this script, navagate to the source root directory in a terminal window and run the command `pip install .` or `python -m pip install .`  
+UncertainSCI can be built from source code using the project metadata in `pyproject.toml`.  To install it, navagate to the source root directory in a terminal window and run the command `pip install .` or `python -m pip install .`  
 
 ## UncertainSCI Overview
 
