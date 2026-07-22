@@ -630,23 +630,19 @@ class BetaDistribution(ProbabilityDistribution):
     \\mu, \\sigma`.
 
     Parameters:
-        alpha (float or iterable of floats, optional): Shape parameter
-        associated to right-hand boundary. Defaults to 1.
-        beta (float or iterable of floats, optional): Shape parameter
-        associated to left-hand boundary. Defaults to 1.
-        mean (float or iterable of floats, optional): Mean of the distribution.
-        Defaults to None.
-        stdev (float or iterable of floats, optional): Standard deviation of
-        the distribution. Defaults to None.
-        dim (int, optional): Dimension of the distribution. Defaults to None.
-        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact
-        hypercube that is the support of the distribution. Defaults to None
+        alpha: Shape parameter associated to right-hand boundary. Defaults to 1.
+        beta: Shape parameter associated to left-hand boundary. Defaults to 1.
+        mean: Mean of the distribution. Defaults to None.
+        stdev: Standard deviation of the distribution. Defaults to None.
+        dim: Dimension of the distribution. Defaults to None.
+        domain: Compact hypercube of size 2 x ``dim`` that is the support of
+            the distribution. Defaults to None.
 
     Attributes:
-        dim (int): Dimension of the distribution.
-        alpha (float or np.ndarray): Shape parameter(s) alpha.
-        beta (float or np.ndarray): Shape parameter(s) beta.
-        polys (:class:`JacobiPolynomials` or list thereof):
+        dim: Dimension of the distribution.
+        alpha: Shape parameter(s) alpha.
+        beta: Shape parameter(s) beta.
+        polys: Jacobi polynomial family or list thereof.
     """
     def __init__(self, alpha=None, beta=None, mean=None, stdev=None,
                  dim=None, domain=None, bounds=None):
@@ -992,17 +988,15 @@ class UniformDistribution(BetaDistribution):
     \\mu, \\sigma`.
 
     Parameters:
-        mean (float or iterable of floats, optional): Mean of the distribution.
-        Defaults to None.
-        stdev (float or iterable of floats, optional): Standard deviation of
-        the distribution. Defaults to None.
-        dim (int, optional): Dimension of the distribution. Defaults to None.
-        domain (numpy.ndarray or similar, of size 2 x `dim`, optional): Compact
-        hypercube that is the support of the distribution. Defaults to None
+        mean: Mean of the distribution. Defaults to None.
+        stdev: Standard deviation of the distribution. Defaults to None.
+        dim: Dimension of the distribution. Defaults to None.
+        domain: Compact hypercube of size 2 x ``dim`` that is the support of
+            the distribution. Defaults to None.
 
     Attributes:
-        dim (int): Dimension of the distribution.
-        polys (:class:`JacobiPolynomials` or list thereof):
+        dim: Dimension of the distribution.
+        polys: Jacobi polynomial family or list thereof.
     """
 
     def __init__(self, mean=None, stdev=None, dim=None, domain=None, bounds=None):

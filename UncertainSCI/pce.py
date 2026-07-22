@@ -29,12 +29,11 @@ class PolynomialChaosExpansion():
     Provides interface to construct and manipulate polynomial chaos expansions.
 
     Attributes:
-    -----------
-        coefficients: A numpy array of polynomial chaos expansion coefficients.
+        coefficients: NumPy array of polynomial chaos expansion coefficients.
         indices: A MultiIndexSet instance specifying the polynomial
-          approximation space.
+            approximation space.
         distribution: A ProbabilityDistribution instance indicating the
-          distribution of the random variable.
+            distribution of the random variable.
         samples: The experimental or sample design in stochastic space.
 
     """
@@ -171,10 +170,10 @@ class PolynomialChaosExpansion():
         """Maps parameter values from model space to standard space.
 
         Parameters:
-            q (array-like): Samples in model space.
+            q: Samples in model space.
 
         Returns:
-            p (numpy.ndarray): Samples in standard space
+            Samples in standard space.
         """
 
         q = np.asarray(q)
@@ -186,10 +185,10 @@ class PolynomialChaosExpansion():
         """Maps parameter values from standard space to model space.
 
         Parameters:
-            p (array-like): Samples in standard space.
+            p: Samples in standard space.
 
         Returns:
-            q (numpy.ndarray): Samples in model space
+            Samples in model space.
         """
 
         p = np.asarray(p)
@@ -200,8 +199,7 @@ class PolynomialChaosExpansion():
         """Generates sample/experimental design for use in PCE construction.
 
         Parameters:
-            new_samples (array-like, optional): Specifies samples that must be
-                part of the ensemble.
+            new_samples: Optional samples that must be part of the ensemble.
         """
 
         self.check_distribution()
@@ -363,12 +361,14 @@ class PolynomialChaosExpansion():
         """
         Augments random samples from induced distribution. Typically done via
         an adaptive refinement procedure. As such some inputs can be given to
-        customize how the samples are drawn in the context of adaptivity:
+        customize how the samples are drawn in the context of adaptivity.
 
-          K: how many samples to add (required)
-          weights: a discrete probability distribution on
-              self.index_set.get_indices() that describes how the induced
-              distrubtion is sampled. Default is uniform.
+        Args:
+            K: Number of samples to add.
+            weights: Discrete probability distribution on
+                ``self.index_set.get_indices()`` that describes how the induced
+                distribution is sampled. Default is uniform.
+            fast_sampler: Whether to use the fast induced-distribution sampler.
         """
 
         return self.distribution.polys.idist_mixture_sampling(K,
@@ -535,7 +535,7 @@ class PolynomialChaosExpansion():
               function should be a vector of size self.dim, and the output
               should be a 1D numpy array. If model_output is None, this is
               required. If model_output is given, this is ignored.
-            model_output: A numpy.ndarray corresponding to the output of the
+            model_output: NumPy array corresponding to the output of the
               model at the sample locations specified by self.samples. This is
               required if the input model is None.
         Returns:
@@ -587,8 +587,8 @@ class PolynomialChaosExpansion():
         """Returns PCE mean.
 
         Returns:
-            numpy.ndarray: A vector containing the PCE mean, of size equal to the size
-              of the vector of the model output.
+            NumPy array containing the PCE mean, of size equal to the size of
+            the vector of the model output.
         """
 
         self.assert_pce_built()
@@ -599,8 +599,8 @@ class PolynomialChaosExpansion():
         Returns PCE standard deviation
 
         Returns:
-            numpy.ndarray: A vector containing the PCE standard deviation, of size
-              equal to the size of the vector of the model output.
+            NumPy array containing the PCE standard deviation, of size equal to
+            the size of the vector of the model output.
         """
 
         self.assert_pce_built()
@@ -617,10 +617,10 @@ class PolynomialChaosExpansion():
               ignored. If given as None (default), then all components are
               computed.
         Returns:
-            numpy.ndarray: An array containing evaluations (predictions) from the PCE
-            emulator. If the input components is None, this array is of size (
-            self.p.shape[0] x self.coefficients.shape[1] ). Otherwise, the
-            second dimension is of size components.size.
+            Array containing evaluations (predictions) from the PCE emulator.
+            If the input components is None, this array is of size
+            ``self.p.shape[0] x self.coefficients.shape[1]``. Otherwise, the
+            second dimension is of size ``components.size``.
         """
 
         self.assert_pce_built()
@@ -793,8 +793,8 @@ class PolynomialChaosExpansion():
               dimensional indices in 0-based indexing. All entries must be
               between 0 and self.distribution.dim.
         Returns:
-            S: DxK array, where each row corresponds to the sensitivity index
-              :math:`S_i` across all K features of the PCE model.
+            DxK array, where each row corresponds to the sensitivity index
+            :math:`S_i` across all K features of the PCE model.
         """
 
         indices = self.index_set.get_indices()
