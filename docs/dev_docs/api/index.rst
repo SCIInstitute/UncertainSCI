@@ -5,7 +5,7 @@ API Reference
 
 
 .. seealso::
-   See :doc:`../formalism` for detail on the analytic properties of these tools.
+   See :doc:`../../formalism/index` for detail on the analytic properties of these tools.
 
 
 .. rubric:: PCE Modules

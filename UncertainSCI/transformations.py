@@ -101,14 +101,16 @@ class AffineTransform:
             return np.abs(np.linalg.det(self.A))
 
     def compose(self, other):
-        """ Returns composition of two AffineTransform's
+        """
+        Returns composition of two AffineTransform's
 
         Args:
             other: An AffineTransform instance where the domain and range are
-              the same dimension as for self.
+                the same dimension as for self.
+
        Returns:
             composition: AffineTransform instance, corresponding to the map
-              self :math:`\\circ` other
+                self :math:`\\circ` other
         """
 
         A1 = np.asarray(self.A.todense())
