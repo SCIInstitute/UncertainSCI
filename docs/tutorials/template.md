@@ -100,7 +100,7 @@ Tables can be used with normal Markdown syntax through MyST.
 ### Referencing Sphynx
 
 
-To link the UncertainSCI API generated using Sphinx, use this syntax: [`[text](../api_docs/pce.rst)`](../api_docs/pce.rst)
+To link the UncertainSCI API generated using Sphinx, use this syntax: [`[text](../formalism/pce)`](../formalism/pce)
 
 
 
