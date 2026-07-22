@@ -4,25 +4,25 @@ Thank you for you contributions to UncertainSCI!  We welcome and appreciate and 
 
 ## Community Support 
 
-A great way to start contributing to UncertainSCI is to submit and answer questions on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.   
+A great way to start contributing to UncertainSCI is to submit and answer questions on our [discussion board](https://github.com/SCIInstitute/UncertainSCI/discussions).   
 
-Other ways of contacting the communtity are located on our [support page](../user_docs/support.html#support)
+Other ways of contacting the communtity are located on our [support page](../user_docs/support.md).
 
 ## Bugs and Features
 
-We  encourage users to report any bugs they find and request any features they'd like as a [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues>.  If you would like to tackle any issues, please volunteer by commenting in the issue or [assigning yourself]<https://docs.github.com/en/issues/tracking-your-work-with-issues/assigning-issues-and-pull-requests-to-other-github-users>.  
+We  encourage users to report any bugs they find and request any features they'd like as a [GitHub issue](https://github.com/SCIInstitute/UncertainSCI/issues).  If you would like to tackle any issues, please volunteer by commenting in the issue or [assigning yourself](https://docs.github.com/en/issues/tracking-your-work-with-issues/assigning-issues-and-pull-requests-to-other-github-users).  
 
 
 ## Make a Tutorial
 
-If you have a tutorial you'd like to share, we'd love to have it.  We have a [Tutorial Tutorial](HowToTutorial.html) to explain how to make and contribute tutorials.
+If you have a tutorial you'd like to share, we'd love to have it.  We have a [Tutorial Tutorial](HowToTutorial.md) to explain how to make and contribute tutorials.
 
 
 ## Contribute Code
 
 We appreciate to code maintenance and development that our community can provide.  If you'd like to submit a bug fix, dependency update, or an added feature, please keep in mind the [style guide](#style-guide), create a [fork](#fork-repo) of the UncertainSCI repo, and use a [Pull Request](#pull-requests) to add it to UncertainSCI.  
 
-It is best practice to make sure that there is  [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues> to describe the required changes to the code, and having these issues documented become more important with the scope of the additions and changes.  Possible additions can also be discussed on our [discussion board]<https://github.com/SCIInstitute/UncertainSCI/discussions>.  
+It is best practice to make sure that there is a [GitHub issue](https://github.com/SCIInstitute/UncertainSCI/issues) to describe the required changes to the code, and having these issues documented become more important with the scope of the additions and changes.  Possible additions can also be discussed on our [discussion board](https://github.com/SCIInstitute/UncertainSCI/discussions).
 
 ### Fork Repo
 
@@ -64,12 +64,12 @@ Please see the [Github help page](https://help.github.com) for more information.
 
 ### Pull Requests
 
-With the contributions added to a branch on a fork of UncertainSCI, it is ready to create a [pull request]<https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>.  While this can be done in many ways, the easiest is probably through the web page of the forked repo. When navigating to the main page, it will usually display the a `contribute` button near the top of the page for recently updated branches.  This is a shortcut to creating a pull request to the main repo and branch.  Alternatively, a pull request can be created from the pull request tab of either the main repo or the fork.  Before making a pull request, please make sure that you've tried your best to follow the [style guide](#style-guide), and that the branch is up-to-date with the lastest master branch.  Also, please update or add [testing](#testing) as appropriate.  
+With the contributions added to a branch on a fork of UncertainSCI, it is ready to create a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).  While this can be done in many ways, the easiest is probably through the web page of the forked repo. When navigating to the main page, it will usually display the a `contribute` button near the top of the page for recently updated branches.  This is a shortcut to creating a pull request to the main repo and branch.  Alternatively, a pull request can be created from the pull request tab of either the main repo or the fork.  Before making a pull request, please make sure that you've tried your best to follow the [style guide](#style-guide), and that the branch is up-to-date with the lastest master branch.  Also, please update or add [testing](#testing) as appropriate.  
 
-Once the pull request is created, the maintainers of UncertainSCI will assign reviewers who will test and review the code to ensure that it meets the requirements of the style guide and is stable.  It is best to limit the size of each pull request to facilitate review, so if there are major new additions, please add a [GitHub issue]<https://github.com/SCIInstitute/UncertainSCI/issues> to track the progress.  
+Once the pull request is created, the maintainers of UncertainSCI will assign reviewers who will test and review the code to ensure that it meets the requirements of the style guide and is stable.  It is best to limit the size of each pull request to facilitate review, so if there are major new additions, please add a [GitHub issue](https://github.com/SCIInstitute/UncertainSCI/issues) to track the progress.  
 
 
-## Syle Guide
+## Style Guide
 
 If you are editing code, take a few minutes to look at the code around you and determine its style.  Please try to keep the style of new code as similar as possible to unchanged code to avoid jarring inconsistencies in the style.
 
@@ -92,16 +92,14 @@ If you are editing code, take a few minutes to look at the code around you and d
 
 ### Demos and Usecases
 
-New demos and usecases are always welcome.  Please add self-contained scripts demonstrating core functionality to the [demos folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/demos>.   Demos that require external packages can be located in seperate repos, such as this [UQ BEM heart position usecase]<https://github.com/SCIInstitute/UQExampleBEMHeartPosition>
+New demos and usecases are always welcome.  Please add self-contained scripts demonstrating core functionality to the [demos folder](https://github.com/SCIInstitute/UncertainSCI/tree/master/demos).   Demos that require external packages can be located in seperate repos, such as this [UQ BEM heart position usecase](https://github.com/SCIInstitute/UQExampleBEMHeartPosition)
 
 ### Testing
 
-In addition to demos, please add unit testing to new function contributed to UncertainSCI using pytest.  Unit test should be placed in the [test folder]<https://github.com/SCIInstitute/UncertainSCI/tree/master/tests>, which contains several tests to use as examples.  To run the test, use the command: 
+In addition to demos, please add unit testing to new function contributed to UncertainSCI using pytest.  Unit test should be placed in the [test folder](https://github.com/SCIInstitute/UncertainSCI/tree/master/tests), which contains several tests to use as examples.  To run the test, use the command: 
 
 ```
 pytest tests
 ```
  
-
-
 

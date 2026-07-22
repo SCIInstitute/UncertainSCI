@@ -2,9 +2,6 @@
 
 # Making Tutorials
 
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
-</script>
 <link rel="stylesheet" href="css/main.css">
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
@@ -20,10 +17,10 @@ Jess Tate
 
 ### Software requirements
 #### UncertainSCI
-To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../user_docs/getting_started.html#system-requirements)
+To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../user_docs/getting_started.md#system-requirements)
 
 #### Dependencies and Development Tools
-UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, Recommonmark, and the other packages in the `docs` optional dependency group.  More information can be found  in [the walkthorugh]( ) and on the [Sphinx documentation](https://www.sphinx-doc.org).
+UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, MyST-NB, and the other packages in the `docs` optional dependency group.  More information can be found in [testing locally](#testing-locally) and on the [Sphinx documentation](https://www.sphinx-doc.org).
 
 #### Creating Your UncertainSCI Fork
 With your own github account, go to the [UncertainSCI Github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
@@ -74,12 +71,8 @@ To make a new tutorial, a markdown file is required for the content of the tutor
 ### Markdown File
 The main file needed for a new tutorial is a markdown file.  The file should have an file ending of *.md* and should be located in the `UncertainSCI/docs/tutorials/` directory.  There is a [template file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/template.md) that can be used, or an existing tutorial like this one can be used. 
 
-If using math equations in a latex, a call to the mathjax server is required at the begining of the document:
-```
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
-</script>
-```
+Math equations can be written directly in Markdown. MyST-NB and Sphinx handle
+math rendering during the documentation build.
 
 Sphinx will build the menu and table of contents from the header names, and the document will be formated correctly if the proper markdown headings levels are used.  For instance, the Document title should be the first content:
 ```
@@ -111,14 +104,14 @@ Additional files added to the `tutorials` folder should be minimized as much as 
 
 ### Linking to New Tutorial
 
-For the new tutorial to be visible on the [tutorials page](../tutorials/index.html#tutorials), add the filename to the list in the  [`UncertainSCI/docs/tutorials/index.rst` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/index.rst).  
+For the new tutorial to be visible on the [tutorials page](../tutorials/index.rst), add the filename to the list in the  [`UncertainSCI/docs/tutorials/index.rst` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/tutorials/index.rst).
 
 ## Testing Documentation
 
 **This chapter describes how to test the look and content of the new tutorial.  Test the  generated github-pages with either a local Sphinx build or using the online build on Read the Docs.**
 
 ### Testing Locally
-Testing the documentation locally involves building documentation website on your local machine using Sphinx and Recommonmark.  These instructions are adapted from [Read the Docs' help page](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html).
+Testing the documentation locally involves building documentation website on your local machine using Sphinx and MyST-NB.  These instructions are adapted from [Read the Docs' help page](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html).
 
 #### Installing Shpinx
 To install Sphinx, make sure that a relatively recent version of Python 3 is available. The notebook documentation also requires the standalone Pandoc executable. With conda, install Pandoc first:
@@ -181,18 +174,18 @@ And to reference (not working with Sphinx):
 </figure>
 
 ### Math
-Math equations can be used in Markdown using [MathJax](http://docs.mathjax.org/en/latest/basic/mathematics.html).  Mathjax will convert LaTex format:
+Math equations can be used directly in Markdown. MyST-NB and Sphinx will render LaTeX-style math:
 ```
-$$ \frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity} $$
+$$
+\frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity}
+$$
 ```
-$$ \frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity} $$
-It can also use MathJax specific tags:
-```
-\\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
-```
-\\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
 
-inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\) 
+$$
+\frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity}
+$$
+
+Inline equations use dollar delimiters, as in ``$\mathbf{p}$``: $\mathbf{p}$
 
 
 ### Citations
@@ -203,21 +196,21 @@ Citations to include in the UncertainSCI docs can be included in the `UncertainS
 
 After the reference has been added to `UncertainSCI/docs/references.bib`, the final step is to include the command in the appropriate place.  
 
-The sphinxcontrib-bibtex is built to run with rst in Sphinx. However, it can be used in markdown using the [AutoStructify](https://recommonmark.readthedocs.io/en/latest/auto_structify.html) package.  This will require using using an `eval_rst` block as follows:
+The sphinxcontrib-bibtex is built to run with rst in Sphinx. However, it can be used in Markdown through MyST's `eval-rst` directive as follows:
 
 ````
-```eval_rst
+```{eval-rst}
 The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
 ```
 ````
 
-```eval_rst
+```{eval-rst}
 The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
 ```
 
 add a bibliography section
 ````
-```eval_rst
+```{eval-rst}
 .. bibliography:: ../references.bib
 ```
 ````
@@ -225,7 +218,7 @@ add a bibliography section
 TODO: move bibliography section back here when docutils and rtd theme play nicely together
 
 #### Bibliography
-```eval_rst
+```{eval-rst}
 .. bibliography:: ../references.bib
 ```
 
@@ -250,9 +243,9 @@ Including links in Markdown is simple, just use `<>` or `[]()`.  For example, an
 ```
 [Adding Content](#adding-content)
 ```
-When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special characters ommited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [Demos](../tutorials/demos.html#demos) is:
+When using internal links to sections, include the name of the section, all lower case and with `-` replacing spaces, and all special characters ommited.  Linking to other pages in within the UncertainSCI documentation requires a relative path.  [Demos](../tutorials/demos/index.rst) is:
 ```
-[Demos](../tutorials/demos.html#demos)
+[Demos](../tutorials/demos/index.rst)
 ```
 Links to other websites can include the full URL.  Using `<>` will show the URL, `[]()` will hide it with other text.  
 ```
@@ -264,7 +257,7 @@ Links to other websites can include the full URL.  Using `<>` will show the URL,
 
 ### Tables
 
-Tables can be used with normal markdown syntax with the [sphinx-markdown-tables](https://github.com/ryanfox/sphinx-markdown-tables) package
+Tables can be used with normal Markdown syntax through MyST.
 
 ```
 | Syntax      | Description |
@@ -279,7 +272,7 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 | Paragraph   | Text        |
 
 
-```eval_rst
+```{eval-rst}
 +------------+------------+-----------+ 
 | Header 1   | Header 2   | Header 3  | 
 +============+============+===========+ 
@@ -293,13 +286,13 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 ### Referencing Sphinx
 
 
-To link the UncertainSCI API generated using Sphinx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions).  
+To link the UncertainSCI API generated using Sphinx, Use this syntax: [`[text](../api_docs/pce.rst)`](../api_docs/pce.rst).
 
 
 
 ## Content Guide
 
-Try to be comprehensive, yet consise, and keep in mind the target audience for the tutorial. It is ok to write an advanced tutorial that builds on more basic knowledge, but please make this expectation clear and link to tutorials and materials that will help the reader develop the required understanding.  Include code snippets, example scripts, screenshots, and videos as appropriate.  Please use [existing tutorials](../tutorials/index.html#Contents) as try to match the style, flow, and level of detail they provide.   
+Try to be comprehensive, yet consise, and keep in mind the target audience for the tutorial. It is ok to write an advanced tutorial that builds on more basic knowledge, but please make this expectation clear and link to tutorials and materials that will help the reader develop the required understanding.  Include code snippets, example scripts, screenshots, and videos as appropriate.  Please use [existing tutorials](../tutorials/index.rst) as try to match the style, flow, and level of detail they provide.
 
 ## Supplemental Materials
 
@@ -307,7 +300,7 @@ Some things to consider including with the tutorial.
 
 ### Example Scripts
 
-Example scripts should be located in the  `UncertainSCI/demos/` directory.  Consider using one of the existing demos as a template and try to follow the coding standards outlined in the [contribution guide](contribute.html).  
+Example scripts should be located in the  `UncertainSCI/demos/` directory.  Consider using one of the existing demos as a template and try to follow the coding standards outlined in the [contribution guide](contribute.md).
 
 ### Movies
 
@@ -337,6 +330,5 @@ Datasets should be located serperately, unless the size is small.  Please [ask](
 <!--- TODO: see above Bibliography note -->
 
 ### Bibliography
-```eval_rst
-.. bibliography:: ../references.bib
-```
+
+The documentation bibliography is centralized in the references page.

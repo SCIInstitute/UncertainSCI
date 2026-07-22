@@ -23,12 +23,13 @@ Currently implemented in UncertainSCI is Polynomial Chaos Expansion (PCE) with a
    :maxdepth: 2
    :caption: Contents:
 
+   user_docs/install
    user_docs/getting_started
    user_docs/support
    tutorials/index
    dev_docs/index
    api_docs/index
-
+   references
 
 Contributors
 ===============
@@ -39,20 +40,9 @@ Acknowledgements
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
 
-..
-  TODO: move bibliography back here when the docutils and sphinx_rtd_theme play nicely together
-
-
 Indices and Tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
-Bibliography
-================
-.. bibliography:: ./references.bib
-  :cited:
-

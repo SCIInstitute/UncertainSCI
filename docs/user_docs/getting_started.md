@@ -19,7 +19,7 @@ UncertainSCI can be built from source code using the project metadata in `pyproj
 
 ## UncertainSCI Overview
 
-Users can evaluate the effect of input uncertainty on forward models with UncertainSCI's implementation of [polynomial Chaos expansion (PCE)](../api_docs/pce.html).  The pipeline for the process is shown in the following image:
+Users can evaluate the effect of input uncertainty on forward models with UncertainSCI's implementation of [polynomial Chaos expansion (PCE)](../api_docs/pce.rst).  The pipeline for the process is shown in the following image:
 
 ![User pipeline for UncertainSCI.  After the user inputs parameter distributions, UncertainSCI will compute an efficient sampling scheme.  The parameter samples are run through the targeted modeling pipeline, which can be implemented in external software tools.  The computed solutions are collected and compiled into relevant statistics with UncertainSCI.](../../paper/UncertainSCI_pipeline.png)
 
@@ -45,7 +45,7 @@ Distribution type of the parameters may effect the number of samples, but to a m
 
 #### Running UncertainSCI for Sample Generation
 
-With the model setup, the user will need to setup the input parameter distribution using UncertainSCI's [distribution datatype](../api_docs/distributions.html).  While there are a few distribution types to choose from, the [Beta distribution](../api_docs/distributions.html#UncertainSCI.distributions.BetaDistribution) is a common choice.  If we had three input parameters, we can define a different beta distribution for each, thus:
+With the model setup, the user will need to setup the input parameter distribution using UncertainSCI's [distribution datatype](../api_docs/distributions.rst).  While there are a few distribution types to choose from, the {class}`UncertainSCI.distributions.BetaDistribution` is a common choice.  If we had three input parameters, we can define a different beta distribution for each, thus:
 ```Python
 from UncertainSCI.distributions import BetaDistribution
 
@@ -62,7 +62,7 @@ After the input parameters are set, we can generate a parameter sampling that wi
 # # Polynomial order
 order = 5
 ```
-Now we can create the [PCE object](../api_docs/pce.html#module-UncertainSCI.pce) and generate parameter samples:
+Now we can create the {class}`UncertainSCI.pce.PolynomialChaosExpansion` object and generate parameter samples:
 ```Python
 from UncertainSCI.pce import PolynomialChaosExpansion
 
@@ -118,13 +118,13 @@ piechart_sensitivity(pce)
 plt.show()
 ```
 
-The [API documentation](../api_docs/index.html) explains the implementation of UncertainSCI in more detail. 
+The [API documentation](../api_docs/index.rst) explains the implementation of UncertainSCI in more detail.
 
 
 ## Running UncertainSCI Demos
 
-There are a number of demos included with UncertainSCI to test it's installation and to demonstrate its use.  The [previous description](#running-uncertainsci) can be found as a notebook with some more details [here](../tutorials/notebooks/build_pce.html) and as a script in `demos/build_pce.py`.  
+There are a number of demos included with UncertainSCI to test it's installation and to demonstrate its use.  The [previous description](#running-uncertainsci) can be found as a notebook with some more details [here](../tutorials/notebooks/build_pce.ipynb) and as a script in `demos/build_pce.py`.
 
 The demo scripts can be a way to quickly test the installation.  Make sure that UncertainSCI is [installed](#getting-uncertainsci), then simply call the script with python using the command `python demos/build_pce.py`.  Other demos can be run similarily.  
 
-We have included a number of demos and [tutorials](../tutorials/index.html) to teach users how to use UncertainSCI with various examples.  
+We have included a number of demos and [tutorials](../tutorials/index.rst) to teach users how to use UncertainSCI with various examples.

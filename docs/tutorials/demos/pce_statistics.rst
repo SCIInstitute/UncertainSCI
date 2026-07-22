@@ -1,5 +1,5 @@
 PCE Statistics
-=====
+==============
 
 Building PCE emulators
 ----------------------
