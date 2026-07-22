@@ -36,5 +36,5 @@ For PCE approaches, most of the computation involves computing the coefficients 
 
 In order to utilize the PCE approaches in UncertainSCI, two items must be provided:
 
-1. The distribution of the random variable :math:`\xi`. See :ref:`distributions` for how to generate this distribution.
+1. The distribution of the random variable :math:`\xi`. See :mod:`UncertainSCI.distributions` for how to generate this distribution.
 2. The type of polynomial functions in :eq:`expansion`. This amounts to defining a particular polynomial subspace. See :ref:`spaces` for how to generate this subspace.

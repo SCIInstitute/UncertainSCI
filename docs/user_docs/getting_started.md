@@ -19,7 +19,7 @@ UncertainSCI can be built from source code using the project metadata in `pyproj
 
 ## UncertainSCI Overview
 
-Users can evaluate the effect of input uncertainty on forward models with UncertainSCI's implementation of [polynomial Chaos expansion (PCE)](../api_docs/pce.rst).  The pipeline for the process is shown in the following image:
+Users can evaluate the effect of input uncertainty on forward models with UncertainSCI's implementation of [polynomial Chaos expansion (PCE)](../formalism/pce).  The pipeline for the process is shown in the following image:
 
 ![User pipeline for UncertainSCI.  After the user inputs parameter distributions, UncertainSCI will compute an efficient sampling scheme.  The parameter samples are run through the targeted modeling pipeline, which can be implemented in external software tools.  The computed solutions are collected and compiled into relevant statistics with UncertainSCI.](../../paper/UncertainSCI_pipeline.png)
 
@@ -45,7 +45,7 @@ Distribution type of the parameters may effect the number of samples, but to a m
 
 #### Running UncertainSCI for Sample Generation
 
-With the model setup, the user will need to setup the input parameter distribution using UncertainSCI's [distribution datatype](../api_docs/distributions.rst).  While there are a few distribution types to choose from, the {class}`UncertainSCI.distributions.BetaDistribution` is a common choice.  If we had three input parameters, we can define a different beta distribution for each, thus:
+With the model setup, the user will need to setup the input parameter distribution using UncertainSCI's [distribution datatype](../dev_docs/api/generated/UncertainSCI.distributions.rst).  While there are a few distribution types to choose from, the {class}`UncertainSCI.distributions.BetaDistribution` is a common choice.  If we had three input parameters, we can define a different beta distribution for each, thus:
 ```Python
 from UncertainSCI.distributions import BetaDistribution
 
@@ -118,7 +118,9 @@ piechart_sensitivity(pce)
 plt.show()
 ```
 
-The [API documentation](../api_docs/index.rst) explains the implementation of UncertainSCI in more detail.
+The [discussion of PCE in the Formalism section](../formalism/pce.rst) explains PCE in
+more detail. Implementation details of UncertainSCI can be found in
+[the API reference](../dev_docs/api/index.rst) and in the source code.
 
 
 ## Running UncertainSCI Demos
