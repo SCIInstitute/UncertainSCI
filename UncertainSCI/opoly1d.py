@@ -366,7 +366,7 @@ def derivative_expansion_driver(ab, s, N, K):
         N: Computes coefficients for :math:`n \\leq N`
         K: Computes coefficients for :math:`k \\leq K`.
     Returns:
-        C: (N+1) x (K+1) numpy array containing coefficients.
+        Coefficient array with shape (N+1, K+1).
     """
 
     assert ab.shape[1] == 2
@@ -435,15 +435,11 @@ class OrthogonalPolynomialBasis1D:
         recurrence_driver is performed to compute the desired
         coefficients, and the output is stored in the instance variable.
 
-        Parameters
-        ----------
-        N: positive integer
-            Maximum polynomial degree for desired recurrence coefficients
+        Args:
+            N: Maximum polynomial degree for desired recurrence coefficients.
 
-        Returns
-        -------
-        ab: ndarray
-            (N+1) x 2 array of recurrence coefficients.
+        Returns:
+            The recurrence coefficient array with shape (N+1, 2).
         """
 
         if N+1 > self.ab.shape[0]:
@@ -507,15 +503,12 @@ class OrthogonalPolynomialBasis1D:
         appropriate size for the polynomial family. Applies the Jacobi
         matrix across the first dimension of v.
 
-        Parameters
-        ----------
-        v: ndarray
-            Input vector or array
+        Args:
+            v: Input vector or array.
 
-        Returns
-        -------
-        Jv: ndarray
-            J*v, where J is the Jacobi matrix of size v.shape[0].
+        Returns:
+            The result of applying ``J*v``, where J is the Jacobi matrix of
+            size ``v.shape[0]``.
         """
 
         N = v.shape[0]
@@ -653,18 +646,12 @@ class OrthogonalPolynomialBasis1D:
 
             C[n,j] = < p_n p_j, p_alpha >, j, n \\in range(N)
 
-        Parameters
-        ----------
-        IC: vector (1d array)
-            Values of input inner products
+        Args:
+            IC: Values of input inner products.
+            ab: Recurrence coefficients.
 
-        ab: ndarray, optional
-            Recurrence coefficients
-
-        Returns
-        -------
-        C: ndarray
-            Output coefficient expansion vector for beta
+        Returns:
+            The output coefficient expansion vector for beta.
         """
 
         N = IC.size
@@ -693,18 +680,12 @@ class OrthogonalPolynomialBasis1D:
         The notation <., .> denotes the inner product under which the
         polynomial family is orthogonal.
 
-        Parameters
-        ----------
-        N: integer
-            Size of matrix to return
+        Args:
+            N: Size of matrix to return.
+            alpha: Multi-index defining a polynomial product.
 
-        alpha: ndarray (1d)
-            Multi-index defining a polynomial product
-
-        Returns
-        -------
-        C: ndarray
-            Output N x N matrix containing integral values
+        Returns:
+            The matrix with shape (N, N) containing integral values.
         """
 
         M = alpha.size
@@ -737,18 +718,12 @@ class OrthogonalPolynomialBasis1D:
 
         for j,n = 0, ..., N-1.
 
-        Parameters
-        ----------
-        N: integer
-            Size of matrix to return
+        Args:
+            N: Size of matrix to return.
+            d: Derivative order.
 
-        d: integer
-            Derivative order
-
-        Returns
-        -------
-        C: ndarray
-            Output N x N matrix containing expansion coefficients
+        Returns:
+            The matrix with shape (N, N) containing expansion coefficients.
         """
 
         assert N >= 0
@@ -904,7 +879,7 @@ class OrthogonalPolynomialBasis1D:
             K: Computes coefficients for :math:`k \\leq K` (optional). If not
               given, is set to N.
         Returns:
-            C: (N+1) x (K+1) numpy array containing coefficients.
+            Coefficient array with shape (N+1, K+1).
         """
 
 
