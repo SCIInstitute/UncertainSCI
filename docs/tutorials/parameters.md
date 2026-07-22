@@ -1,8 +1,5 @@
 # Defining random parameters
 
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
-</script>
 <link rel="stylesheet" href="_static/css/main.css">
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.

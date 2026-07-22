@@ -1,8 +1,5 @@
 # Simple example with boxplots
 
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
-</script>
 <link rel="stylesheet" href="_static/css/main.css">
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
@@ -32,11 +29,11 @@ b = 0.05
 f = ishigami_function(a,b)
 ```
 
-This generates a function `f` of three parameters. See the [`[Ishigami Function]`](../models.html#ishigami-function) description for more information about this model.
+This generates a function `f` of three parameters. See the [Ishigami Function](../models.md#ishigami-function) description for more information about this model.
 
 ### Parameter distributions
 
-A more complete discussion of creating parameter distributions is given in the [`[Defining Random Parameters]`](../parameters.html) tutorial. Here we only present a simple setup. We will assume that our three parameters,
+A more complete discussion of creating parameter distributions is given in the [Defining Random Parameters](../parameters.md) tutorial. Here we only present a simple setup. We will assume that our three parameters,
 
 \begin{align}
 \mathbf{P} = (P_1, P_2, P_3) \in \mathbb{R}^3
@@ -56,7 +53,7 @@ p3 = BetaDistribution(alpha=1, beta=1, domain=bounds)
 p = TensorialDistribution(distributions=[p1, p2, p3])
 ```
 
-We have used the fact that a `BetaDistribution` with parameters `alpha=beta=1` corresponds to the uniform distribution. See [`[Beta Distribution]`](../parameters.html#beta-distribution) for more information about the Beta distribution. Note also that we have individually defined the parameters, and then combined them into a single three-dimensional random parameter using the `TensorialDistribution` command.
+We have used the fact that a `BetaDistribution` with parameters `alpha=beta=1` corresponds to the uniform distribution. See [Beta Distribution](../parameters.md#beta-distribution) for more information about the Beta distribution. Note also that we have individually defined the parameters, and then combined them into a single three-dimensional random parameter using the `TensorialDistribution` command.
 
 ### Defining polynomial order
 
@@ -107,4 +104,3 @@ We generate boxplots using standard Monte Carlo sampling and also sampling from 
 Boxplots are generated using the `matplotlib` boxplot feature. 
 
 ![Boxplot comparisons](../../_static/simple_boxplots.png "Boxplots")
-

@@ -1,8 +1,5 @@
 # Template for Tutorial
 
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
-</script>
 <link rel="stylesheet" href="_static/css/main.css">
 
 This project was supported by grants from the National Institute of Biomedical Imaging and Bioengineering (U24EB029012) from the National Institutes of Health.
@@ -41,30 +38,27 @@ Example Subsection.  These can go to 6 `#`'s.  Subsections are optional for  tab
 ![Example for including an image in tutorial.](../_static/UncertainSCI.png "UncertainSCI example image")
 
 ### Math
-Math equations use [MathJax](http://docs.mathjax.org/en/latest/basic/mathematics.html). This requires the inclusion of this near the beginning of the document: 
-```
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
-</script>
-```
+Math equations can be written directly in Markdown. MyST-NB and Sphinx handle math rendering during the documentation build.
 Example equation:
-\\[ x = {-b \pm \sqrt{b^2-4ac} \over 2a} \\]
-$$ \frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity} $$
 
-inline equations use the `\\(\mathbf{p}\\)` sytanx: \\(\mathbf{p}\\) 
+$$
+\frac{\partial \rho}{\partial t} + \nabla \cdot \vec{j} = 0 \,. \label{eq:continuity}
+$$
+
+Inline equations use dollar delimiters, as in ``$ a^2 + b^2 = c^2 $``, which displays as $a^2 + b^2 = c^2$.
 
 ### Citations
 
-Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Works well for RST, but we are still working on it for markdown.  The sphinxcontrib-bibtex is built to run with rst in Sphinx. However, it can be used in markdown using the [AutoStructify](https://recommonmark.readthedocs.io/en/latest/auto_structify.html) package.
+Sphinx has a built in citation manager for bibtex: [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/). Use MyST's `eval-rst` directive when a Markdown page needs an rst-only citation directive.
 
-```eval_rst
+```{eval-rst}
 The whole paragraph will need to be in the eval_rst block :cite:p:`JDT:Bur2020`. For multiple references: :cite:p:`JDT:Bur2020,gupta1983`
 ```
 
 
 add a bibliography section
 ````
-```eval_rst
+```{eval-rst}
 .. bibliography::
 ```
 ````
@@ -88,7 +82,7 @@ External link: <https://www.markdownguide.org>, or [Markdown](https://www.markdo
 
 ### Tables
 
-Tables can be used with normal markdown syntax with the [sphinx-markdown-tables](https://github.com/ryanfox/sphinx-markdown-tables) package
+Tables can be used with normal Markdown syntax through MyST.
 
 ```
 | Syntax      | Description |
@@ -106,7 +100,7 @@ Tables can be used with normal markdown syntax with the [sphinx-markdown-tables]
 ### Referencing Sphynx
 
 
-To link the UncertainSCI API generated using Sphynx, Use this syntax: [`[text](../api_docs/pce.html#polynomial-chaos-expansions)`](../api_docs/pce.html#polynomial-chaos-expansions)
+To link the UncertainSCI API generated using Sphinx, use this syntax: [`[text](../api_docs/pce.rst)`](../api_docs/pce.rst)
 
 
 
