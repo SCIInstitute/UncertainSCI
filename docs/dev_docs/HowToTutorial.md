@@ -23,7 +23,7 @@ Jess Tate
 To make a Tutorial for UncertainSCI, start with an up-to-date version of the code and documentation.  Download the source code or clone the repository from [github](https://github.com/SCIInstitute/UncertainSCI.git).  We suggest [creating a fork](#creating-your-uncertainsci-fork) of the repository so that you can track your changes and create pull requests to the UncertainSCI repository.  UncertainSCI requirements are found [here](../user_docs/getting_started.html#system-requirements)
 
 #### Dependencies and Development Tools
-UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, Recommonmark, and other packages in the [`docs/requirements.txt` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/requirements.txt).  More information can be found  in [the walkthorugh]( ) and on the [Sphinx documentation](https://www.sphinx-doc.org).
+UncertainSCI uses Read the Docs and Sphinx to build and host tutorial documentation.  This platform converts markdown files to html for web viewing using Sphinx, a Python Library.  Testing the new documentation may require building the web pages locally for viewing.  This will require installing Python, pip, Sphinx, Recommonmark, and the other packages in the `docs` optional dependency group.  More information can be found  in [the walkthorugh]( ) and on the [Sphinx documentation](https://www.sphinx-doc.org).
 
 #### Creating Your UncertainSCI Fork
 With your own github account, go to the [UncertainSCI Github page](https://github.com/SCIInstitute/UncertainSCI). Click the fork button on the upper right side of the page. It will ask you where to move the fork to, chose your own account. Once the repository is forked, clone it to your local machine with the following command.  
@@ -121,13 +121,18 @@ For the new tutorial to be visible on the [tutorials page](../tutorials/index.ht
 Testing the documentation locally involves building documentation website on your local machine using Sphinx and Recommonmark.  These instructions are adapted from [Read the Docs' help page](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html).
 
 #### Installing Shpinx
-To install the Sphinx, make sure that a relatively recent version of Python 3. Installing sphinx and other dependencies is easiest with [pip](https://pip.pypa.io/en/stable/installing/), just run 
+To install Sphinx, make sure that a relatively recent version of Python 3 is available. The notebook documentation also requires the standalone Pandoc executable. With conda, install Pandoc first:
 ```
-pip install -r requirements.txt
+conda install -c conda-forge pandoc
 ```
-in the `UncertainSCI/docs` folder and the relavent python dependencies, including Sphinx, will be installed.  
 
-Alternatively, the dependencies listed in [`UncertainSCI/docs/requirements.txt` file](https://github.com/SCIInstitute/UncertainSCI/blob/master/docs/requirements.txt) could be installed seperately.  
+Then install the Python documentation dependencies with [pip](https://pip.pypa.io/en/stable/installing/):
+```
+python -m pip install ".[docs]"
+```
+in the repository root and the relavent python dependencies, including Sphinx, will be installed.  
+
+Alternatively, install Pandoc with your operating system package manager and install the dependencies listed in the `docs` optional dependency group in `pyproject.toml` seperately.  
 
 Please [ask](https://github.com/SCIInstitute/UncertainSCI/discussions) if you have any questions. 
 
