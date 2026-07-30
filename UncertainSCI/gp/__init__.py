@@ -195,7 +195,7 @@ class GaussianProcess:
             self.s_train
         )
 
-        return losses
+        return jnp.asarray(losses)
 
     @staticmethod
     @jax.jit(static_argnames=('optim',))
@@ -262,7 +262,7 @@ class GaussianProcess:
         L = jnp.linalg.cholesky(
             self.prior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
-        return self.prior_mean(x) + (L @ jax.random.normal(key, (n, p)))
+        return self.prior_mean(x) + (L @ jax.random.normal(key, (n * self.cdim, p)))
 
     def posterior_mean(self, x):
         self.validate_input_shape(x)
@@ -292,6 +292,6 @@ class GaussianProcess:
         n, _ = self.validate_input_shape(x)
 
         L = jnp.linalg.cholesky(
-            self.posterior_covariance(x, x) + self.nugget * jnp.eye(n)
+            self.posterior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
-        return self.posterior_mean(x) + (L @ jax.random.normal(key, (n, p)))
+        return self.posterior_mean(x) + (L @ jax.random.normal(key, (n * self.cdim, p)))
