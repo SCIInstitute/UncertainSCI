@@ -1,10 +1,44 @@
+import abc
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy.typing as npt
 
 
-class PositiveDefinite(eqx.Module):
+class ComputedArray(eqx.Module, metaclass=abc.ABCMeta):
+    """
+    Computed array base class.
+
+    Primarily used to detect if PyTree nodes require (further) resolution to reach
+    underlying objects or data.
+    """
+    is_static: bool = eqx.field(static=True)
+
+    @abc.abstractmethod
+    def __call__(self) -> jax.Array:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def from_array(cls, a: jax.Array, is_static: bool=False, **kwargs):
+        """
+        Convenience method for in-place replacement of types of
+        :class:`ComputedArray`, though not generally intended for use as a long-lived
+        instance; prefer direct instantiation when possible.
+
+        Args:
+            a (array):
+                The array data of this :class:`ComputedArray`.
+            is_static (bool, optional):
+                If static.
+            **kwargs:
+                Kwargs to hand off to :meth:`__init__` (generally depends
+                on child class).
+        """
+        raise NotImplementedError
+
+
+class PositiveDefinite(ComputedArray):
     """
     A positive-definite matrix.
 
@@ -12,21 +46,17 @@ class PositiveDefinite(eqx.Module):
     during training.
 
     Attributes:
-        n (int):
-            Dimension of the (square) matrix, inferred from initialization.
-        shape (tuple of int):
-            Shape of the matrix (always like ``(n,) * 2``).
-        ndim (int):
-            Number of dimensions of the matrix (always 2).
+        L_log_diag (array or None):
+            Log of diagonal of Cholesky factor of positive definite matrix.
+        L_off_diag (array or None):
+            Elements below main diagonal of Cholesky factor of positive definite.
     """
-    n: int = eqx.field(static=True)
     L_log_diag: jax.Array
     L_off_diag: jax.Array
-    is_static: bool = eqx.field(static=True)
 
     def __init__(
         self,
-        *,
+        *,  # TODO: make this NOT kwargs-only.
         D: jax.Array | npt.NDArray | None = None,
         L_log_diag: jax.Array | npt.NDArray | None = None,
         L_off_diag: jax.Array | npt.NDArray | None = None,
@@ -63,11 +93,10 @@ class PositiveDefinite(eqx.Module):
             if D.shape[0] != D.shape[1]:
                 raise ValueError(f'Expected square matrix, got D.shape = {D.shape}!')
 
-            self.n = D.shape[0]
-
+            n = D.shape[0]
             L = jnp.linalg.cholesky(D)
             self.L_log_diag = jnp.log(jnp.diag(L))
-            self.L_off_diag = L[jnp.tril_indices(self.n, k=-1)]
+            self.L_off_diag = L[jnp.tril_indices(n, k=-1)]
 
         elif L_log_diag is not None and L_off_diag is not None:
             if L_log_diag.ndim != 1:
@@ -79,12 +108,12 @@ class PositiveDefinite(eqx.Module):
                     f'Expected ndim = 1 for L_off_diag, got L_off_diag.ndim = {L_off_diag.ndim}!'
                 )
             
-            self.n = L_log_diag.shape[0]
 
-            if L_off_diag.shape[0] != (self.n) * (self.n - 1) / 2:
+            n = L_log_diag.shape[0]
+            if L_off_diag.shape[0] != (n) * (n - 1) / 2:
                 raise ValueError(
                     f'Expected L_off_diag.shape[0] = (n) * (n - 1) / 2 = '
-                    f'{(self.n) * (self.n - 1) / 2} (numel below main diagonal), got '
+                    f'{(n) * (n - 1) / 2} (numel below main diagonal), got '
                     f'L_off_diag.shape[0] = {L_off_diag.shape[0]}!'
                 )
 
@@ -94,23 +123,19 @@ class PositiveDefinite(eqx.Module):
         else:
             raise ValueError('Got unexpected combination of parameters; check caller!')
 
-        self.is_static = is_static
-        super().__init__()
+        super().__init__(is_static=is_static)
 
     def __call__(self) -> jax.Array:
+        n = self.L_log_diag.shape[0]
         L = jnp.diag(jnp.exp(self.L_log_diag))
-        L = L.at[jnp.tril_indices(self.n, k=-1)].set(self.L_off_diag)
+        L = L.at[jnp.tril_indices(n, k=-1)].set(self.L_off_diag)
         D = L @ L.T
 
         return jax.lax.stop_gradient(D) if self.is_static else D
 
-    @property
-    def shape(self):
-        return (self.n, self.n)
-
-    @property
-    def ndim(self):
-        return 2
+    @classmethod
+    def from_array(cls, a, is_static: bool = False, **kwargs):
+        return cls(D=a, is_static=is_static, **kwargs)
 
 
 def xor(a: bool, b: bool) -> bool:
