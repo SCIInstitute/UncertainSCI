@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
+import scipy.spatial as spatial
 import optax
 
 from .. import _linalg
@@ -243,6 +244,128 @@ class GaussianProcess:
             d.T @ _linalg.solve_cholesky(L_train, d) +
             jnp.sum(jnp.log(jnp.diag(L_train)))
         )
+
+    def get_sample_point(
+        self,
+        x: jax.Array,
+        hull: spatial.ConvexHull | None = None,
+        ranges: jax.Array | npt.NDArray | None = None,
+        tol: float = 1e-6,
+        n: int = 1000,
+        optim = DEFAULT_OPTIM,
+        optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
+    ):
+        """
+        Args:
+            x (jax.Array):
+                Candidate coordinate from which to start optimization.
+            hull (scipy.spatial.ConvexHull, optional):
+                Convex hull of coordinate domain,
+                must be supplied if ``ranges`` is not.
+            ranges (jax.Array or array-like, optional):
+                Array of shape (2, dim) of corners of prism of coordinate domain.
+                Must be supplied if ``hull`` is not.
+            tol (float):
+                Tolerance of hull inclusion criterion.
+            n (int):
+                Number of steps to take in optimization.
+            optim (...):
+                ...
+            optim_kwargs (...):
+                ...
+        """
+        if not hasattr(self, 'x_train') or not hasattr(self, 'L_train'):
+            raise ValueError('Gaussian process must be conditioned before sampling.')
+
+        x = jnp.asarray(x)
+        if not np.issubdtype(x.dtype, np.inexact):
+            x = x.astype(jnp.float32)
+        if x.ndim > 1:
+            raise ValueError
+        if x.shape != (self.dim,):
+            raise ValueError
+        x = x.reshape((1, self.dim))
+
+        if hull is None and ranges is None:
+            raise ValueError
+
+        if hull is None:
+            ranges = np.asarray(ranges)
+            if ranges.ndim != 2:
+                raise ValueError
+            if ranges.shape != (2, self.dim):
+                raise ValueError
+
+            hull = spatial.ConvexHull(
+                np.stack(
+                    np.meshgrid(
+                        ranges.T,
+                        indexing='ij'
+                    ),
+                    axis=-1
+                ).reshape((-1, self.dim))
+            )
+
+        A = hull.equations[:, :-1]
+        b = hull.equations[:, -1]
+
+        def inside_domain(x_cand: jax.Array):
+            return jnp.all(jnp.dot(x_cand, A.T) + b <= tol)
+
+        if not inside_domain(x):
+            raise ValueError
+
+        optim = optim(**optim_kwargs)
+        optim_state = optim.init(x)
+
+        for i in range(n):
+            optim_state, x_cand, _variance = GaussianProcess._step_sample_point(
+                optim,
+                optim_state,
+                self.k,
+                self.x_train,
+                self.L_train,
+                x
+            )
+
+            if inside_domain(x_cand):
+                x = x_cand
+            else:
+                return x
+
+        return x
+
+    @staticmethod
+    @jax.jit(static_argnames=('optim',))
+    def _step_sample_point(
+        optim,
+        optim_state,
+        k: kernel.Kernel,
+        x_train: jax.Array,
+        L_train: jax.Array,
+        x: jax.Array
+    ) -> tuple[jax.Array, jax.Array, jax.Array]:
+        def loss_fn(x):
+            return -GaussianProcess._posterior_variance(k, x_train, L_train, x)
+
+        loss, grads = jax.value_and_grad(loss_fn)(x)
+        updates, optim_state = optim.update(grads, optim_state, x)
+        x = eqx.apply_updates(x, updates)
+        return optim_state, x, -loss
+
+    @staticmethod
+    @jax.jit
+    def _posterior_variance(
+        k: kernel.Kernel,
+        x_train: jax.Array,
+        L_train: jax.Array,
+        x: jax.Array
+    ) -> jax.Array:
+        covariance = (
+            k(x, x) -
+            k(x, x_train) @ _linalg.solve_cholesky(L_train, k(x_train, x))
+        )
+        return jnp.sum(jnp.diag(covariance))
 
     def prior_mean(self, x):
         self.validate_input_shape(x)
