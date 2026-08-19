@@ -81,9 +81,9 @@ class PositiveDefinite(ComputedArray):
             is_static (bool):
                 If the matrix is static.
         """
-        if not xor(
-            D is not None,
-            L_log_diag is not None and L_off_diag is not None
+        if not (
+            (D is not None) ^
+            (L_log_diag is not None and L_off_diag is not None)
         ):
             raise ValueError('D xor (L_log_diag and L_off_diag) must be defined!')
 
@@ -136,7 +136,3 @@ class PositiveDefinite(ComputedArray):
     @classmethod
     def from_array(cls, a, is_static: bool = False, **kwargs):
         return cls(D=a, is_static=is_static, **kwargs)
-
-
-def xor(a: bool, b: bool) -> bool:
-    return (a or b) and not (a and b)
