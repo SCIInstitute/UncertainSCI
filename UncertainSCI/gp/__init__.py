@@ -10,7 +10,6 @@ import numpy.typing as npt
 import scipy.spatial as spatial
 import optax
 
-from .. import _linalg
 from . import kernel
 from . import mean
 
@@ -28,10 +27,10 @@ class GaussianProcess:
 
     nugget: float
 
-    x_train: jax.Array
-    y_train: jax.Array
-    s_train: jax.Array
-    L_train: jax.Array
+    train_x: jax.Array
+    train_y: jax.Array
+    train_s: jax.Array
+    train_cov_factor: kernel.CovarianceFactor
 
     seed: int
     key: jax.Array
@@ -75,18 +74,15 @@ class GaussianProcess:
     ):
         _, ny = self.validate_shapes(x, y, s)
 
-        self.x_train = jnp.asarray(x)
-        self.y_train = jnp.asarray(y)
-        if isinstance(s, (float, int)):
-            self.s_train = s * jnp.eye(ny * self.cdim)
-        else:
-            self.s_train = jnp.asarray(s)
+        self.train_x = jnp.asarray(x)
+        self.train_y = jnp.asarray(y)
+        self.train_s = jnp.asarray(s)
 
-        self.L_train = GaussianProcess._get_L_train(
+        self.train_cov_factor = GaussianProcess._get_train_cov_factor(
             (self.mu, self.k),
-            self.x_train,
-            self.y_train,
-            self.s_train
+            self.train_x,
+            self.train_y,
+            self.train_s
         )
 
     def add_point(self, x, y, s):
@@ -104,9 +100,16 @@ class GaussianProcess:
         if nx != ny:
             raise ValueError
 
-        if not isinstance(s, (float, int)):
-            if s.shape != (ny, self.cdim):
-                raise ValueError
+        s_shape = jnp.shape(s)
+        if s_shape == ():
+            return nx, ny
+
+        if s_shape not in {
+            (ny, self.cdim),
+            (ny * self.cdim,),
+            (ny * self.cdim, ny * self.cdim),
+        }:
+            raise ValueError
 
         return nx, ny
 
@@ -130,35 +133,32 @@ class GaussianProcess:
 
         return n, c
 
-    def get_L_train(
+    def get_train_cov_factor(
         self,
         x: jax.Array | npt.NDArray,
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> jax.Array:
-        _, ny = self.validate_shapes(x, y, s)
+    ) -> kernel.CovarianceFactor:
+        _, _ = self.validate_shapes(x, y, s)
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
-        if isinstance(s, (float, int)):
-            s = s * jnp.eye(ny * self.cdim)
-        else:
-            s = jnp.asarray(s)
+        s = jnp.asarray(s)
 
-        return GaussianProcess._get_L_train((self.mu, self.k), x, y, s)
+        return GaussianProcess._get_train_cov_factor((self.mu, self.k), x, y, s)
 
     # TODO: may want to change args for this function, but it's nice to maintain the same signature as
     # other core/mathematical routines.
     @staticmethod
     @jax.jit
-    def _get_L_train(
+    def _get_train_cov_factor(
         p: tuple[mean.Mean, kernel.Kernel],
         x: jax.Array,
         y: jax.Array,
         s: jax.Array
-    ) -> jax.Array:
-        mu, k = p
-        return jnp.linalg.cholesky(k(x, x) + s)
+    ) -> kernel.CovarianceFactor:
+        _, k = p
+        return k.covariance_factor(x, s)
 
     def tune(
         self,
@@ -182,18 +182,17 @@ class GaussianProcess:
                 optim,
                 optim_state,
                 (self.mu, self.k),
-                self.x_train,
-                self.y_train,
-                self.s_train
+                self.train_x,
+                self.train_y,
+                self.train_s
             )
             losses.append(loss)
 
-        # Recompute the Cholesky factor of observation matrix after tuning:
-        self.L_train = GaussianProcess._get_L_train(
+        self.train_cov_factor = GaussianProcess._get_train_cov_factor(
             (self.mu, self.k),
-            self.x_train,
-            self.y_train,
-            self.s_train
+            self.train_x,
+            self.train_y,
+            self.train_s
         )
 
         return jnp.asarray(losses)
@@ -213,19 +212,17 @@ class GaussianProcess:
         p = eqx.apply_updates(p, updates)
         return optim_state, p, loss
 
-    def loss(self,
+    def loss(
+        self,
         x: jax.Array | npt.NDArray,
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ) -> jax.Array:
-        _, ny = self.validate_shapes(x, y, s)
+        _, _ = self.validate_shapes(x, y, s)
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
-        if isinstance(s, (float, int)):
-            s = s * jnp.eye(ny * self.cdim)
-        else:
-            s = jnp.asarray(s)
+        s = jnp.asarray(s)
 
         return GaussianProcess._loss((self.mu, self.k), x, y, s)
 
@@ -238,11 +235,11 @@ class GaussianProcess:
         s: jax.Array
     ) -> jax.Array:
         mu, k = p
-        d = (y - mu(x)).flatten()
-        L_train = GaussianProcess._get_L_train((mu, k), x, y, s)
+        d = (y - mu(x)).reshape(-1)
+        cov_factor = GaussianProcess._get_train_cov_factor((mu, k), x, y, s)
         return (
-            d.T @ _linalg.solve_cholesky(L_train, d) +
-            jnp.sum(jnp.log(jnp.diag(L_train)))
+            d.T @ cov_factor.solve(d) +
+            cov_factor.log_sqrt_det()
         )
 
     def get_sample_point(
@@ -274,11 +271,11 @@ class GaussianProcess:
             optim_kwargs (...):
                 ...
         """
-        if not hasattr(self, 'x_train') or not hasattr(self, 'L_train'):
+        if not hasattr(self, 'train_x') or not hasattr(self, 'train_cov_factor'):
             raise ValueError('Gaussian process must be conditioned before sampling.')
 
         x = jnp.asarray(x)
-        if not np.issubdtype(x.dtype, np.inexact):
+        if not jnp.issubdtype(x.dtype, jnp.inexact):
             x = x.astype(jnp.float32)
         if x.ndim > 1:
             raise ValueError
@@ -286,31 +283,40 @@ class GaussianProcess:
             raise ValueError
         x = x.reshape((1, self.dim))
 
-        if hull is None and ranges is None:
+        if not ((hull is not None) ^ (ranges is not None)):
             raise ValueError
 
-        if hull is None:
-            ranges = np.asarray(ranges)
-            if ranges.ndim != 2:
+        if self.dim > 1:
+            if hull is None:
+                ranges = jnp.asarray(ranges)
+                if ranges.ndim != 2:
+                    raise ValueError
+                if ranges.shape != (2, self.dim):
+                    raise ValueError
+
+                hull = spatial.ConvexHull(
+                    jnp.stack(
+                        jnp.meshgrid(
+                            *ranges.T,
+                            indexing='ij'
+                        ),
+                        axis=-1
+                    ).reshape((-1, self.dim))
+                )
+
+            A = hull.equations[:, :-1]
+            b = hull.equations[:, -1]
+            def inside_domain(x_cand: jax.Array):
+                return jnp.all(jnp.dot(x_cand, A.T) + b <= tol)
+
+        else:
+            if ranges is None:
                 raise ValueError
-            if ranges.shape != (2, self.dim):
-                raise ValueError
-
-            hull = spatial.ConvexHull(
-                np.stack(
-                    np.meshgrid(
-                        ranges.T,
-                        indexing='ij'
-                    ),
-                    axis=-1
-                ).reshape((-1, self.dim))
-            )
-
-        A = hull.equations[:, :-1]
-        b = hull.equations[:, -1]
-
-        def inside_domain(x_cand: jax.Array):
-            return jnp.all(jnp.dot(x_cand, A.T) + b <= tol)
+            def inside_domain(x_cand: jax.Array):
+                return jnp.all(
+                    (x_cand >= ranges[0, 0] - tol) &
+                    (x_cand <= ranges[1, 0] + tol)
+                )
 
         if not inside_domain(x):
             raise ValueError
@@ -323,8 +329,8 @@ class GaussianProcess:
                 optim,
                 optim_state,
                 self.k,
-                self.x_train,
-                self.L_train,
+                self.train_x,
+                self.train_cov_factor,
                 x
             )
 
@@ -341,12 +347,15 @@ class GaussianProcess:
         optim,
         optim_state,
         k: kernel.Kernel,
-        x_train: jax.Array,
-        L_train: jax.Array,
+        train_x: jax.Array,
+        train_cov_factor: kernel.CovarianceFactor,
         x: jax.Array
     ) -> tuple[jax.Array, jax.Array, jax.Array]:
         def loss_fn(x):
-            return -GaussianProcess._posterior_variance(k, x_train, L_train, x)
+            return (
+                -1 *
+                GaussianProcess._posterior_variance(k, train_x, train_cov_factor, x)
+            )
 
         loss, grads = jax.value_and_grad(loss_fn)(x)
         updates, optim_state = optim.update(grads, optim_state, x)
@@ -357,13 +366,13 @@ class GaussianProcess:
     @jax.jit
     def _posterior_variance(
         k: kernel.Kernel,
-        x_train: jax.Array,
-        L_train: jax.Array,
+        train_x: jax.Array,
+        train_cov_factor: kernel.CovarianceFactor,
         x: jax.Array
     ) -> jax.Array:
         covariance = (
             k(x, x) -
-            k(x, x_train) @ _linalg.solve_cholesky(L_train, k(x_train, x))
+            k(x, train_x) @ train_cov_factor.solve(k(train_x, x))
         )
         return jnp.sum(jnp.diag(covariance))
 
@@ -390,13 +399,9 @@ class GaussianProcess:
     def posterior_mean(self, x):
         self.validate_input_shape(x)
 
-        return (
-            self.mu(x) +
-            self.k(x, self.x_train) @ _linalg.solve_cholesky(
-                self.L_train,
-                self.y_train - self.mu(self.x_train)
-            )
-        )
+        d = (self.train_y - self.mu(self.train_x)).reshape(-1)
+        correction = self.k(x, self.train_x) @ self.train_cov_factor.solve(d)
+        return self.mu(x) + correction.reshape((-1, self.cdim))
 
     def posterior_covariance(self, u, v):
         self.validate_input_shape(u)
@@ -404,10 +409,7 @@ class GaussianProcess:
 
         return (
             self.k(u, v) -
-            self.k(u, self.x_train) @ _linalg.solve_cholesky(
-                self.L_train,
-                self.k(self.x_train, v)
-            )
+            self.k(u, self.train_x) @ self.train_cov_factor.solve(self.k(self.train_x, v))
         )
 
     def posterior_realization(self, x, p=1):
