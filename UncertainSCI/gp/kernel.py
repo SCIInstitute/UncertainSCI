@@ -68,12 +68,10 @@ class CovarianceFactor(eqx.Module, metaclass=abc.ABCMeta):
     def solve(self, y: jax.Array | npt.NDArray) -> jax.Array:
         raise NotImplementedError
 
-    @property
     @abc.abstractmethod
     def log_sqrt_det(self) -> jax.Array:
         raise NotImplementedError
 
-    @property
     @abc.abstractmethod
     def cholesky(self) -> jax.Array:
         raise NotImplementedError
@@ -98,11 +96,9 @@ class Cholesky(CovarianceFactor):
     def solve(self, y: jax.Array | npt.NDArray) -> jax.Array:
         return _linalg.solve_cholesky(self.L, y)
 
-    @property
     def log_sqrt_det(self) -> jax.Array:
         return jnp.sum(jnp.log(jnp.diag(self.L)))
 
-    @property
     def cholesky(self) -> jax.Array:
         return self.L
 
@@ -165,11 +161,9 @@ class KroneckerScalarNoise(CovarianceFactor):
 
         raise ValueError
 
-    @property
     def log_sqrt_det(self) -> jax.Array:
         return 0.5 * jnp.sum(jnp.log(self.eigenvalues))
 
-    @property
     def cholesky(self) -> jax.Array:
         q = jnp.kron(self.left_eigenvectors, self.right_eigenvectors)
         covariance = (q * self.eigenvalues.reshape(-1)) @ q.T
