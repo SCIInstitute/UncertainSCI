@@ -89,7 +89,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             )
         )
         self.assertAlmostEqual(
-            float(factor.log_sqrt_det),
+            float(factor.log_sqrt_det()),
             float(dense_log_sqrt_det),
             places=4
         )
