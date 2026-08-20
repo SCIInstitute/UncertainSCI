@@ -312,6 +312,8 @@ class GaussianProcess:
         else:
             if ranges is None:
                 raise ValueError
+
+            ranges = jnp.asarray(ranges)
             def inside_domain(x_cand: jax.Array):
                 return jnp.all(
                     (x_cand >= ranges[0, 0] - tol) &
