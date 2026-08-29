@@ -199,7 +199,7 @@ class GaussianProcess:
 
     @staticmethod
     @jax.jit(static_argnames=('optim',))
-    def _step(
+    def _step_hyperparameters(
         optim,
         optim_state,
         p: tuple[mean.Mean, kernel.Kernel],
@@ -207,12 +207,12 @@ class GaussianProcess:
         y: jax.Array,
         s: jax.Array
     ) -> tuple[jax.Array, tuple[mean.Mean, kernel.Kernel], jax.Array]:
-        loss, grads = eqx.filter_value_and_grad(GaussianProcess._loss)(p, x, y, s)
+        loss, grads = eqx.filter_value_and_grad(GaussianProcess._loss_hyperparameters)(p, x, y, s)
         updates, optim_state = optim.update(grads, optim_state, p)
         p = eqx.apply_updates(p, updates)
         return optim_state, p, loss
 
-    def loss(
+    def loss_hyperparameters(
         self,
         x: jax.Array | npt.NDArray,
         y: jax.Array | npt.NDArray,
@@ -224,11 +224,11 @@ class GaussianProcess:
         y = jnp.asarray(y)
         s = jnp.asarray(s)
 
-        return GaussianProcess._loss((self.mu, self.k), x, y, s)
+        return GaussianProcess._loss_hyperparameters((self.mu, self.k), x, y, s)
 
     @staticmethod
     @jax.jit
-    def _loss(
+    def _loss_hyperparameters(
         p: tuple[mean.Mean, kernel.Kernel],
         x: jax.Array,
         y: jax.Array,
@@ -353,30 +353,17 @@ class GaussianProcess:
         train_cov_factor: kernel.CovarianceFactor,
         x: jax.Array
     ) -> tuple[jax.Array, jax.Array, jax.Array]:
-        def loss_fn(x):
-            return (
-                -1 *
-                GaussianProcess._posterior_variance(k, train_x, train_cov_factor, x)
+        def loss_fn(x):  # Posterior variance:
+            covariance = (
+                k(x, x) -
+                k(x, train_x) @ train_cov_factor.solve(k(train_x, x))
             )
+            return -1 * jnp.sum(jnp.diag(covariance))
 
         loss, grads = jax.value_and_grad(loss_fn)(x)
         updates, optim_state = optim.update(grads, optim_state, x)
         x = eqx.apply_updates(x, updates)
         return optim_state, x, -loss
-
-    @staticmethod
-    @jax.jit
-    def _posterior_variance(
-        k: kernel.Kernel,
-        train_x: jax.Array,
-        train_cov_factor: kernel.CovarianceFactor,
-        x: jax.Array
-    ) -> jax.Array:
-        covariance = (
-            k(x, x) -
-            k(x, train_x) @ train_cov_factor.solve(k(train_x, x))
-        )
-        return jnp.sum(jnp.diag(covariance))
 
     def prior_mean(self, x):
         self.validate_input_shape(x)
