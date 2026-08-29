@@ -238,7 +238,7 @@ class GaussianProcess:
         d = (y - mu(x)).reshape(-1)
         cov_factor = GaussianProcess._get_train_cov_factor((mu, k), x, y, s)
         return (
-            d.T @ cov_factor.solve(d) +
+            d.T @ cov_factor.solve(d) / 2 +
             cov_factor.log_sqrt_det()
         )
 
