@@ -55,7 +55,7 @@ def noise_as_matrix(
     raise ValueError
 
 
-class CovarianceFactor(eqx.Module, metaclass=abc.ABCMeta):
+class _CF(eqx.Module, metaclass=abc.ABCMeta):
     """
     Factorization of a covariance matrix used for solves and log determinants.
 
@@ -77,7 +77,7 @@ class CovarianceFactor(eqx.Module, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class Cholesky(CovarianceFactor):
+class _CF_Cholesky(_CF):
     """
     Dense lower Cholesky factorization of a noisy covariance matrix.
     """
@@ -103,7 +103,7 @@ class Cholesky(CovarianceFactor):
         return self.L
 
 
-class KroneckerScalarNoise(CovarianceFactor):
+class _CF_Kronecker_ScalarNoise(_CF):
     """
     Eigendecomposition of ``left`` ⊗ ``right`` plus scalar isotropic noise.
     """
@@ -206,7 +206,7 @@ class Kernel(eqx.Module, metaclass=abc.ABCMeta):
         self,
         x: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> CovarianceFactor:
+    ) -> _CF:
         """
         Factor the covariance of observed values at ``x``.
 
@@ -222,7 +222,7 @@ class Kernel(eqx.Module, metaclass=abc.ABCMeta):
         x = jnp.asarray(x)
         covariance = self(x, x)
         s = noise_as_matrix(s, covariance.shape[0], x.shape[0], self.cdim)
-        return Cholesky(jnp.linalg.cholesky(covariance + s))
+        return _CF_Cholesky(jnp.linalg.cholesky(covariance + s))
 
 
 class Gaussian(Kernel):
@@ -318,11 +318,11 @@ class Kronecker(Kernel):
         self,
         x: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> CovarianceFactor:
+    ) -> _CF:
         x = jnp.asarray(x)
         s = jnp.asarray(s)
 
         if s.ndim == 0:
-            return KroneckerScalarNoise(self.k(x, x), self.C(), s)
+            return _CF_Kronecker_ScalarNoise(self.k(x, x), self.C(), s)
 
         return super().covariance_factor(x, s)
