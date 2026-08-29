@@ -30,7 +30,7 @@ class GaussianProcess:
     train_x: jax.Array
     train_y: jax.Array
     train_s: jax.Array
-    train_cov_factor: kernel.CovarianceFactor
+    train_cov_factor: kernel._CF
 
     seed: int
     key: jax.Array
@@ -138,7 +138,7 @@ class GaussianProcess:
         x: jax.Array | npt.NDArray,
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> kernel.CovarianceFactor:
+    ) -> kernel._CF:
         _, _ = self.validate_shapes(x, y, s)
 
         x = jnp.asarray(x)
@@ -156,7 +156,7 @@ class GaussianProcess:
         x: jax.Array,
         y: jax.Array,
         s: jax.Array
-    ) -> kernel.CovarianceFactor:
+    ) -> kernel._CF:
         _, k = p
         return k.covariance_factor(x, s)
 
@@ -178,7 +178,7 @@ class GaussianProcess:
 
         losses = []
         for i in range(n):
-            optim_state, (self.mu, self.k), loss = GaussianProcess._step(
+            optim_state, (self.mu, self.k), loss = GaussianProcess._step_hyperparameters(
                 optim,
                 optim_state,
                 (self.mu, self.k),
@@ -350,7 +350,7 @@ class GaussianProcess:
         optim_state,
         k: kernel.Kernel,
         train_x: jax.Array,
-        train_cov_factor: kernel.CovarianceFactor,
+        train_cov_factor: kernel._CF,
         x: jax.Array
     ) -> tuple[jax.Array, jax.Array, jax.Array]:
         def loss_fn(x):  # Posterior variance:
