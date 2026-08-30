@@ -20,6 +20,22 @@ DEFAULT_OPTIM_KWARGS = {
 }
 
 class GaussianProcess:
+    """
+    A Gaussian process emulator.
+
+    Builds a distribution on functions like
+
+    .. math::
+
+        f \\sim \\mathcal{GP}(\\mu, k)
+    
+    where :math:`f` is an unknown function, :math:`\\mu` is a mean function and
+    :math:`k` is a positive definite covariance kernel.
+
+    See `Gaussian Processes on Wikipedia <https://en.wikipedia.org/wiki/Gaussian_process>`_
+    or `Kanagawa et al. (2018) <https://doi.org/10.48550/arXiv.1807.02582>`_ for more
+    information.
+    """
     dim: int
     cdim: int
     mu: mean.Mean
@@ -30,7 +46,7 @@ class GaussianProcess:
     train_x: jax.Array
     train_y: jax.Array
     train_s: jax.Array
-    train_cov_factor: kernel._CF
+    train_cov_factor: kernel.CovarianceFactor
 
     seed: int
     key: jax.Array
@@ -44,6 +60,22 @@ class GaussianProcess:
         nugget: float = 1e-3,
         seed: int | None = None
     ) -> None:
+        """
+        Args:
+            dim (int):
+                Dimension of the domain of unknown function :math:`f`.
+            cdim (int):
+                Dimension of the codomain of unknown function :math:`f`.
+            mu (mean.Mean):
+                Mean function of Gaussian process.
+            k (kernel.Kernel):
+                Covariance kernel of Gaussian process.
+            nugget (float):
+                Numerical nugget added in some methods for stability.
+            seed (int, optional):
+                Seed to initialize JAX PRNG.  Default initialized from
+                :func:`numpy.random.randint`.
+        """
         if mu.dim != dim:
             raise ValueError
         if k.dim != dim:
@@ -72,7 +104,28 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ):
-        _, ny = self.validate_shapes(x, y, s)
+        """
+        Condition this Gaussian process from data ``(x, y, s)`` where ``s`` is the
+        variance of the observation pair ``(x, y)``.
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            y (jax.Array or numpy.ndarray):
+                y coordinates.  Must have shape ``(n, c)`` where ``c`` is the dimension
+                of the codomain.
+            s (jax.Array, numpy.ndarray, float, or int):
+                Covariances of ``(x, y)``.  If array-type, must have shape:
+
+                    * ``()``
+                    * ``(n, c)``
+                    * ``(n * c)``
+                    * ``(n * c, n * c)``
+
+                where ``c`` is the dimension of the codomain.
+        """
+        self.validate_shapes(x, y, s)
 
         self.train_x = jnp.asarray(x)
         self.train_y = jnp.asarray(y)
@@ -93,7 +146,27 @@ class GaussianProcess:
         x: jax.Array | npt.NDArray,
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> tuple[int, int]:
+    ):
+        """
+        Validate shapes of arguments to various methods.
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            y (jax.Array or numpy.ndarray):
+                y coordinates.  Must have shape ``(n, c)`` where ``c`` is the dimension
+                of the codomain.
+            s (jax.Array, numpy.ndarray, float, or int):
+                Covariances of ``(x, y)``.  If array-type, must have shape:
+
+                    * ``()``
+                    * ``(n, c)``
+                    * ``(n * c)``
+                    * ``(n * c, n * c)``
+
+                where ``c`` is the dimension of the codomain.
+        """
         nx, _ = self.validate_input_shape(x)
         ny, _ = self.validate_output_shape(y)
 
@@ -102,18 +175,27 @@ class GaussianProcess:
 
         s_shape = jnp.shape(s)
         if s_shape == ():
-            return nx, ny
-
-        if s_shape not in {
+            return
+        elif s_shape not in {
             (ny, self.cdim),
             (ny * self.cdim,),
             (ny * self.cdim, ny * self.cdim),
         }:
             raise ValueError
 
-        return nx, ny
-
     def validate_input_shape(self, x: jax.Array | npt.NDArray) -> tuple[int, int]:
+        """
+        Validate shapes of input-type arguments to various methods (e.g., x values).
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+
+        Returns:
+            tuple[int, int]:
+                A tuple of sizes like ``(n, d)``.
+        """
         if x.ndim != 2:
             raise ValueError
         
@@ -124,6 +206,18 @@ class GaussianProcess:
         return n, d
 
     def validate_output_shape(self, y: jax.Array | npt.NDArray) -> tuple[int, int]:
+        """
+        Validate shapes of output-type arguments to various methods (e.g., y values).
+
+        Args:
+            y (jax.Array or numpy.ndarray):
+                y coordinates.  Must have shape ``(n, c)`` where ``c`` is the dimension
+                of the codomain.
+
+        Returns:
+            tuple[int, int]:
+                A tuple of sizes like ``(n, c)``.
+        """
         if y.ndim != 2:
             raise ValueError
 
@@ -138,8 +232,28 @@ class GaussianProcess:
         x: jax.Array | npt.NDArray,
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> kernel._CF:
-        _, _ = self.validate_shapes(x, y, s)
+    ) -> kernel.CovarianceFactor:
+        """
+        Get training covariance factor associated with the data ``(x, y, s)``.
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            y (jax.Array or numpy.ndarray):
+                y coordinates.  Must have shape ``(n, c)`` where ``c`` is the dimension
+                of the codomain.
+            s (jax.Array, numpy.ndarray, float, or int):
+                Covariances of ``(x, y)``.  If array-type, must have shape:
+
+                    * ``()``
+                    * ``(n, c)``
+                    * ``(n * c)``
+                    * ``(n * c, n * c)``
+
+                where ``c`` is the dimension of the codomain.
+        """
+        self.validate_shapes(x, y, s)
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
@@ -156,7 +270,7 @@ class GaussianProcess:
         x: jax.Array,
         y: jax.Array,
         s: jax.Array
-    ) -> kernel._CF:
+    ) -> kernel.CovarianceFactor:
         _, k = p
         return k.covariance_factor(x, s)
 
@@ -165,7 +279,7 @@ class GaussianProcess:
         n: int = 1000,
         optim = DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
-    ):
+    ) -> jax.Array:
         """
         Args:
             optim (callable):
@@ -218,7 +332,30 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ) -> jax.Array:
-        _, _ = self.validate_shapes(x, y, s)
+        """
+        Compute the loss of Gaussian process' prior given data ``(x, y, s)``.
+
+        This is the negative log marginal likelihood of the Gaussian process given data
+        ``(x, y, s)``, discarding constants.
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            y (jax.Array or numpy.ndarray):
+                y coordinates.  Must have shape ``(n, c)`` where ``c`` is the dimension
+                of the codomain.
+            s (jax.Array, numpy.ndarray, float, or int):
+                Covariances of ``(x, y)``.  If array-type, must have shape:
+
+                    * ``()``
+                    * ``(n, c)``
+                    * ``(n * c)``
+                    * ``(n * c, n * c)``
+
+                where ``c`` is the dimension of the codomain.
+        """
+        self.validate_shapes(x, y, s)
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
@@ -244,32 +381,34 @@ class GaussianProcess:
 
     def get_sample_point(
         self,
-        x: jax.Array,
+        x: jax.Array | npt.NDArray,
         hull: spatial.ConvexHull | None = None,
         ranges: jax.Array | npt.NDArray | None = None,
         tol: float = 1e-6,
         n: int = 1000,
         optim = DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
-    ):
+    ) -> jax.Array:
         """
+        Optimize a coordinate ``x`` to maximize posterior variance.
+
         Args:
-            x (jax.Array):
+            x (jax.Array or numpy.ndarray):
                 Candidate coordinate from which to start optimization.
             hull (scipy.spatial.ConvexHull, optional):
                 Convex hull of coordinate domain,
                 must be supplied if ``ranges`` is not.
-            ranges (jax.Array or array-like, optional):
+            ranges (jax.Array or numpy.ndarray, optional):
                 Array of shape (2, dim) of corners of prism of coordinate domain.
                 Must be supplied if ``hull`` is not.
             tol (float):
                 Tolerance of hull inclusion criterion.
             n (int):
                 Number of steps to take in optimization.
-            optim (...):
-                ...
-            optim_kwargs (...):
-                ...
+            optim (callable):
+                Optax or Optax-style optimizer.
+            optim_kwargs (dict):
+                kwargs for ``optim``.
         """
         if not hasattr(self, 'train_x') or not hasattr(self, 'train_cov_factor'):
             raise ValueError('Gaussian process must be conditioned before sampling.')
@@ -339,9 +478,9 @@ class GaussianProcess:
             if inside_domain(x_cand):
                 x = x_cand
             else:
-                return x
+                return jnp.asarray(x)
 
-        return x
+        return jnp.asarray(x)
 
     @staticmethod
     @jax.jit(static_argnames=('optim',))
@@ -350,7 +489,7 @@ class GaussianProcess:
         optim_state,
         k: kernel.Kernel,
         train_x: jax.Array,
-        train_cov_factor: kernel._CF,
+        train_cov_factor: kernel.CovarianceFactor,
         x: jax.Array
     ) -> tuple[jax.Array, jax.Array, jax.Array]:
         def loss_fn(x):  # Posterior variance:
@@ -366,17 +505,46 @@ class GaussianProcess:
         return optim_state, x, -loss
 
     def prior_mean(self, x):
+        """
+        Evaluate the prior mean at ``x``.
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+        """
         self.validate_input_shape(x)
 
         return self.mu(x)
 
     def prior_covariance(self, u, v):
+        """
+        Evaluate the prior covariance as :math:`k(\\texttt{u}, \\texttt{v})`.
+
+        Args:
+            u (jax.Array or numpy.ndarray):
+                u coordinates.  Must have shape ``(nu, d)`` where ``d`` is the
+                dimension of the domain.
+            v (jax.Array or numpy.ndarray):
+                v coordinates.  Must have shape ``(nv, d)`` where ``d`` is the
+                dimension of the domain.
+        """
         self.validate_input_shape(u)
         self.validate_input_shape(v)
 
         return self.k(u, v)
 
-    def prior_realization(self, x, p=1):
+    def prior_realization(self, x: jax.Array | npt.NDArray, p: int = 1):
+        """
+        Produce ``p`` realizations of the prior at locations ``x``.
+        
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            p (int, optional):
+                Number of realizations to generate, default ``1``.
+        """
         self.key, key = jax.random.split(self.key)
         n, _ = self.validate_input_shape(x)
 
@@ -386,6 +554,14 @@ class GaussianProcess:
         return self.prior_mean(x) + (L @ jax.random.normal(key, (n * self.cdim, p)))
 
     def posterior_mean(self, x):
+        """
+        Evaluate the posterior mean at ``x``.
+
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+        """
         self.validate_input_shape(x)
 
         d = (self.train_y - self.mu(self.train_x)).reshape(-1)
@@ -393,6 +569,17 @@ class GaussianProcess:
         return self.mu(x) + correction.reshape((-1, self.cdim))
 
     def posterior_covariance(self, u, v):
+        """
+        Evaluate the posterior covariance at ``(u, v)``.
+
+        Args:
+            u (jax.Array or numpy.ndarray):
+                u coordinates.  Must have shape ``(nu, d)`` where ``d`` is the
+                dimension of the domain.
+            v (jax.Array or numpy.ndarray):
+                v coordinates.  Must have shape ``(nv, d)`` where ``d`` is the
+                dimension of the domain.
+        """
         self.validate_input_shape(u)
         self.validate_input_shape(v)
 
@@ -401,7 +588,17 @@ class GaussianProcess:
             self.k(u, self.train_x) @ self.train_cov_factor.solve(self.k(self.train_x, v))
         )
 
-    def posterior_realization(self, x, p=1):
+    def posterior_realization(self, x: jax.Array | npt.NDArray, p: int = 1):
+        """
+        Produce ``p`` realizations of the posterior at locations ``x``.
+        
+        Args:
+            x (jax.Array or numpy.ndarray):
+                x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            p (int, optional):
+                Number of realizations to generate, default ``1``.
+        """
         self.key, key = jax.random.split(self.key)
         n, _ = self.validate_input_shape(x)
 

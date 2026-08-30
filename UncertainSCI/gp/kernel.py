@@ -3,9 +3,11 @@ Kernels for Gaussian processes.
 """
 
 import abc
+from typing import Any
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+from numpy._typing import NDArray
 import numpy.typing as npt
 
 from .. import _equinox
@@ -22,15 +24,17 @@ def noise_as_matrix(
     Given ``s``, infer and return noise matrix.
 
     ``s`` can be:
+
     * Scalar, interpreted as isotropic noise.
     * A vector of length ``matrix_size``,
-        interpreted as noise per-observation per-channel.
+      interpreted as noise per-observation per-channel.
     * A matrix of shape ``(matrix_size, matrix_size)``, returned as-is.
-    * Of shape ``(n, cdim)`` such that ``n * cdim == matrix_size``,
-        interpreted as noise per-observation per-channel.
+    * A matrix of shape ``(n, c)`` such that ``n * c == matrix_size``
+      where ``c`` is the dimension of the codomain,
+      interpreted as noise per-observation per-channel.
 
     Args:
-        s (array or scalar of noise):
+        s (jax.Array, numpy.ndarray, float, or int):
             Noise of observations.
     """
     s = jnp.asarray(s)
@@ -55,9 +59,24 @@ def noise_as_matrix(
     raise ValueError
 
 
-class _CF(eqx.Module, metaclass=abc.ABCMeta):
+class CovarianceFactor(eqx.Module, metaclass=abc.ABCMeta):
     """
-    Factorization of a covariance matrix used for solves and log determinants.
+    Covariance factor base class.  Stores factorization of a covariance matrix
+    :math:`\\tilde{K}` used for solves and log determinants.
+
+    In particular, this class stores factorization methods and data to solve
+
+    .. math::
+
+        x = \\tilde{K}^{-1} y
+
+    where, for instance,
+
+    .. math::
+
+        \\tilde{K} = K_{XX} + \\sigma^2 I
+
+    or :math:`\\tilde{K}` has some other more complicated structure.
 
     Subclasses may store a Cholesky factor, an eigendecomposition, or another
     structured representation.
@@ -66,24 +85,44 @@ class _CF(eqx.Module, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def solve(self, y: jax.Array | npt.NDArray) -> jax.Array:
+        """
+        Compute :math:`x = \\tilde{K} \\backslash y`.
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def log_sqrt_det(self) -> jax.Array:
+        """
+        Compute :math:`\\log{ \\sqrt{ \\det \\tilde{K} } }`.
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def cholesky(self) -> jax.Array:
+        """
+        Compute (or return) the Cholesky factor :math:`L` of :math:`\\tilde{K}` such
+        that
+
+        .. math::
+
+            L L^\\top = \\tilde{K}.
+        """
         raise NotImplementedError
 
 
-class _CF_Cholesky(_CF):
+class CholeskyFactor(CovarianceFactor):
     """
-    Dense lower Cholesky factorization of a noisy covariance matrix.
+    Dense lower Cholesky factorization of a noisy covariance matrix
+    :math:`\\tilde{K} = K + S` for covariance matrix :math:`K` and noise :math:`S`.
     """
     L: jax.Array
 
     def __init__(self, L: jax.Array | npt.NDArray):
+        """
+        Args:
+            L (array):
+                The Cholesky factor of noisy covariance matrix.
+        """
         L = jnp.asarray(L)
         if L.ndim != 2:
             raise ValueError
@@ -103,9 +142,11 @@ class _CF_Cholesky(_CF):
         return self.L
 
 
-class _CF_Kronecker_ScalarNoise(_CF):
+class KroneckerScalarNoiseFactor(CovarianceFactor):
     """
-    Eigendecomposition of ``left`` ⊗ ``right`` plus scalar isotropic noise.
+    Eigendecomposition of noisy covariance matrix
+    :math:`\\tilde{K} = L \\otimes R + s I`, where :math:`L` is ``left``,
+    :math:`R` is ``right``, and :math:`s` is ``noise``.
     """
     left_eigenvalues: jax.Array
     left_eigenvectors: jax.Array
@@ -121,6 +162,15 @@ class _CF_Kronecker_ScalarNoise(_CF):
         right: jax.Array | npt.NDArray,
         noise: jax.Array | npt.NDArray | float | int,
     ):
+        """
+        Args:
+            left (jax.Array or numpy.ndarray):
+                ``left`` matrix in Kronecker-structure covariance matrix.
+            right (jax.Array or numpy.ndarray):
+                ``right`` matrix in Kronecker-structure covariance matrix.
+            noise (jax.Array, numpy.ndarray, float, or int):
+                ``noise`` in noisy covariance matrix.
+        """
         left = jnp.asarray(left)
         right = jnp.asarray(right)
         if left.ndim != 2 or left.shape[0] != left.shape[1]:
@@ -173,7 +223,7 @@ class _CF_Kronecker_ScalarNoise(_CF):
 class Kernel(eqx.Module, metaclass=abc.ABCMeta):
     """
     Kernel base class.
-    
+
     Attributes:
         dim (int):
             Dimension of the domain.
@@ -193,20 +243,26 @@ class Kernel(eqx.Module, metaclass=abc.ABCMeta):
         Evaluate this kernel.
 
         Args:
-            x (array):
-                Array of coordinates shaped as ``(num_x, dim)``. May be passed as 1-d
-                array in the case ``dim == 1``.
-            y (array):
-                Array of coordinates shaped as ``(num_y, dim)``. May be passed as 1-d
-                array in the case ``dim == 1``.
+            x (jax.Array or numpy.ndarray):
+                Array of coordinates shaped as ``(nx, d)``. May be passed as 1-d
+                array in the case dimension of domain ``d == 1``.
+            y (jax.Array or numpy.ndarray):
+                Array of coordinates shaped as ``(ny, d)``. May be passed as 1-d
+                array in the case dimension of domain ``d == 1``.
+
+        Returns:
+            jax.Array:
+                Array of shape (c * nx, c * ny) of covariance where ``c`` is the
+                dimension of the codomain.
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def covariance_factor(
         self,
         x: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> _CF:
+    ) -> CovarianceFactor:
         """
         Factor the covariance of observed values at ``x``.
 
@@ -214,37 +270,44 @@ class Kernel(eqx.Module, metaclass=abc.ABCMeta):
         Structured kernels can override this to avoid dense factorization.
 
         Args:
-            x (array):
-                Array of coordinates shaped as ``(num_x, dim)``.
-            s (array):
-                Array of noise associated with each observation.  
+            x (jax.Array or numpy.ndarray):
+                Array of coordinates shaped as ``(n, d)`` where ``d`` is the dimension
+                of the domain.
+            s (jax.Array, numpy.ndarray, float, or int):
+                Noise associated with each coordinate.  If array-type, must have shape:
+
+                    * ``()``
+                    * ``(n, c)``
+                    * ``(n * c)``
+                    * ``(n * c, n * c)``
+
+                where ``c`` is the dimension of the codomain.
         """
         x = jnp.asarray(x)
         covariance = self(x, x)
         s = noise_as_matrix(s, covariance.shape[0], x.shape[0], self.cdim)
-        return _CF_Cholesky(jnp.linalg.cholesky(covariance + s))
+        return CholeskyFactor(jnp.linalg.cholesky(covariance + s))
 
 
 class Gaussian(Kernel):
     r"""
-    A Gaussian (square exponential) covariance kernel.
+    A Gaussian (square exponential) scalar-valued covariance kernel.
 
     This produces a kernel according to the function
 
     .. math::
 
-        k(x, y) = \exp{\left( - y^\top D x \right)}.
+        k(x, y) = \exp{\left[ - (x - y)^\top D \;(x - y) \right]}.
 
-    Attributes:
-        D (array):
-            Matrix defining metric on coordinates.
-
-    ``D`` is a matrix defining some metric on the coordinates :math:`x` and :math:`y`
-    according to
+    :math:`D` is probably best viewed as a matrix defining a metric on the coordinates
+    :math:`x` and :math:`y`. Specifically,
 
     .. math::
 
-            \left[ \operatorname{dist}(x, y) \right]^2 = y^\top D x.
+            \left[ \operatorname{dist}(x, y) \right]^2 = (x - y)^\top D \;(x - y).
+
+    If the coordinate space is isotropic, a reasonable choice is :math:`D = I_d` where
+    :math:`d` is the dimension of the domain.
     """
     D: _equinox.PositiveDefinite
 
@@ -255,6 +318,20 @@ class Gaussian(Kernel):
         D: jax.Array | npt.NDArray,
         D_is_static: bool = False
     ):
+        """
+        Args:
+            dim (int):
+                Dimension of the domain of this kernel.
+            cdim (int):
+                Dimension of the codomain of this kernel.  Must be 1.
+            D (jax.Array or numpy.ndarray):
+                Matrix defining metric on coordinates.
+            D_is_static (bool, optional):
+                If ``D`` is a tunable hyperparameter, default ``False``.
+        """
+        if cdim != 1:
+            raise ValueError
+        
         super().__init__(dim=dim, cdim=cdim)
         self.D = _equinox.PositiveDefinite(D=D, is_static=D_is_static)
 
@@ -269,6 +346,12 @@ class Gaussian(Kernel):
             )
         )
 
+    def covariance_factor(
+        self,
+        x: jax.Array | npt.NDArray,
+        s: jax.Array | npt.NDArray | float | int
+    ) -> CovarianceFactor:
+        return super().covariance_factor(x, s)
 
 class Kronecker(Kernel):
     r"""
@@ -282,12 +365,6 @@ class Kronecker(Kernel):
 
     where :math:`k` is a scalar kernel (e.g., a square exponential kernel) and
     :math:`\otimes` is the Kronecker product.
-
-    Attributes:
-        k (Kernel):
-            Covariance kernel on coordindates.
-        C (array):
-            Covariance on outputs.
     """
     k: Kernel
     C: _equinox.PositiveDefinite
@@ -300,6 +377,19 @@ class Kronecker(Kernel):
         C: jax.Array | npt.NDArray,
         C_is_static: bool = False
     ):
+        """
+        Args:
+            dim (int):
+                Dimension of the domain of this kernel.
+            cdim (int):
+                Dimension of the codomain of this kernel.
+            k (Kernel):
+                Scalar covariance kernel.
+            C (jax.Array or numpy.ndarray):
+                Output covariance matrix in Kronecker kernel.
+            C_is_static (bool, optional):
+                If ``C`` is a tunable hyperparameter, default ``False``.
+        """
         if k.cdim != 1:
             raise ValueError('Kronecker coordinate kernel must be scalar-valued.')
 
@@ -318,11 +408,11 @@ class Kronecker(Kernel):
         self,
         x: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
-    ) -> _CF:
+    ) -> CovarianceFactor:
         x = jnp.asarray(x)
         s = jnp.asarray(s)
 
         if s.ndim == 0:
-            return _CF_Kronecker_ScalarNoise(self.k(x, x), self.C(), s)
+            return KroneckerScalarNoiseFactor(self.k(x, x), self.C(), s)
 
         return super().covariance_factor(x, s)

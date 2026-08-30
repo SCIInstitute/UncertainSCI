@@ -79,7 +79,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         dense_cholesky = jnp.linalg.cholesky(dense_covariance)
         dense_log_sqrt_det = jnp.sum(jnp.log(jnp.diag(dense_cholesky)))
 
-        self.assertIsInstance(factor, gp.kernel._CF_Kronecker_ScalarNoise)
+        self.assertIsInstance(factor, gp.kernel.KroneckerScalarNoiseFactor)
         self.assertTrue(
             jnp.allclose(
                 factor.solve(rhs),
@@ -138,7 +138,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             jnp.linalg.solve(dense_covariance, k(x_train, x_test))
         )
 
-        self.assertIsInstance(g.train_cov_factor, gp.kernel._CF_Kronecker_ScalarNoise)
+        self.assertIsInstance(g.train_cov_factor, gp.kernel.KroneckerScalarNoiseFactor)
         self.assertEqual(g.posterior_mean(x_test).shape, (2, 2))
         self.assertEqual(g.posterior_covariance(x_test, x_test).shape, (4, 4))
         self.assertTrue(
