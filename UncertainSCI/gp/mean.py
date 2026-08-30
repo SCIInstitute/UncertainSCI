@@ -63,9 +63,10 @@ class Affine(Mean):
 
         .. math::
 
-            y = x @ A.T + b
+            y = x A.T + b
 
-        where ``x.shape = (number, dim)``.
+        where ``x.shape = (n, d)`` for some number of coordinates ``n`` and
+        dimension of the domain ``d``.
 
         Args:
             dim (int):
