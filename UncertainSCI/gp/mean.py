@@ -86,6 +86,7 @@ class Affine(Mean):
 
         a = jnp.asarray(a)
         if isinstance(b, (float, int)):
+            # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
             b = b * jnp.ones((cdim,))
         else:
             b = jnp.asarray(b)
