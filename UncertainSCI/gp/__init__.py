@@ -129,6 +129,7 @@ class GaussianProcess:
 
         self.train_x = jnp.asarray(x)
         self.train_y = jnp.asarray(y)
+        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
         self.train_s = jnp.asarray(s)
 
         self.train_cov_factor = GaussianProcess._get_train_cov_factor(
@@ -257,6 +258,7 @@ class GaussianProcess:
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
+        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         return GaussianProcess._get_train_cov_factor((self.mu, self.k), x, y, s)
@@ -359,6 +361,7 @@ class GaussianProcess:
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
+        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         return GaussianProcess._loss_hyperparameters((self.mu, self.k), x, y, s)

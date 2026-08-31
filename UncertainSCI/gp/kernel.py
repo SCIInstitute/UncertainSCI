@@ -37,6 +37,7 @@ def noise_as_matrix(
         s (jax.Array, numpy.ndarray, float, or int):
             Noise of observations.
     """
+    # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
     s = jnp.asarray(s)
 
     if s.ndim == 0:
@@ -183,6 +184,7 @@ class KroneckerScalarNoiseFactor(CovarianceFactor):
         self.right_size = right.shape[0]
         self.left_eigenvalues, self.left_eigenvectors = jnp.linalg.eigh(left)
         self.right_eigenvalues, self.right_eigenvectors = jnp.linalg.eigh(right)
+        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
         self.noise = jnp.asarray(noise)
 
     @property
@@ -410,6 +412,7 @@ class Kronecker(Kernel):
         s: jax.Array | npt.NDArray | float | int
     ) -> CovarianceFactor:
         x = jnp.asarray(x)
+        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         if s.ndim == 0:
