@@ -12,6 +12,7 @@ import optax
 
 from . import kernel
 from . import mean
+from . import vis
 
 
 DEFAULT_OPTIM = optax.adam
