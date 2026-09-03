@@ -26,3 +26,13 @@ API Reference
    transformations
    ttr
    vis
+
+
+.. rubric:: GP Modules
+
+.. autosummary::
+   :toctree: generated
+   :recursive:
+   :signatures: none
+
+   gp
