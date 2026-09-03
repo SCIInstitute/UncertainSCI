@@ -56,6 +56,7 @@ language = 'en'
 
 autosummary_generate = True
 autosummary_imported_members = True
+autoclass_content = 'both'
 
 # Path for bibtex files
 bibtex_bibfiles = ['references.bib']
@@ -69,6 +70,7 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
+    'jax': ('https://docs.jax.dev/en/latest/', None),
 }
 
 myst_enable_extensions = [
