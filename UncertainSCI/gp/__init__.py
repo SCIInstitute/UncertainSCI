@@ -279,22 +279,61 @@ class GaussianProcess:
 
     def tune(
         self,
-        n: int = 1000,
         optim = DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
+        max_iter: int = 1000,
+        rel: float | None = None,
+        window: int = 10,
+        patience: int = 3,
     ) -> jax.Array:
         """
+        Tune the Gaussian process hyperparameters.
+
+        Early termination of the optimization is optional.  When ``rel`` is set,
+        the minimum losses in adjacent, non-overlapping windows are compared every
+        ``window`` steps.  Training stops after ``patience`` consecutive
+        comparisons fail to achieve the requested relative improvement.  Using
+        windows and patience prevents a single noisy optimization step from
+        ending training.
+
         Args:
             optim (callable):
                 Optax or Optax-style optimizer.
             optim_kwargs (dict):
                 kwargs for ``optim``.
+            n (int):
+                Maximum number of optimization steps.
+            rel (float, optional):
+                Minimum fractional decrease in loss required between two
+                adjacent windows.  For example, ``0.01`` requires a one-percent
+                decrease.  If ``None`` (the default), early stopping is
+                disabled.
+            window (int):
+                Number of consecutive losses averaged for each comparison.
+            patience (int):
+                Number of consecutive insufficient-improvement comparisons
+                required before stopping.
+
+        Returns:
+            jax.Array:
+                Losses from the optimization steps that were run.
         """
+        if rel is not None:
+            if not np.isfinite(rel) or rel <= 0:
+                raise ValueError('rel must be positive float.')
+        if not isinstance(window, int) or window < 1:
+            raise ValueError('window must be a positive integer.')
+        if not isinstance(patience, int) or patience < 1:
+            raise ValueError('patience must be a positive integer.')
+
         optim = optim(**optim_kwargs)
-        optim_state = optim.init(eqx.filter((self.mu, self.k), eqx.is_inexact_array))
+        optim_state = optim.init(
+            eqx.filter((self.mu, self.k), eqx.is_inexact_array)
+        )
 
         losses = []
-        for i in range(n):
+        comparisons_without_improvement = 0
+        for _ in range(max_iter):
             optim_state, (self.mu, self.k), loss = GaussianProcess._step_hyperparameters(
                 optim,
                 optim_state,
@@ -304,6 +343,31 @@ class GaussianProcess:
                 self.train_s
             )
             losses.append(loss)
+
+            should_compare = (
+                rel is not None and
+                len(losses) >= 2 * window and
+                len(losses) % window == 0
+            )
+            if should_compare:
+                previous_loss = float(jnp.mean(jnp.stack(
+                    losses[-2 * window:-window]
+                )))
+                current_loss = float(jnp.mean(jnp.stack(
+                    losses[-window:]
+                )))
+                scale = max(abs(previous_loss), np.finfo(float).eps)
+                relative_improvement = (previous_loss - current_loss) / scale
+
+                if (
+                    not np.isfinite(relative_improvement) or
+                    relative_improvement < rel
+                ):
+                    comparisons_without_improvement += 1
+                    if comparisons_without_improvement >= patience:
+                        break
+                else:
+                    comparisons_without_improvement = 0
 
         self.train_cov_factor = GaussianProcess._get_train_cov_factor(
             (self.mu, self.k),

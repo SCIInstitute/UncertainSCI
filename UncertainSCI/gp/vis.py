@@ -8,6 +8,7 @@ import copy
 import jax
 import jax.numpy as jnp
 import matplotlib.axes as axes
+import matplotlib.collections as collections
 import numpy.typing as npt
 import typing
 
@@ -171,6 +172,214 @@ def plot_distribution_variance(
         else:
             ax.vlines(g.train_x.squeeze(), 0, 1, color='tab:green')
     ax.set_title('Variance')
+
+
+def _prepare_mesh_2d(
+        g: GaussianProcess,
+        mesh: tuple[jax.Array | npt.NDArray, jax.Array | npt.NDArray]
+    ) -> tuple[jax.Array, jax.Array, jax.Array]:
+    """Validate and flatten a two-dimensional coordinate mesh."""
+    if g.dim != 2:
+        raise ValueError(
+            'Two-dimensional distribution plots require a Gaussian process '
+            'with dim == 2.'
+        )
+    if len(mesh) != 2:
+        raise ValueError('mesh must contain exactly two coordinate arrays.')
+
+    x1, x2 = (jnp.asarray(coordinate) for coordinate in mesh)
+    if x1.ndim != 2 or x2.ndim != 2:
+        raise ValueError('mesh coordinate arrays must be two-dimensional.')
+    if x1.shape != x2.shape:
+        raise ValueError('mesh coordinate arrays must have the same shape.')
+
+    x = jnp.stack((x1, x2), axis=-1).reshape((-1, 2))
+    return x1, x2, x
+
+
+def _validate_output(g: GaussianProcess, output: int) -> None:
+    """Validate a Gaussian process output-channel index."""
+    if not isinstance(output, int):
+        raise TypeError('output must be an integer.')
+    if output < 0 or output >= g.cdim:
+        raise ValueError(
+            f'output must be between 0 and {g.cdim - 1}, inclusive.'
+        )
+
+
+def _plot_training_coordinates_2d(
+        ax: axes.Axes,
+        g: GaussianProcess,
+        colorlast: bool
+    ) -> None:
+    """Overlay posterior training coordinates on a two-dimensional plot."""
+    if colorlast and g.train_x.shape[0] > 0:
+        ax.scatter(
+            g.train_x[:-1, 0],
+            g.train_x[:-1, 1],
+            marker='D',
+            facecolors='none',
+            edgecolors='tab:green',
+            s=20
+        )
+        ax.scatter(
+            g.train_x[-1, 0],
+            g.train_x[-1, 1],
+            marker='o',
+            facecolors='none',
+            edgecolors='tab:red',
+            s=80
+        )
+    else:
+        ax.scatter(
+            g.train_x[:, 0],
+            g.train_x[:, 1],
+            marker='D',
+            facecolors='none',
+            edgecolors='tab:green',
+            s=20
+        )
+
+
+def plot_distribution_mean_2d(
+        ax: axes.Axes,
+        g: GaussianProcess,
+        mesh: tuple[jax.Array | npt.NDArray, jax.Array | npt.NDArray],
+        output: int = 0,
+        which: str = 'posterior',
+        show_training: bool = True,
+        colorlast: bool = False,
+        **kwargs
+    ) -> collections.QuadMesh:
+    """
+    Plot one output channel of a Gaussian process mean over a 2-D mesh.
+
+    Args:
+        ax (matplotlib.axes.Axes):
+            The axes to plot into.
+        g (gp.GaussianProcess):
+            The two-dimensional Gaussian process to evaluate.
+        mesh (tuple of array):
+            Two coordinate arrays, such as those returned by
+            :func:`numpy.meshgrid`. Both arrays must be two-dimensional and
+            have the same shape.
+        output (int, optional):
+            Output channel to plot, default ``0``.
+        which ({'posterior', 'prior'}, optional):
+            Distribution whose mean is plotted, default ``'posterior'``.
+        show_training (bool, optional):
+            Whether to mark training coordinates for a posterior plot, default
+            ``True``.
+        colorlast (bool, optional):
+            Whether to highlight the final training coordinate separately,
+            default ``False``.
+        **kwargs:
+            Additional keyword arguments passed to
+            :meth:`matplotlib.axes.Axes.pcolormesh`.
+
+    Returns:
+        matplotlib.collections.QuadMesh:
+            The plotted mesh, suitable for constructing a colorbar.
+
+    Raises:
+        TypeError:
+            If ``output`` is not an integer.
+        ValueError:
+            If the process or mesh is not two-dimensional, ``output`` is out of
+            bounds, or ``which`` is neither ``'posterior'`` nor ``'prior'``.
+    """
+    x1, x2, x = _prepare_mesh_2d(g, mesh)
+    _validate_output(g, output)
+
+    if which == 'posterior':
+        values = g.posterior_mean(x)
+    elif which == 'prior':
+        values = g.prior_mean(x)
+    else:
+        raise ValueError("which must be either 'posterior' or 'prior'.")
+
+    plotted = ax.pcolormesh(
+        x1,
+        x2,
+        values[:, output].reshape(x1.shape),
+        **kwargs
+    )
+    if which == 'posterior' and show_training:
+        _plot_training_coordinates_2d(ax, g, colorlast)
+    ax.set_aspect('equal')
+    ax.set_title(f'{which.title()} Mean, Output {output + 1}')
+    return plotted
+
+
+def plot_distribution_variance_2d(
+        ax: axes.Axes,
+        g: GaussianProcess,
+        mesh: tuple[jax.Array | npt.NDArray, jax.Array | npt.NDArray],
+        output: int = 0,
+        which: str = 'posterior',
+        show_training: bool = True,
+        colorlast: bool = False,
+        **kwargs
+    ) -> collections.QuadMesh:
+    """
+    Plot one output channel's marginal GP variance over a 2-D mesh.
+
+    Args:
+        ax (matplotlib.axes.Axes):
+            The axes to plot into.
+        g (gp.GaussianProcess):
+            The two-dimensional Gaussian process to evaluate.
+        mesh (tuple of array):
+            Two coordinate arrays, such as those returned by
+            :func:`numpy.meshgrid`. Both arrays must be two-dimensional and
+            have the same shape.
+        output (int, optional):
+            Output channel to plot, default ``0``.
+        which ({'posterior', 'prior'}, optional):
+            Distribution whose variance is plotted, default ``'posterior'``.
+        show_training (bool, optional):
+            Whether to mark training coordinates for a posterior plot, default
+            ``True``.
+        colorlast (bool, optional):
+            Whether to highlight the final training coordinate separately,
+            default ``False``.
+        **kwargs:
+            Additional keyword arguments passed to
+            :meth:`matplotlib.axes.Axes.pcolormesh`.
+
+    Returns:
+        matplotlib.collections.QuadMesh:
+            The plotted mesh, suitable for constructing a colorbar.
+
+    Raises:
+        TypeError:
+            If ``output`` is not an integer.
+        ValueError:
+            If the process or mesh is not two-dimensional, ``output`` is out of
+            bounds, or ``which`` is neither ``'posterior'`` nor ``'prior'``.
+    """
+    x1, x2, x = _prepare_mesh_2d(g, mesh)
+    _validate_output(g, output)
+
+    if which == 'posterior':
+        covariance = g.posterior_covariance(x, x)
+    elif which == 'prior':
+        covariance = g.prior_covariance(x, x)
+    else:
+        raise ValueError("which must be either 'posterior' or 'prior'.")
+
+    values = jnp.diag(covariance).reshape((-1, g.cdim))
+    plotted = ax.pcolormesh(
+        x1,
+        x2,
+        values[:, output].reshape(x1.shape),
+        **kwargs
+    )
+    if which == 'posterior' and show_training:
+        _plot_training_coordinates_2d(ax, g, colorlast)
+    ax.set_aspect('equal')
+    ax.set_title(f'{which.title()} Variance, Output {output + 1}')
+    return plotted
 
 
 def plot_loss_landscape(

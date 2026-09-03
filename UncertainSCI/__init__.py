@@ -14,3 +14,6 @@ from . import sampling
 from . import transformations
 from . import ttr
 from . import vis
+
+# Import GP components:
+from . import gp
