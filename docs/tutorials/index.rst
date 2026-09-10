@@ -1,9 +1,10 @@
 Tutorials
-========================================
+=========
+
+These are some helpful tutorials to familiarize yourself with UncertainSCI.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
 
    notebooks/build_pce
    demos/index
@@ -11,4 +12,3 @@ Tutorials
    models
    parameters
    template
-

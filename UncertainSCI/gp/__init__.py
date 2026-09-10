@@ -538,7 +538,7 @@ class GaussianProcess:
 
         return self.k(u, v)
 
-    def prior_realization(self, x: jax.Array | npt.NDArray, p: int = 1):
+    def prior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
         """
         Produce ``p`` realizations of the prior at locations ``x``.
         
@@ -548,6 +548,12 @@ class GaussianProcess:
                 of the domain.
             p (int, optional):
                 Number of realizations to generate, default ``1``.
+
+        Returns:
+            jax.Array:
+                Array of shape ``(n, c, p)`` where the first dimension corresponds to
+                sampling coordinate, the second dimension corresponds to the output
+                channel, and the third dimension stores the number of realizations.
         """
         self.key, key = jax.random.split(self.key)
         n, _ = self.validate_input_shape(x)
@@ -555,9 +561,12 @@ class GaussianProcess:
         L = jnp.linalg.cholesky(
             self.prior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
-        return self.prior_mean(x) + (L @ jax.random.normal(key, (n * self.cdim, p)))
+        return (
+            self.prior_mean(x).reshape(n, self.cdim, 1) + 
+            (L @ jax.random.normal(key, (n * self.cdim, p))).reshape(n, self.cdim, p)
+        )
 
-    def posterior_mean(self, x):
+    def posterior_mean(self, x) -> jax.Array:
         """
         Evaluate the posterior mean at ``x``.
 
@@ -572,7 +581,7 @@ class GaussianProcess:
         correction = self.k(x, self.train_x) @ self.train_cov_factor.solve(d)
         return self.mu(x) + correction.reshape((-1, self.cdim))
 
-    def posterior_covariance(self, u, v):
+    def posterior_covariance(self, u, v) -> jax.Array:
         """
         Evaluate the posterior covariance at ``(u, v)``.
 
@@ -592,7 +601,7 @@ class GaussianProcess:
             self.k(u, self.train_x) @ self.train_cov_factor.solve(self.k(self.train_x, v))
         )
 
-    def posterior_realization(self, x: jax.Array | npt.NDArray, p: int = 1):
+    def posterior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
         """
         Produce ``p`` realizations of the posterior at locations ``x``.
         
@@ -602,6 +611,12 @@ class GaussianProcess:
                 of the domain.
             p (int, optional):
                 Number of realizations to generate, default ``1``.
+
+        Returns:
+            jax.Array:
+                Array of shape ``(n, c, p)`` where the first dimension corresponds to
+                sampling coordinate, the second dimension corresponds to the output
+                channel, and the third dimension stores the number of realizations.
         """
         self.key, key = jax.random.split(self.key)
         n, _ = self.validate_input_shape(x)
@@ -609,4 +624,7 @@ class GaussianProcess:
         L = jnp.linalg.cholesky(
             self.posterior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
-        return self.posterior_mean(x) + (L @ jax.random.normal(key, (n * self.cdim, p)))
+        return (
+            self.posterior_mean(x).reshape(n, self.cdim, 1) + 
+            (L @ jax.random.normal(key, (n * self.cdim, p))).reshape(n, self.cdim, p)
+        )
