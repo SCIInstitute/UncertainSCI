@@ -28,14 +28,15 @@ release = '1.0.1'
 # -- General configuration ---------------------------------------------------
 
 extensions = [
-        'sphinx.ext.autodoc',
-        'sphinx.ext.autosummary',
-        'sphinx.ext.intersphinx',
-        'sphinx.ext.napoleon',
-        'sphinx.ext.viewcode',
-        'myst_nb',
-        'sphinx_copybutton',
-        'sphinxcontrib.bibtex',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'myst_nb',
+    'sphinx_collections',
+    'sphinx_copybutton',
+    'sphinxcontrib.bibtex',
 ]
 
 templates_path = ['_templates']
@@ -59,7 +60,9 @@ autosummary_imported_members = True
 autoclass_content = 'both'
 
 # Path for bibtex files
-bibtex_bibfiles = ['references.bib']
+bibtex_bibfiles = [
+    'references.bib',
+]
 bibtex_default_style = 'unsrt'
 bibtex_encoding = 'latin'
 
@@ -80,10 +83,17 @@ myst_enable_extensions = [
     'dollarmath',
     'html_image',
 ]
-
 myst_heading_anchors = 4
-
 nb_execution_mode = 'auto'
+
+collections_target = '.'
+collections_final_clean = False
+collections = {
+   'tutorials/copied': {
+      'driver': 'copy_folder',
+      'source': '../demos/',
+   }
+}
 
 
 # -- Options for HTML output -------------------------------------------------
