@@ -14,6 +14,11 @@ help:
 
 .PHONY: help Makefile
 
+clean:
+	find "$(SOURCEDIR)" -type d -name copied -prune -exec rm -rf {} +
+	find "$(SOURCEDIR)" -type d -name generated -prune -exec rm -rf {} +
+	@$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
