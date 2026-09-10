@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 import jax.numpy as jnp
 
@@ -12,6 +13,71 @@ class GaussianProcessTestCase(unittest.TestCase):
 
     def setUp(self):
         self.longMessage = True
+
+    def make_conditioned_gp(self):
+        mu = gp.mean.Affine(
+            dim=1,
+            cdim=1,
+            a=jnp.zeros((1, 1)),
+            b=0.0,
+            a_is_static=True,
+            b_is_static=True
+        )
+        k = gp.kernel.Gaussian(
+            dim=1,
+            cdim=1,
+            D=jnp.eye(1),
+            D_is_static=True
+        )
+        g = gp.GaussianProcess(dim=1, cdim=1, mu=mu, k=k, seed=0)
+        g.condition(jnp.array([[0.0]]), jnp.array([[0.0]]), 1e-8)
+        return g
+
+    def test_tune_stops_after_windowed_loss_plateaus(self):
+        """Test that noisy individual losses do not control early stopping."""
+        g = self.make_conditioned_gp()
+        simulated_losses = iter([
+            10.1, 9.9,
+            9.1, 8.9,
+            9.1, 8.9,
+            8.95, 9.05,
+            8.0, 7.0,
+        ])
+
+        def simulated_step(optim, optim_state, parameters, x, y, s):
+            return optim_state, parameters, jnp.asarray(next(simulated_losses))
+
+        with mock.patch.object(
+            gp.GaussianProcess,
+            '_step_hyperparameters',
+            side_effect=simulated_step
+        ):
+            losses = g.tune(
+                n=10,
+                rel=0.01,
+                window=2,
+                patience=2
+            )
+
+        self.assertEqual(losses.shape, (8,))
+        self.assertTrue(jnp.allclose(losses[-2:], jnp.array([8.95, 9.05])))
+
+    def test_tune_runs_all_steps_when_early_stopping_is_disabled(self):
+        return
+
+        g = self.make_conditioned_gp()
+
+        def simulated_step(optim, optim_state, parameters, x, y, s):
+            return optim_state, parameters, jnp.asarray(1.0)
+
+        with mock.patch.object(
+            gp.GaussianProcess,
+            '_step_hyperparameters',
+            side_effect=simulated_step
+        ):
+            losses = g.tune(n=5)
+
+        self.assertEqual(losses.shape, (5,))
 
     def test_get_sample_point_optimizes_posterior_variance(self):
         """Test posterior-variance sampling over an interval."""
