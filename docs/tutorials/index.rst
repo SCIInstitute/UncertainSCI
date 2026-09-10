@@ -5,11 +5,17 @@ These are some helpful tutorials to familiarize yourself with UncertainSCI.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Polynomial Chaos Expansion
 
-   notebooks/build_pce
-   demos/index
-   notebooks/adapt_pce
+   copied/build_pce
+   copied/adapt_pce
+   pce_boxplots
+   pce_statistics
    models
    parameters
-   template
-   1-d Gaussian Process <copied/gp-1d>
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Gaussian Processes
+
+   1-d Gaussian Processes <copied/gp-1d>
