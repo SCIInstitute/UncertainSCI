@@ -15,7 +15,8 @@ help:
 .PHONY: help Makefile
 
 clean:
-	rm -rf ${SOURCEDIR}/dev_docs/api/generated/
+	find "$(SOURCEDIR)" -type d -name copied -prune -exec rm -rf {} +
+	find "$(SOURCEDIR)" -type d -name generated -prune -exec rm -rf {} +
 	@$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # Catch-all target: route all unknown targets to Sphinx using the new
