@@ -5,3 +5,4 @@ Mathematical Formalism
     :maxdepth: 2
 
     pce
+    gp

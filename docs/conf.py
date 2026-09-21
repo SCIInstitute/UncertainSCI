@@ -28,14 +28,14 @@ release = '1.0.1'
 # -- General configuration ---------------------------------------------------
 
 extensions = [
-        'sphinx.ext.autodoc',
-        'sphinx.ext.autosummary',
-        'sphinx.ext.intersphinx',
-        'sphinx.ext.napoleon',
-        'sphinx.ext.viewcode',
-        'myst_nb',
-        'sphinx_copybutton',
-        'sphinxcontrib.bibtex',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'myst_nb',
+    'sphinx_copybutton',
+    'sphinxcontrib.bibtex',
 ]
 
 templates_path = ['_templates']
@@ -56,9 +56,12 @@ language = 'en'
 
 autosummary_generate = True
 autosummary_imported_members = True
+autoclass_content = 'both'
 
 # Path for bibtex files
-bibtex_bibfiles = ['references.bib']
+bibtex_bibfiles = [
+    'references.bib',
+]
 bibtex_default_style = 'unsrt'
 bibtex_encoding = 'latin'
 
@@ -69,6 +72,7 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
+    'jax': ('https://docs.jax.dev/en/latest/', None),
 }
 
 myst_enable_extensions = [
@@ -78,9 +82,7 @@ myst_enable_extensions = [
     'dollarmath',
     'html_image',
 ]
-
 myst_heading_anchors = 4
-
 nb_execution_mode = 'auto'
 
 
