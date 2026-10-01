@@ -12,3 +12,4 @@ These are some helpful tutorials to familiarize yourself with UncertainSCI.
    models
    parameters
    template
+   1-d Gaussian Process <copied/gp-1d>
