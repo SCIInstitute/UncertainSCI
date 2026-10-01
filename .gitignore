@@ -70,6 +70,7 @@ instance/
 
 # Docs:
 docs/_build/
+docs/**/copied/
 docs/**/generated/
 
 # PyBuilder
