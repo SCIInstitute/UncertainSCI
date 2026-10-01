@@ -14,10 +14,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
 
-    - name: Setup Python 3.9
+    - name: Setup Python 3.12
       uses: actions/setup-python@v6
       with:
-        python-version: 3.9
+        python-version: 3.12
         cache: 'pip'  # optional, adds caching for faster builds
 
     - name: Install UncertainSCI
