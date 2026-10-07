@@ -53,6 +53,72 @@ class GaussianProcessTestCase(unittest.TestCase):
         self.assertLessEqual(float(x_sample[0, 0]), 2.0 + 1e-6)
         self.assertGreater(float(sample_variance), float(start_variance))
 
+    def test_get_sample_point_accepts_domain_predicate(self):
+        """Test posterior-variance sampling with a custom domain predicate."""
+        mu = gp.mean.Affine(
+            dim=1,
+            cdim=1,
+            a=jnp.zeros((1, 1)),
+            b=0.0,
+            a_is_static=True,
+            b_is_static=True
+        )
+        k = gp.kernel.Gaussian(
+            dim=1,
+            cdim=1,
+            D=jnp.eye(1),
+            D_is_static=True
+        )
+        g = gp.GaussianProcess(dim=1, cdim=1, mu=mu, k=k, seed=0)
+        g.condition(jnp.array([[0.0]]), jnp.array([[0.0]]), 1e-8)
+
+        shapes = []
+
+        def inside_domain(x):
+            shapes.append(x.shape)
+            return jnp.all((x >= 0.0) & (x <= 0.75))
+
+        x_sample = g.get_sample_point(
+            jnp.array([0.25]),
+            inside_domain=inside_domain,
+            n=100,
+            optim_kwargs={'learning_rate': 0.05}
+        )
+
+        self.assertTrue(shapes)
+        self.assertTrue(all(shape == (1, 1) for shape in shapes))
+        self.assertGreater(float(x_sample[0, 0]), 0.25)
+        self.assertLessEqual(float(x_sample[0, 0]), 0.75)
+
+    def test_get_sample_point_requires_one_domain_specification(self):
+        """Test that domain specifications are mutually exclusive."""
+        mu = gp.mean.Affine(
+            dim=1,
+            cdim=1,
+            a=jnp.zeros((1, 1)),
+            b=0.0,
+            a_is_static=True,
+            b_is_static=True
+        )
+        k = gp.kernel.Gaussian(
+            dim=1,
+            cdim=1,
+            D=jnp.eye(1),
+            D_is_static=True
+        )
+        g = gp.GaussianProcess(dim=1, cdim=1, mu=mu, k=k, seed=0)
+        g.condition(jnp.array([[0.0]]), jnp.array([[0.0]]), 1e-8)
+
+        with self.assertRaisesRegex(ValueError, 'exactly one'):
+            g.get_sample_point(jnp.array([0.25]), n=1)
+        with self.assertRaisesRegex(ValueError, 'exactly one'):
+            g.get_sample_point(
+                jnp.array([0.25]),
+                ranges=jnp.array([[0.0], [1.0]]),
+                inside_domain=lambda x: True,
+                n=1
+            )
+
     def test_kronecker_scalar_noise_factor_matches_dense_solve(self):
         """Test Kronecker structured solves with scalar observation noise."""
         x = jnp.array([[0.0], [0.5], [1.0]])

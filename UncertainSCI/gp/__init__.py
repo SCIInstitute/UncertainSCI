@@ -2,6 +2,8 @@
 Build Gaussian processes.
 """
 
+from collections.abc import Callable
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -392,6 +394,7 @@ class GaussianProcess:
         n: int = 1000,
         optim = DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
+        inside_domain: Callable[[jax.Array], bool | jax.Array] | None = None,
     ) -> jax.Array:
         """
         Optimize a coordinate ``x`` to maximize posterior variance.
@@ -400,19 +403,25 @@ class GaussianProcess:
             x (jax.Array or numpy.ndarray):
                 Candidate coordinate from which to start optimization.
             hull (scipy.spatial.ConvexHull, optional):
-                Convex hull of coordinate domain,
-                must be supplied if ``ranges`` is not.
+                Convex hull of coordinate domain. Mutually exclusive with
+                ``ranges`` and ``inside_domain``.
             ranges (jax.Array or numpy.ndarray, optional):
-                Array of shape (2, dim) of corners of prism of coordinate domain.
-                Must be supplied if ``hull`` is not.
+                Array of shape (2, dim) containing the lower and upper corners
+                of the coordinate domain. Mutually exclusive with ``hull`` and
+                ``inside_domain``.
             tol (float):
-                Tolerance of hull inclusion criterion.
+                Tolerance of the inclusion criterion constructed from ``hull``
+                or ``ranges``.
             n (int):
                 Number of steps to take in optimization.
             optim (callable):
                 Optax or Optax-style optimizer.
             optim_kwargs (dict):
                 kwargs for ``optim``.
+            inside_domain (callable, optional):
+                Predicate that accepts a candidate array of shape ``(1, dim)``
+                and returns whether it is in the coordinate domain. Mutually
+                exclusive with ``hull`` and ``ranges``.
         """
         if not hasattr(self, 'train_x') or not hasattr(self, 'train_cov_factor'):
             raise ValueError('Gaussian process must be conditioned before sampling.')
@@ -426,50 +435,41 @@ class GaussianProcess:
             raise ValueError
         x = x.reshape((1, self.dim))
 
-        if not ((hull is not None) ^ (ranges is not None)):
-            raise ValueError
+        domain_specs = (hull, ranges, inside_domain)
+        if sum(spec is not None for spec in domain_specs) != 1:
+            raise ValueError(
+                'Supply exactly one of hull, ranges, or inside_domain.'
+            )
 
-        if self.dim > 1:
-            if hull is None:
-                ranges = jnp.asarray(ranges)
-                if ranges.ndim != 2:
-                    raise ValueError
-                if ranges.shape != (2, self.dim):
-                    raise ValueError
+        if inside_domain is not None:
+            domain_contains = inside_domain
+        elif hull is not None:
+            equations = jnp.asarray(hull.equations)
 
-                hull = spatial.ConvexHull(
-                    jnp.stack(
-                        jnp.meshgrid(
-                            *ranges.T,
-                            indexing='ij'
-                        ),
-                        axis=-1
-                    ).reshape((-1, self.dim))
-                )
-
-            A = hull.equations[:, :-1]
-            b = hull.equations[:, -1]
-            def inside_domain(x_cand: jax.Array):
-                return jnp.all(jnp.dot(x_cand, A.T) + b <= tol)
-
-        else:
-            if ranges is None:
-                raise ValueError
-
-            ranges = jnp.asarray(ranges)
-            def inside_domain(x_cand: jax.Array):
+            def domain_contains(x_cand: jax.Array) -> jax.Array:
                 return jnp.all(
-                    (x_cand >= ranges[0, 0] - tol) &
-                    (x_cand <= ranges[1, 0] + tol)
+                    x_cand @ equations[:, :-1].T + equations[:, -1] <= tol
+                )
+        else:
+            ranges = jnp.asarray(ranges)
+            if ranges.shape != (2, self.dim):
+                raise ValueError(
+                    f'ranges must have shape (2, {self.dim}).'
                 )
 
-        if not inside_domain(x):
-            raise ValueError
+            def domain_contains(x_cand: jax.Array) -> jax.Array:
+                return jnp.all(
+                    (x_cand >= ranges[0] - tol) &
+                    (x_cand <= ranges[1] + tol)
+                )
+
+        if not domain_contains(x):
+            raise ValueError('Initial coordinate is outside the domain.')
 
         optim = optim(**optim_kwargs)
         optim_state = optim.init(x)
 
-        for i in range(n):
+        for _ in range(n):
             optim_state, x_cand, _variance = GaussianProcess._step_sample_point(
                 optim,
                 optim_state,
@@ -479,12 +479,11 @@ class GaussianProcess:
                 x
             )
 
-            if inside_domain(x_cand):
-                x = x_cand
-            else:
-                return jnp.asarray(x)
+            if not domain_contains(x_cand):
+                break
+            x = x_cand
 
-        return jnp.asarray(x)
+        return x
 
     @staticmethod
     @jax.jit(static_argnames=('optim',))
