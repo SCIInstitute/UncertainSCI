@@ -344,7 +344,7 @@ class Gaussian(Kernel):
     ):
         d = x.reshape((-1, 1, self.dim)) - y.reshape((1, -1, self.dim))
         return jnp.exp(-1 * jnp.einsum(
-                'ijk,kk,ijk->ij', d, self.D(), d
+                'ijk,kl,ijl->ij', d, self.D(), d
             )
         )
 

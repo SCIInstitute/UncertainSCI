@@ -13,6 +13,20 @@ class GaussianProcessTestCase(unittest.TestCase):
     def setUp(self):
         self.longMessage = True
 
+    def test_gaussian_kernel_uses_full_metric(self):
+        """The Gaussian distance includes off-diagonal metric entries."""
+        k = gp.kernel.Gaussian(
+            dim=2,
+            cdim=1,
+            D=jnp.array([[2.0, 0.5], [0.5, 1.0]]),
+            D_is_static=True
+        )
+        x = jnp.array([[1.0, 1.0], [1.0, -1.0]])
+        y = jnp.array([[0.0, 0.0]])
+        expected = jnp.exp(-jnp.array([[4.0], [2.0]]))
+
+        self.assertTrue(jnp.allclose(k(x, y), expected))
+
     def test_get_sample_point_optimizes_posterior_variance(self):
         """Test posterior-variance sampling over an interval."""
         mu = gp.mean.Affine(
