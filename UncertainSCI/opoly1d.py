@@ -54,7 +54,6 @@ def eval_driver(x, n, d, ab):
         Assigns dimension 2 of the nonlocal array preturn according to values
         in the derivative list d.
         """
-        nonlocal preturn
 
         indlocations = [i for i, val in enumerate(d) if val == dval]
         for i in indlocations:

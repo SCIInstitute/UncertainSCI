@@ -274,7 +274,6 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
     xh = x[:-1] + h/2.
 
     def create_system(p):
-        nonlocal x, xh, N
         a = diffusion(xh, p)
         number_nonzeros = 1 + 1 + (N-2)*3
         rows = np.zeros(number_nonzeros, dtype=int)
@@ -304,7 +303,6 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
         return A
 
     def solve_system(p):
-        nonlocal fx, h
         return splinalg.spsolve(create_system(p), fx*(h**2))
 
     return lambda p: solve_system(p)
