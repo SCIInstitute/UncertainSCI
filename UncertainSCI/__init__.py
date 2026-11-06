@@ -1,3 +1,1 @@
-"""
-A modern Python-based mathematical uncertainty toolkit.
-"""
+"""A modern Python-based mathematical uncertainty toolkit."""

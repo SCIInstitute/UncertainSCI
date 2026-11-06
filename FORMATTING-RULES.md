@@ -256,6 +256,10 @@ limit and flagging line breaks *before* binary operators (W503).
    # TODO: github.com/SCIInstitute/UncertainSCI/issues/123 - Support complex-valued inputs.
    ```
 
+   New `TODO` comments must include the issue link or ID.  Older `TODO`
+   comments that predate this rule may omit it (`# TODO: <sentence>`) until an
+   issue is filed for them.  Use `TODO`, not `FIXME` or `XXX`.
+
    Directives read by tools or by the interpreter are exempt from the sentence
    and spacing rules above, and must keep whatever form the tool requires.
    Examples are shebang lines, encoding declarations, `# noqa: ...`,
@@ -310,6 +314,9 @@ limit and flagging line breaks *before* binary operators (W503).
    - Classes use `CapWords` (e.g. `MyClass`, `PolynomialChaosExpansion`).
    - Constants use `UPPER_WITH_UNDER`.
    - Internal (non-public) names begin with a single leading underscore.
+   - Names taken from established mathematical notation (e.g. `N`, `M`, `A`,
+     `ab`) may keep that notation, including capitals, when they match the
+     formulas or references the code implements.
 
    Existing public names that do not follow these conventions should be
    renamed only with a deprecation path, since doing so changes the public API.

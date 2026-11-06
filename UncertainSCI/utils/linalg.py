@@ -5,9 +5,9 @@ from UncertainSCI.utils.version import version_lessthan
 
 
 def mgs_pivot_restart(A, p=None, pstart=None):
-    """
-    Computes pivots from a QR decomposition with starting pivots specified. If
-    A is an M x N matrix, computes pivots associated to a permutation matrix P
+    """Computes pivots from a QR decomposition with starting pivots specified.
+
+    If A is an M x N matrix, computes pivots associated to a permutation matrix P
     in a partial QR decomposition of A.T with column pivoting:
 
       A P = T R,
@@ -25,10 +25,10 @@ def mgs_pivot_restart(A, p=None, pstart=None):
         p (int): The number of pivots to compute. Defaults to None, in which
           case p is set to max(min(M,N), len(pstart)).
         pstart (list/array of ints): Ordered list of user-chosen pivots.
+
     Returns:
         numpy.ndarray: A vector of ints containing p pivots.
     """
-
     M, N = A.shape
 
     if pstart is None:
@@ -43,7 +43,7 @@ def mgs_pivot_restart(A, p=None, pstart=None):
     # the top.
     Npst = len(pstart)
     if Npst == 0:
-        # More work than necessary, but is probably more efficient
+        # More work than necessary, but is probably more efficient.
         _, _, inds = qr(A, pivoting=True)
         return inds[:p]
 
@@ -51,10 +51,10 @@ def mgs_pivot_restart(A, p=None, pstart=None):
     A = np.hstack((A[:, pstart], A[:, cpstart]))
     inds = np.hstack((pstart, cpstart))
 
-    # Now perform MGS, partly using scipy/lapack routines
+    # Now perform MGS, partly using scipy/lapack routines.
     Q, R = qr(A[:, :Npst], mode='economic')
 
-    # MGS Orthogonalization:
+    # MGS orthogonalization.
     for qq in range(Npst):
         A[:, Npst:] -= np.outer(Q[:, qq], Q[:, qq].T @ A[:, Npst:])
 
@@ -62,14 +62,14 @@ def mgs_pivot_restart(A, p=None, pstart=None):
     for q in range(Npst, p):
         pnext = q + np.argmax(np.sum(A[:, q:]**2, axis=0))
 
-        # Pivot
+        # Pivot.
         inds[[q, pnext]] = inds[[pnext, q]]
         A[:, [q, pnext]] = A[:, [pnext, q]]
 
-        # Orthogonalize
+        # Orthogonalize.
         qvec = A[:, q]
         if np.linalg.norm(qvec) < 1e-13:
-            assert False  # Matrix is low-rank so stop pivoting
+            assert False  # Matrix is low-rank so stop pivoting.
         qvec /= np.linalg.norm(qvec)
         temp = (qvec.T @ A[:, q+1:])
         A[:, q+1:] -= np.outer(qvec, temp)
@@ -78,9 +78,9 @@ def mgs_pivot_restart(A, p=None, pstart=None):
 
 
 def greedy_d_optimal(A, p, pstart=None):
-    r"""
-    Chooses p rows in A via a greedy D-optimal design. Performs the iterative
-    optimization,
+    r"""Chooses p rows in A via a greedy D-optimal design.
+
+    Performs the iterative optimization,
 
         if |R| < A.shape[1]:
             max_r det( A[S, :] * A[S, :].T ),   S = r \cup R,
@@ -96,7 +96,6 @@ def greedy_d_optimal(A, p, pstart=None):
     Returns an ordered pivot vector P indicating the ordered selection of rows
     of A.
     """
-
     assert len(A.shape) == 2
     if p > A.shape[0]:
         p = A.shape[0]
@@ -109,7 +108,7 @@ def greedy_d_optimal(A, p, pstart=None):
     else:
         assert all(0 <= pval <= M-1 for pval in pstart)
 
-        # User asked for fewer pivots than the starting ones
+        # User asked for fewer pivots than the starting ones.
         if len(pstart) >= p:
             return pstart[:p]
 
@@ -118,50 +117,48 @@ def greedy_d_optimal(A, p, pstart=None):
         if len(pstart) < N:
             P[:N] = mgs_pivot_restart(A.T, p=N, pstart=pstart)
 
+        # Otherwise, we have at least N pivots, but fewer than p.
         numpivots = len(pstart)
-        # Otherwise: we have at least N pivots, but fewer than p.
 
     if p > numpivots:
-
         W = A[P[:numpivots], :]
         G = np.dot(W.T, W)
         Ginvwm = np.linalg.solve(G, A[P[numpivots:], :].T)
 
         for m in range(numpivots, p):
-            # The remaining choices:
+            # The remaining choices.
             detnorms = np.sum(A[P[m:], :].T * Ginvwm[:, (m-numpivots):], axis=0)
 
-            # Det maximization
+            # Determinant maximization.
             Pind = np.argmax(detnorms)
 
-            # Update inv(G)*wm via sherman-morrison
-            Ginvwm[:, (m-numpivots):] -= np.outer(Ginvwm[:, m-numpivots+Pind],
-                                                  np.dot(A[P[m+Pind], :].T,
-                                                  Ginvwm[:, (m-numpivots):])/(1+detnorms[Pind])
-                                                  )
+            # Update inv(G)*wm via Sherman-Morrison.
+            Ginvwm[:, (m-numpivots):] -= np.outer(
+                Ginvwm[:, m-numpivots+Pind],
+                np.dot(A[P[m+Pind], :].T, Ginvwm[:, (m-numpivots):])/(1+detnorms[Pind]),
+            )
 
-            # Pivoting
+            # Pivoting.
             P[[m, Pind+m]] = P[[Pind+m, m]]
-            Ginvwm[:, [m-numpivots, m-numpivots+Pind]] = Ginvwm[:,
-                                                                [m-numpivots+Pind,
-                                                                    m-numpivots]]
+            Ginvwm[:, [m-numpivots, m-numpivots+Pind]] = Ginvwm[:, [m-numpivots+Pind, m-numpivots]]
 
     return P[:p]
 
 
 def lstsq_loocv_error(A, b, weights):
-    """Computes the leave-one-out cross validation (LOOCV) metric for a
-    least-squares problem.
+    """Computes the leave-one-out cross validation (LOOCV) metric.
 
-    Parameters:
-        A: The M x N design matrix from a least-squares procedure
-        b: The right-hand side array with M rows from a least-squares procedure
-        weights: size-M array with positive entries, indicating pointwise
+    The metric is computed for a least-squares problem.
+
+    Args:
+        A: The M x N design matrix from a least-squares procedure.
+        b: The right-hand side array with M rows from a least-squares procedure.
+        weights: Size-M array with positive entries, indicating pointwise
             weights in the LOOCV metric.
-    Attributes:
-        cv: The sum-of-squares cross-validation metric (scalar, float)
-    """
 
+    Returns:
+        cv: The sum-of-squares cross-validation metric (scalar, float).
+    """
     M, N = A.shape
     Q, R, P = qr(A, pivoting=True, mode='economic')
 
@@ -173,44 +170,41 @@ def lstsq_loocv_error(A, b, weights):
         cv = np.zeros(b.shape[1])
 
     for m in range(M):
-        # Leave out m'th sample and compute residal on m'th point.
+        # Leave out m'th sample and compute residual on m'th point.
         Qm, Rm = qr_delete(Q, R, m)
         bm = np.delete(b, m, axis=0)
 
         if bdim > 1:
-            cv += weights[m]*(b[m, :] -
-                              A[m, P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
+            cv += weights[m]*(b[m, :] - A[m, P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
         else:
-            cv += weights[m]*(b[m] -
-                              A[m, P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
+            cv += weights[m]*(b[m] - A[m, P] @ np.linalg.solve(Rm, Qm.T @ bm))**2
 
     return np.sqrt(cv/M)
 
 
 def weighted_lsq(A, b, w):
-    """
-    Computes the weighted least squares solution to A x = b. I.e., computes x
-    that minimizes the :math:`\\ell^2' norm of the weighted residual
+    """Computes the weighted least squares solution to A x = b.
+
+    I.e., computes x that minimizes the :math:`\\ell^2' norm of the weighted
+    residual
 
     .. math::
 
       \\mathrm{diag}(\\sqrt{w_1}, \\ldots, \\sqrt{w_M}) (A x - b)
 
-
-    Parameters:
-        A (array-like): The M x N design matrix from a least-squares procedure
+    Args:
+        A (array-like): The M x N design matrix from a least-squares procedure.
         b (array-like): The right-hand side array with M rows from a
-            least-squares procedure
-        w: size-M array with positive entries, indicating pointwise
+            least-squares procedure.
+        w: Size-M array with positive entries, indicating pointwise
             weights in the least squares problem.
-    Attributes:
+
+    Returns:
         x (array-like): The least-squares solution.
         residual (array-like): Residual for the least squares problem.
     """
-
     M, N = A.shape
-    assert M == b.shape[0], ("Matrix A and right-hand side b must have "
-                             "identical size along axis 0.")
+    assert M == b.shape[0], "Matrix A and right-hand side b must have identical size along axis 0."
 
     wsqrt = np.sqrt(w)
     bweighted = np.multiply(b.T, wsqrt).T
@@ -223,5 +217,4 @@ def weighted_lsq(A, b, w):
 
 
 if __name__ == "__main__":
-
     pass

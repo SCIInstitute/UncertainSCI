@@ -1,6 +1,4 @@
-"""
-Mean functions for Gaussian processes.
-"""
+"""Mean functions for Gaussian processes."""
 
 import abc
 import equinox as eqx
@@ -10,8 +8,7 @@ import numpy.typing as npt
 
 
 class Mean(eqx.Module, metaclass=abc.ABCMeta):
-    """
-    Mean function base class.
+    """Mean function base class.
 
     Attributes:
         dim (int):
@@ -19,6 +16,7 @@ class Mean(eqx.Module, metaclass=abc.ABCMeta):
         cdim (int):
             Dimension of the codomain.
     """
+
     dim: int = eqx.field(static=True)
     cdim: int = eqx.field(static=True)
 
@@ -27,10 +25,9 @@ class Mean(eqx.Module, metaclass=abc.ABCMeta):
         self,
         x: jax.Array | npt.NDArray
     ) -> jax.Array:
-        """
-        Evaluate the mean.
+        """Evaluates the mean.
 
-        Arguments:
+        Args:
             x (array):
                 x values of evaluation.
         """
@@ -58,8 +55,9 @@ class Affine(Mean):
         a_is_static: bool = False,
         b_is_static: bool = False
     ):
-        """
-        Like:
+        """Initializes an affine mean function.
+
+        The mean function is
 
         .. math::
 
@@ -86,7 +84,7 @@ class Affine(Mean):
 
         a = jnp.asarray(a)
         if isinstance(b, (float, int)):
-            # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+            # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
             b = b * jnp.ones((cdim,))
         else:
             b = jnp.asarray(b)

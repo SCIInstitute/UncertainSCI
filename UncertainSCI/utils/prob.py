@@ -2,23 +2,16 @@ import numpy as np
 
 
 def discrete_sampling(N, probs, states):
-    """ samples iid from a discrete probability measure
-    Parameters
-    ------
-    param1: N
-    Numeber of iid samples generated from a random variable X
+    """Samples iid from a discrete probability measure.
 
-    param2: probs
-    X's probability mass function, prob(X = states[j]) = prob[j]
+    Args:
+        N: Number of iid samples generated from a random variable X.
+        probs: X's probability mass function, prob(X = states[j]) = prob[j].
+        states: Values of random variable X, X = states[j].
 
-    param3: states
-    values of random variable X, X = statesj[]
-
-    Returns
-    ------
-    N samples iid from a discrete probability measure
+    Returns:
+        N samples iid from a discrete probability measure.
     """
-
     p = probs[:] / sum(probs[:])
 
     j = np.digitize(np.random.random(N), np.cumsum(p), right=False)
@@ -29,7 +22,8 @@ def discrete_sampling(N, probs, states):
 
     return x
 
-# TODO: use numpy.choice, scipy.stats.discrete_rv
+
+# TODO: Use numpy.choice or scipy.stats.discrete_rv.
 
 
 def choice(a, size=1, p=None):
@@ -39,7 +33,6 @@ def choice(a, size=1, p=None):
 
 
 if __name__ == "__main__":
-
     from families import JacobiPolynomials
 
     alph = -0.8

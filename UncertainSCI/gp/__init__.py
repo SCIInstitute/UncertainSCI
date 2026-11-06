@@ -1,6 +1,4 @@
-"""
-Build Gaussian processes.
-"""
+"""Builds Gaussian processes."""
 
 from collections.abc import Callable
 
@@ -24,8 +22,7 @@ DEFAULT_OPTIM_KWARGS = {
 
 
 class GaussianProcess:
-    """
-    A Gaussian process emulator.
+    """A Gaussian process emulator.
 
     Builds a distribution on functions like
 
@@ -40,6 +37,7 @@ class GaussianProcess:
     or `Kanagawa et al. (2018) <https://doi.org/10.48550/arXiv.1807.02582>`_ for more
     information.
     """
+
     dim: int
     cdim: int
     mu: mean.Mean
@@ -64,7 +62,8 @@ class GaussianProcess:
         nugget: float = 1e-3,
         seed: int | None = None
     ) -> None:
-        """
+        """Initializes the Gaussian process.
+
         Args:
             dim (int):
                 Dimension of the domain of unknown function :math:`f`.
@@ -108,9 +107,9 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ):
-        """
-        Condition this Gaussian process from data ``(x, y, s)`` where ``s`` is the
-        variance of the observation pair ``(x, y)``.
+        """Conditions this Gaussian process on data ``(x, y, s)``.
+
+        Here ``s`` is the variance of the observation pair ``(x, y)``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -133,7 +132,7 @@ class GaussianProcess:
 
         self.train_x = jnp.asarray(x)
         self.train_y = jnp.asarray(y)
-        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+        # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
         self.train_s = jnp.asarray(s)
 
         self.train_cov_factor = GaussianProcess._get_train_cov_factor(
@@ -152,8 +151,7 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ):
-        """
-        Validate shapes of arguments to various methods.
+        """Validates shapes of arguments to various methods.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -189,8 +187,7 @@ class GaussianProcess:
             raise ValueError
 
     def validate_input_shape(self, x: jax.Array | npt.NDArray) -> tuple[int, int]:
-        """
-        Validate shapes of input-type arguments to various methods (e.g., x values).
+        """Validates shapes of input-type arguments to various methods (e.g., x values).
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -211,8 +208,7 @@ class GaussianProcess:
         return n, d
 
     def validate_output_shape(self, y: jax.Array | npt.NDArray) -> tuple[int, int]:
-        """
-        Validate shapes of output-type arguments to various methods (e.g., y values).
+        """Validates shapes of output-type arguments to various methods (e.g., y values).
 
         Args:
             y (jax.Array or numpy.ndarray):
@@ -238,8 +234,7 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ) -> kernel.CovarianceFactor:
-        """
-        Get training covariance factor associated with the data ``(x, y, s)``.
+        """Gets the training covariance factor associated with the data ``(x, y, s)``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -262,13 +257,13 @@ class GaussianProcess:
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
-        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+        # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         return GaussianProcess._get_train_cov_factor((self.mu, self.k), x, y, s)
 
-    # TODO: may want to change args for this function, but it's nice to maintain the same signature as
-    # other core/mathematical routines.
+    # TODO: We may want to change the args for this function, but it's nice to maintain the same
+    # signature as other core/mathematical routines.
     @staticmethod
     @jax.jit
     def _get_train_cov_factor(
@@ -286,12 +281,19 @@ class GaussianProcess:
         optim=DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
     ) -> jax.Array:
-        """
+        """Tunes the mean and kernel hyperparameters by minimizing the hyperparameter loss.
+
         Args:
+            n (int):
+                Number of steps to take in optimization.
             optim (callable):
                 Optax or Optax-style optimizer.
             optim_kwargs (dict):
                 kwargs for ``optim``.
+
+        Returns:
+            jax.Array:
+                The loss at each optimization step.
         """
         optim = optim(**optim_kwargs)
         optim_state = optim.init(eqx.filter((self.mu, self.k), eqx.is_inexact_array))
@@ -338,8 +340,7 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ) -> jax.Array:
-        """
-        Compute the loss of Gaussian process' prior given data ``(x, y, s)``.
+        """Computes the loss of the Gaussian process' prior given data ``(x, y, s)``.
 
         This is the negative log marginal likelihood of the Gaussian process given data
         ``(x, y, s)``, discarding constants.
@@ -365,7 +366,7 @@ class GaussianProcess:
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
-        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+        # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         return GaussianProcess._loss_hyperparameters((self.mu, self.k), x, y, s)
@@ -394,9 +395,10 @@ class GaussianProcess:
         inside_domain: Callable[[jax.Array], bool | jax.Array] | None,
         tol: float,
     ) -> Callable[[jax.Array], bool | jax.Array]:
-        """
-        Validate the mutually exclusive domain specifications of
-        :meth:`get_sample_point` and return the corresponding inclusion
+        """Returns the domain inclusion predicate for :meth:`get_sample_point`.
+
+        Validates the mutually exclusive domain specifications of
+        :meth:`get_sample_point` and returns the corresponding inclusion
         predicate.
         """
         domain_specs = (hull, ranges, inside_domain)
@@ -440,8 +442,7 @@ class GaussianProcess:
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
         inside_domain: Callable[[jax.Array], bool | jax.Array] | None = None,
     ) -> jax.Array:
-        """
-        Optimize a coordinate ``x`` to maximize posterior variance.
+        """Optimizes a coordinate ``x`` to maximize posterior variance.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -515,7 +516,7 @@ class GaussianProcess:
         train_cov_factor: kernel.CovarianceFactor,
         x: jax.Array
     ) -> tuple[jax.Array, jax.Array, jax.Array]:
-        def loss_fn(x):  # Posterior variance:
+        def loss_fn(x):  # Negative posterior variance.
             covariance = (
                 k(x, x) -
                 k(x, train_x) @ train_cov_factor.solve(k(train_x, x))
@@ -528,8 +529,7 @@ class GaussianProcess:
         return optim_state, x, -loss
 
     def prior_mean(self, x):
-        """
-        Evaluate the prior mean at ``x``.
+        """Evaluates the prior mean at ``x``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -537,12 +537,10 @@ class GaussianProcess:
                 of the domain.
         """
         self.validate_input_shape(x)
-
         return self.mu(x)
 
     def prior_covariance(self, u, v):
-        """
-        Evaluate the prior covariance as :math:`k(\\texttt{u}, \\texttt{v})`.
+        """Evaluates the prior covariance as :math:`k(\\texttt{u}, \\texttt{v})`.
 
         Args:
             u (jax.Array or numpy.ndarray):
@@ -554,12 +552,10 @@ class GaussianProcess:
         """
         self.validate_input_shape(u)
         self.validate_input_shape(v)
-
         return self.k(u, v)
 
     def prior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
-        """
-        Produce ``p`` realizations of the prior at locations ``x``.
+        """Produces ``p`` realizations of the prior at locations ``x``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -586,8 +582,7 @@ class GaussianProcess:
         )
 
     def posterior_mean(self, x) -> jax.Array:
-        """
-        Evaluate the posterior mean at ``x``.
+        """Evaluates the posterior mean at ``x``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -601,8 +596,7 @@ class GaussianProcess:
         return self.mu(x) + correction.reshape((-1, self.cdim))
 
     def posterior_covariance(self, u, v) -> jax.Array:
-        """
-        Evaluate the posterior covariance at ``(u, v)``.
+        """Evaluates the posterior covariance at ``(u, v)``.
 
         Args:
             u (jax.Array or numpy.ndarray):
@@ -621,8 +615,7 @@ class GaussianProcess:
         )
 
     def posterior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
-        """
-        Produce ``p`` realizations of the posterior at locations ``x``.
+        """Produces ``p`` realizations of the posterior at locations ``x``.
 
         Args:
             x (jax.Array or numpy.ndarray):

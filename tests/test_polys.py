@@ -7,17 +7,13 @@ import UncertainSCI.opolynd as opolynd
 
 
 class PolysTestCase(unittest.TestCase):
-    """
-    Testing orthogonal polynomial routines.
-    """
+    """Tests orthogonal polynomial routines."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_derivative_expansion(self):
-        """
-        Expansion coefficients of derivatives.
-        """
+        """Tests expansion coefficients of derivatives."""
         alpha = 10 * np.random.rand()
         beta = 10 * np.random.rand()
         J = families.JacobiPolynomials(alpha=alpha, beta=beta)
@@ -45,9 +41,9 @@ class PolysTestCase(unittest.TestCase):
         beta = 10 * np.random.rand(dim)[0]
 
         N = np.random.randint(5, 10)
-        Inds = indexing.LpSet(dim=dim, order=N - 1, p=np.inf)
+        inds = indexing.LpSet(dim=dim, order=N - 1, p=np.inf)
 
-        J = [None,] * dim
+        J = [None] * dim
         for q in range(dim):
             J[q] = families.JacobiPolynomials(alpha=alpha, beta=beta)
 
@@ -55,7 +51,7 @@ class PolysTestCase(unittest.TestCase):
 
         x, w = P.tensor_gauss_quadrature(N)
 
-        V = P.eval(x, Inds.get_indices())
+        V = P.eval(x, inds.get_indices())
 
         G = V.T @ np.diag(w) @ V
 

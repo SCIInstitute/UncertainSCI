@@ -5,18 +5,14 @@ import UncertainSCI.families as families
 
 
 class JacobiTestCase(unittest.TestCase):
-    """
-    Performs basic tests for univariate Jacobi polynomials.
-    """
+    """Performs basic tests for univariate Jacobi polynomials."""
 
     def setUp(self):
-        """
-        Evaluation of orthogonal polynomials.
-        """
+        """Sets up the evaluation of orthogonal polynomials."""
         self.longMessage = True
 
     def test_ratio(self):
-        """Evaluate orthogonal polynomial ratios."""
+        """Tests evaluation of orthogonal polynomial ratios."""
         alpha = -1. + 10 * np.random.rand()
         beta = -1. + 10 * np.random.rand()
         J = families.JacobiPolynomials(alpha=alpha, beta=beta)
@@ -34,19 +30,20 @@ class JacobiTestCase(unittest.TestCase):
 
         r = J.r_eval(x, range(N + 1))
 
-        delta = 1e-4  # FIXME: This is an unacceptably high tolerance.
+        delta = 1e-4  # TODO: This is an unacceptably high tolerance.
         errs = np.abs(r - rdirect)
         i, j = np.nonzero(errs > delta)
         if i.size > 0:
             errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2}, x={3}'.format(
-                alpha, beta, np.array2string(j), np.array2string(x[i]))
+                alpha, beta, np.array2string(j), np.array2string(x[i])
+            )
         else:
             errstr = ''
 
         self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta, msg=errstr)
 
     def test_gq(self):
-        """Calculate Gaussian quadrature integration accuracy."""
+        """Tests Gaussian quadrature integration accuracy."""
         alpha = -1. + 10 * np.random.rand()
         beta = -1. + 10 * np.random.rand()
 
@@ -54,7 +51,7 @@ class JacobiTestCase(unittest.TestCase):
         N = np.random.randint(0, 60 + 1)
 
         x, w = J.gauss_quadrature(N)
-        w /= w.sum()    # Force a probability measure.
+        w /= w.sum()  # Force a probability measure.
 
         V = J.eval(x, range(2 * N))
 
@@ -65,12 +62,10 @@ class JacobiTestCase(unittest.TestCase):
 
 
 class IDistTestCase(unittest.TestCase):
-    """
-    Tests for induced distributions.
-    """
+    """Tests induced distributions."""
 
     def test_idist_legendre(self):
-        """Evaluation of Legendre induced distribution function."""
+        """Tests evaluation of the Legendre induced distribution function."""
         J = families.JacobiPolynomials(alpha=0., beta=0.)
 
         n = np.random.randint(1, 25 + 1)
@@ -92,7 +87,7 @@ class IDistTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(F1 - F2, ord=np.inf), 0.)
 
     def test_fidist_jacobi(self):
-        """Fast induced sampling routine for Jacobi polynomials."""
+        """Tests the fast induced sampling routine for Jacobi polynomials."""
         alpha = np.random.random() * 11 - 1.
         beta = np.random.random() * 11 - 1.
 
@@ -102,7 +97,7 @@ class IDistTestCase(unittest.TestCase):
 
         J = families.JacobiPolynomials(alpha=alpha, beta=beta)
 
-        delta = 1e-1  # FIXME: This is an unacceptably high tolerance.
+        delta = 1e-1  # TODO: This is an unacceptably high tolerance.
 
         for n in range(nmax)[::-1]:
             x0 = J.idistinv(u, n)
@@ -111,7 +106,8 @@ class IDistTestCase(unittest.TestCase):
             ind = np.nonzero(np.abs(x0 - x1) > delta)[0]
             if ind.size > 0:
                 errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2:d}, u={3}'.format(
-                    alpha, beta, n, np.array2string(u[ind]))
+                    alpha, beta, n, np.array2string(u[ind])
+                )
             else:
                 errstr = ''
 
@@ -123,7 +119,8 @@ class IDistTestCase(unittest.TestCase):
         ind = np.nonzero(np.abs(x0 - x1) > delta)[0]
         if ind.size > 0:
             errstr = 'Failed for alpha={0:1.3f}, beta={1:1.3f}, n={2}, u={3}'.format(
-                alpha, beta, np.array2string(n[ind]), np.array2string(u[ind]))
+                alpha, beta, np.array2string(n[ind]), np.array2string(u[ind])
+            )
         else:
             errstr = ''
 

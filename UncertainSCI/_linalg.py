@@ -4,8 +4,7 @@ import jax.numpy as jnp
 
 @jax.jit
 def d_foerstner(a: jax.Array, b: jax.Array) -> jax.Array:
-    r"""
-    Compute the Förstner distance between covariance matrices ``a`` and ``b``.
+    r"""Computes the Förstner distance between covariance matrices ``a`` and ``b``.
 
     The Förstner metric is defined as
 
@@ -26,7 +25,7 @@ def d_foerstner(a: jax.Array, b: jax.Array) -> jax.Array:
         a (array):
             Matrix ``a``.
         b (array):
-            Matric ``b``.
+            Matrix ``b``.
 
     Returns:
         A scalar array (``ndim == 0`` and ``shape == ()``) of the Förstner distance
@@ -39,12 +38,12 @@ def d_foerstner(a: jax.Array, b: jax.Array) -> jax.Array:
 @jax.jit
 def eigh_generalized(
     a: jax.Array,
-    b: jax.Array
+    b: jax.Array,
 ) -> tuple[jax.Array, jax.Array]:
-    r"""
-    Solves the generalized eigenvalue problem :math:`A v = \lambda B v`
-    for symmetric/Hermitian matrices where :math:`B` is positive-definite
-    in a JAX-compatible way.
+    r"""Solves the generalized eigenvalue problem :math:`A v = \lambda B v`.
+
+    This applies to symmetric/Hermitian matrices where :math:`B` is
+    positive-definite, and is computed in a JAX-compatible way.
 
     This exists because :func:`jax.scipy.linalg.eigh` does not support
     ``b is not None`` (in particular, it supports only the standard eigenvalue
@@ -67,14 +66,13 @@ def eigh_generalized(
     c = jax.scipy.linalg.solve_triangular(chol, x.conj().T, lower=True)
     evals, w = jnp.linalg.eigh(c)
     evecs = jax.scipy.linalg.solve_triangular(chol.conj().T, w, lower=False)
-
     return evals, evecs
 
 
 @jax.jit
 def solve_cholesky(
     l: jax.Array,
-    y: jax.Array
+    y: jax.Array,
 ):
     w = jax.scipy.linalg.solve_triangular(l, y, lower=True)
     return jax.scipy.linalg.solve_triangular(l.conj().T, w)

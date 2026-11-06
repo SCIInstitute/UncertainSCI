@@ -7,17 +7,13 @@ import UncertainSCI.pce as pce
 
 
 class PCETestCase(unittest.TestCase):
-    """
-    Testing PCE constructions.
-    """
+    """Tests PCE constructions."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_quantile(self):
-        """
-        Quantile evaluations, in particular internal PCE affine mappings.
-        """
+        """Tests quantile evaluations, in particular internal PCE affine mappings."""
         M = 1 + int(np.ceil(30 * np.random.random()))
         alpha = 10 * np.random.rand()
         beta = 10 * np.random.rand()
@@ -28,7 +24,7 @@ class PCETestCase(unittest.TestCase):
         domain = np.array(
             [
                 -5 + 5 * np.random.rand(),
-                5 + 5 * np.random.rand()
+                5 + 5 * np.random.rand(),
             ]
         )
         domain = np.reshape(domain, [2, 1])
@@ -63,9 +59,7 @@ class PCETestCase(unittest.TestCase):
         self.assertAlmostEqual(qerr, 0, delta=delta, msg=msg)
 
     def test_global_derivative_sensitivity(self):
-        """
-        Global derivative sensitivity computations.
-        """
+        """Tests global derivative sensitivity computations."""
         dim = 3
         order = 5
         alpha = 10 * np.random.rand()
@@ -88,11 +82,10 @@ class PCETestCase(unittest.TestCase):
 
         # Differentiate along dimension q and integrate.
         for q in range(dim):
-            derivative = [0, ] * dim
+            derivative = [0] * dim
             derivative[q] = 1
 
-            S2[q, :] = w.T @ (dist.polys.eval(x, indices, derivative) @
-                              pce_model.coefficients)
+            S2[q, :] = w.T @ (dist.polys.eval(x, indices, derivative) @ pce_model.coefficients)
 
         # The map Jacobian is 2 for every dimension.
         S2 *= 2

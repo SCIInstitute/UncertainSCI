@@ -7,16 +7,15 @@ import UncertainSCI.utils.verify_orthonormal as verify_orthonormal
 
 
 class TTRTestCase(unittest.TestCase):
-    """
-    Testing for computing three-term recurrence coefficients.
-    """
+    """Tests computation of three-term recurrence coefficients."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_pc(self):
-        """
-        Compute the first N recurrence coefficients using the PC algorithm
+        """Tests the PC algorithm for recurrence coefficients.
+
+        Computes the first N recurrence coefficients using the PC algorithm
         for half Hermite weight function w(x) = e^(-x^2) on [0, inf).
         """
         a = -np.inf
@@ -41,8 +40,9 @@ class TTRTestCase(unittest.TestCase):
         self.assertAlmostEqual(e_pc, 0, delta=delta, msg=errstr)
 
     def test_orthogonality(self):
-        """
-        Verify the orthogonality of polynomials evaluated by recurrence
+        """Tests orthogonality of polynomials from PC algorithm recurrence coefficients.
+
+        Verifies the orthogonality of polynomials evaluated by recurrence
         coefficients computed from the PC algorithm.
         """
         a = -np.inf
@@ -56,9 +56,8 @@ class TTRTestCase(unittest.TestCase):
         xg, wg = opoly1d.gauss_quadrature_driver(ab_pc, N)
 
         e_pc = np.linalg.norm(
-            verify_orthonormal.verify_orthonormal(ab_pc, np.arange(N), xg, wg) -
-            np.eye(N),
-            None
+            verify_orthonormal.verify_orthonormal(ab_pc, np.arange(N), xg, wg) - np.eye(N),
+            None,
         )
 
         delta = 1e-8
@@ -66,8 +65,9 @@ class TTRTestCase(unittest.TestCase):
         self.assertAlmostEqual(e_pc, 0, delta=delta, msg=errstr)
 
     def test_orthogonality_half_line(self):
-        """
-        Verify the orthogonality of polynomials evaluated by
+        """Tests orthogonality of polynomials from PC algorithm recurrence coefficients on the half line.
+
+        Verifies the orthogonality of polynomials evaluated by
         recurrence coefficients computed from PC algorithm.
         """
         a = 0.
@@ -83,7 +83,7 @@ class TTRTestCase(unittest.TestCase):
 
         e_pc = np.linalg.norm(
             verify_orthonormal.verify_orthonormal(ab_pc, np.arange(N), xg, wg) - np.eye(N),
-            None
+            None,
         )
 
         delta = 1e-8
@@ -91,8 +91,9 @@ class TTRTestCase(unittest.TestCase):
         self.assertAlmostEqual(e_pc, 0, delta=delta, msg=errstr)
 
     def test_lanczos(self):
-        """
-        Compute the first N recurrence coefficients using
+        """Tests the stabilized Lanczos procedure for recurrence coefficients.
+
+        Computes the first N recurrence coefficients using
         (stabilized) Lanczos procedure for
         the discrete Chebyshev transformed to [0,1).
         """
@@ -103,9 +104,7 @@ class TTRTestCase(unittest.TestCase):
         ab_lz = ttr.lanczos_stable(x, w, N)
 
         def discrete_chebyshev(N):
-            """
-            Return the first N exact recurrence coefficients.
-            """
+            """Returns the first N exact recurrence coefficients."""
             ab = np.zeros([N, 2])
             ab[1:, 0] = (N - 1) / (2 * N)
             ab[0, 1] = 1.

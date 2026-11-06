@@ -1,6 +1,4 @@
-"""
-Visualize Gaussian processes.
-"""
+"""Visualizes Gaussian processes."""
 
 from __future__ import annotations
 
@@ -23,8 +21,7 @@ def stats(
     which: str = 'posterior',
     p: int = 100
 ):
-    """
-    Evaluate summary statistics and realizations of a Gaussian process.
+    """Evaluates summary statistics and realizations of a Gaussian process.
 
     Args:
         g (gp.GaussianProcess):
@@ -67,8 +64,7 @@ def plot_distribution_mean(
     which: str = 'posterior',
     p: int = 100
 ):
-    """
-    Plot a Gaussian process distribution and (optionally) a reference function.
+    """Plots a Gaussian process distribution and (optionally) a reference function.
 
     Plots the process mean with a shaded band of one marginal variance on either
     side, sampled realizations, and (optionally) the values of ``f_true``. For
@@ -131,8 +127,7 @@ def plot_distribution_variance(
     p: int = 100,
     colorlast: bool = True
 ):
-    """
-    Plot the marginal variance of a Gaussian process distribution.
+    """Plots the marginal variance of a Gaussian process distribution.
 
     For the posterior distribution, vertical lines mark the training coordinates.
     When ``colorlast`` is true, the final coordinate is highlighted separately.
@@ -183,8 +178,7 @@ def plot_loss_landscape(
     ymax: jax.Array | npt.NDArray | float | int | None = None,
     ytop: float = 1e2
 ):
-    """
-    Plot a Gaussian process loss landscape for a scalar parameter.
+    """Plots a Gaussian process loss landscape for a scalar parameter.
 
     The parameter is resolved by following the attribute path in ``p_name`` on a
     deep copy of ``g``. Its value is replaced by each entry in ``p_range``, and the

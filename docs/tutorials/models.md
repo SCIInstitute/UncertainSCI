@@ -81,14 +81,14 @@ Above, the forcing function \\(f\\) and the diffusion coefficient \\(a(x, \mathb
 where the mean diffusion behavior \\(a_0\\) is given, and the functions \\(a_j\\) for \\(j = 1, \ldots, d\\) are (scaled) eigenfunctions of the integral operator associated to an assumed covariance kernel of a random field \\(a(x)\\). In UncertainSCI, one example of such a truncated KLE associated to an exponential covariance kernel can be created using the following:
 ```
 imoprt numpy as np
-from UncertainSCI.model_examples import KLE_exponential_covariance_1d
+from UncertainSCI.model_examples import kle_exponential_covariance_1d
 
 xminus = -1.
 xplus = 1.
 abar = lambda x: 3*np.ones(np.shape(x))  # Constant a_0 equal to 3
 d = 4
 
-a = KLE_exponential_covariance_1d(d, xminus, xplus, abar)
+a = kle_exponential_covariance_1d(d, xminus, xplus, abar)
 ```
 
 The output `a` is a function with two inputs \\(x\\) and \\(\mathbf{p}\\). We discretize the \\(x\\) variable with \\(N\\) equispaced points on \\([x_-, x_+]\\) and use a finite-difference method to solve the ODE. The following code then creates the ODE model with this parametric diffusion coefficient:

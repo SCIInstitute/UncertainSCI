@@ -5,15 +5,13 @@ import UncertainSCI.model_examples as model_examples
 
 
 class ModelTestCase(unittest.TestCase):
-    """
-    Performs basic tests for models.
-    """
+    """Performs basic tests for models."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_genz_oscillatory(self):
-        """Test the Genz oscillatory model."""
+        """Tests the Genz oscillatory model."""
         d = np.random.randint(1, 10 + 1)
         N = np.random.randint(1, 100 + 1)
 

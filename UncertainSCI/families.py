@@ -1,7 +1,4 @@
-"""
-Routines that specialize :mod:`UncertainSCI.opoly1d` for classical families of
-orthogonal polynomials.
-"""
+"""Routines that specialize :mod:`UncertainSCI.opoly1d` for classical orthogonal polynomial families."""
 import numpy as np
 
 from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
@@ -20,8 +17,9 @@ from scipy.stats import gamma
 
 
 def jacobi_weight_normalized(x, alpha, beta):
-    """
-    Evaluates the Jacobi weight function defined as
+    """Evaluates the normalized Jacobi weight function.
+
+    The Jacobi weight function is defined as
 
       w(x) = C(alpha,beta) * (1-x)**alpha, (1+x)**beta,
 
@@ -30,39 +28,39 @@ def jacobi_weight_normalized(x, alpha, beta):
     for alpha, beta > -1, and |x| <= 1. This weight function is a probability
     density on [-1,1].
     """
-
     return 1/(2**(alpha+beta+1)*sp.beta(beta+1, alpha+1)) * (1-x)**alpha * (1+x)**beta
 
 
 def jacobi_recurrence_values(N, alpha, beta):
-    """
-    Returns the first N+1 recurrence coefficient pairs for the (alpha, beta)
-    Jacobi family
-    """
+    """Returns the first N+1 recurrence coefficient pairs for the (alpha, beta) Jacobi family."""
     if N < 1:
         ab = np.ones((1, 2))
         ab[0, 0] = 0
-        ab[0, 1] = np.exp((alpha + beta + 1.) * np.log(2.) +
-                          sp.gammaln(alpha + 1.) + sp.gammaln(beta + 1.) -
-                          sp.gammaln(alpha + beta + 2.))
+        ab[0, 1] = np.exp(
+            (alpha + beta + 1.) * np.log(2.) +
+            sp.gammaln(alpha + 1.) +
+            sp.gammaln(beta + 1.) -
+            sp.gammaln(alpha + beta + 2.)
+        )
         ab = np.sqrt(ab)
         return ab
 
     ab = np.ones((N+1, 2)) * np.array([beta**2. - alpha**2., 1.])
 
-    # Special cases
+    # Special cases.
     ab[0, 0] = 0.
     ab[1, 0] = (beta - alpha) / (alpha + beta + 2.)
-    ab[0, 1] = np.exp((alpha + beta + 1.) * np.log(2.) +
-                      sp.gammaln(alpha + 1.) + sp.gammaln(beta + 1.) -
-                      sp.gammaln(alpha + beta + 2.))
+    ab[0, 1] = np.exp(
+        (alpha + beta + 1.) * np.log(2.) +
+        sp.gammaln(alpha + 1.) +
+        sp.gammaln(beta + 1.) -
+        sp.gammaln(alpha + beta + 2.)
+    )
 
-    ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / (
-        (alpha + beta + 2.)**2 * (alpha + beta + 3.))
+    ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / ((alpha + beta + 2.)**2 * (alpha + beta + 3.))
 
     if N > 1:
-        ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / (
-            (alpha + beta + 2.)**2 * (alpha + beta + 3.))
+        ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / ((alpha + beta + 2.)**2 * (alpha + beta + 3.))
 
         ab[2, 0] /= (2. + alpha + beta) * (4. + alpha + beta)
         inds = 2
@@ -93,11 +91,9 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
     if n > 0:
         xn, wn = gauss_quadrature_driver(ab, n)
 
-    """
-    This is the (inverse) n'th root of the leading coefficient square of p_n
-    """
+    # This is the (inverse) n'th root of the leading coefficient square of p_n.
     if n == 0:
-        kn_factor = 0  # could be any value since we don't use it when n = 0
+        kn_factor = 0  # Could be any value since it is not used when n = 0.
     else:
         kn_factor = np.exp(-1/n * np.sum(np.log(ab[:, 1]**2)))
 
@@ -114,7 +110,6 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
 
         logfactor = 0.
         for j in range(n):
-            # ab = quad_mod(ab, un[j])
             ab = quadratic_modification(ab, un[j])
             logfactor = logfactor + np.log(ab[0, 1]**2 * ((x[ind]+1)/2)**2 * kn_factor)
             ab[0, 1] = 1.
@@ -122,16 +117,16 @@ def jacobi_idist_driver(x, n, alpha, beta, M):
         root = (3.-x[ind]) / (1.+x[ind])
 
         for k in range(A):
-            # ab = lin_mod(ab, root)
             ab = linear_modification(ab, root)
             logfactor = logfactor + np.log(ab[0, 1]**2 * 1/2 * (x[ind]+1))
             ab[0, 1] = 1.
 
         u, w = gauss_quadrature_driver(ab, M)
 
-        Ival = np.sum(w * (2 - 1/2 * (u+1) * (x[ind]+1))**Aa)
-        F[ind] = np.exp(logfactor - alpha*np.log(2) - sp.betaln(beta+1, alpha+1) -
-                        np.log(beta+1) + (beta+1) * np.log((x[ind]+1)/2)) * Ival
+        i_val = np.sum(w * (2 - 1/2 * (u+1) * (x[ind]+1))**Aa)
+        F[ind] = np.exp(
+            logfactor - alpha*np.log(2) - sp.betaln(beta+1, alpha+1) - np.log(beta+1) + (beta+1) * np.log((x[ind]+1)/2)
+        ) * i_val
 
     return F
 
@@ -154,11 +149,9 @@ def fidistinv_setup_helper1(ug, exps):
 
 
 def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
-
-    # vgrid = np.cos( np.linspace(np.pi, 0, M) )
-    # Or
-    # vgrid = np.cos( np.linspace(np.pi, 0, M+1)[:-1] + M/(2*np.pi) )
-    # Or
+    # Other candidate grids are np.cos(np.linspace(np.pi, 0, M)) and
+    # np.cos(np.linspace(np.pi, 0, M+1)[:-1] + M/(2*np.pi)); here the interior
+    # points of an (M+2)-point Chebyshev grid are used.
     vgrid = np.cos(np.linspace(np.pi, 0, M+2))
     vgrid = vgrid[1:-1]
 
@@ -181,8 +174,8 @@ def fidistinv_setup_helper2(ug, idistinv, exponents, M, alpha, beta):
 
         temp = xgrid[:, q]
 
-        # temp = temp(ugrid)
-        # for ugrid near 0, then temp behaves like a certain rational function (1-ugrid)**???
+        # Viewing temp as a function of ugrid, for ugrid near 0 temp behaves like a
+        # certain rational function (1-ugrid)**p with an undetermined exponent p.
         if exponents[0, q] != 0:
             temp = (temp - xgrid[0, q]) / (xgrid[-1, q] - xgrid[0, q])
         else:
@@ -209,10 +202,10 @@ def fidistinv_driver(u, n, data):
         return np.zeros(0)
 
     if n.size != 1:
-        assert u.size == n.size  # Inputs u and n must be the same size, or n must be a scalar
+        assert u.size == n.size  # Inputs u and n must be the same size, or n must be a scalar.
 
     N = int(max(n))
-    assert len(data) >= N+1  # Input data does not cover range of n
+    assert len(data) >= N+1  # Input data does not cover range of n.
 
     x = np.zeros(u.size)
     if n.size == 1:
@@ -238,7 +231,7 @@ def driver_helper(u, data):
     B = edges.size - 1
 
     x = np.zeros(u.size)
-    x[np.where(j == 1)] = data[2, 0]  # Boundary bins
+    x[np.where(j == 1)] = data[2, 0]  # Boundary bins.
     x[np.where(j == B)] = data[3, -1]
 
     for qb in range(2, B):
@@ -268,9 +261,7 @@ def driver_helper(u, data):
 
 
 class JacobiPolynomials(OrthogonalPolynomialBasis1D):
-    """
-    Jacobi Polynomial family.
-    """
+    """Jacobi Polynomial family."""
 
     def __init__(self, alpha=0., beta=0., domain=[-1., 1.], **options):
         OrthogonalPolynomialBasis1D.__init__(self, **options)
@@ -283,20 +274,14 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         self.transform_to_standard = AffineTransform(domain=self.domain, image=self.standard_domain)
 
     def recurrence_driver(self, N):
-        # Returns the first N+1 recurrence coefficient pairs for the Jacobi
-        # polynomial family.
+        """Returns the first N+1 recurrence coefficient pairs for the Jacobi polynomial family."""
         ab = jacobi_recurrence_values(N, self.alpha, self.beta)
         if self.probability_measure and N >= 0:
             ab[0, 1] = 1.
-
         return ab
 
     def idist_medapprox(self, n):
-        """
-        Computes an approximation to the median of the degree-n induced
-        distribution.
-        """
-
+        """Computes an approximation to the median of the degree-n induced distribution."""
         if n > 0:
             m = (self.beta**2-self.alpha**2) / (2*n+self.alpha+self.beta)**2
         else:
@@ -304,16 +289,17 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         return m
 
     def idist(self, x, n, M=50):
-        """
-        Computes the order-n induced distribution at the locations x using M=10
-        quadrature nodes.
-        """
+        """Computes the order-n induced distribution at the locations x using M=10 quadrature nodes."""
         x = np.atleast_1d(x)
 
         F = np.zeros(x.size, )
         mrs_centroid = self.idist_medapprox(n)
-        F[np.where(x <= mrs_centroid)] = jacobi_idist_driver(x[np.where(x <= mrs_centroid)], n, self.alpha, self.beta, M)
-        F[np.where(x > mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x > mrs_centroid)], n, self.beta, self.alpha, M)
+        F[np.where(x <= mrs_centroid)] = jacobi_idist_driver(
+            x[np.where(x <= mrs_centroid)], n, self.alpha, self.beta, M
+        )
+        F[np.where(x > mrs_centroid)] = 1 - jacobi_idist_driver(
+            -x[np.where(x > mrs_centroid)], n, self.beta, self.alpha, M
+        )
 
         return F
 
@@ -355,7 +341,6 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         ns = np.arange(len(data), n+1)
 
         for q in range(ns.size):
-
             nn = ns[q]
 
             if nn == 0:
@@ -365,54 +350,53 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
                 ug = self.idist(xg, nn)
                 ug = np.insert(ug, [0, ug.size], [0, 1])
 
-            # F_n^{-1}(u) near u = 0 (also u = 1)
-            # F_n(x) = \int_{-1}^x p_n^2(s) w(s) ds
-            # u near 0 =====> x near -1
-            # near -1: F_n(x) = D(alpha,beta) \int_{-1}^{-1+eps} p_n^2(s) w(s) ds
+            # The following describes F_n^{-1}(u) near u = 0 (and similarly near u = 1).
+            # F_n(x) = \int_{-1}^x p_n^2(s) w(s) ds.
+            # u near 0 =====> x near -1.
+            # Near -1: F_n(x) = D(alpha,beta) \int_{-1}^{-1+eps} p_n^2(s) w(s) ds
             #
             #        D(alpha,beta)^{-1} = 2^(alpha+beta+1) B(beta+1, alpha+1)
             #
             #          p_n^2(s) \sim C_n = p_n^2(-1) near s = -1 (C_n is computable)
             #
-            # near -1: F_n(x) \approx D \int_{-1}^{-1+eps} C_n (1-s)^alpha (1+s)^beta ds
+            # Near -1: F_n(x) \approx D \int_{-1}^{-1+eps} C_n (1-s)^alpha (1+s)^beta ds
             #                 \approx D \int_{-1}^{-1+eps} C_n 2^alpha (1+s)^beta ds
             #                 = 2^alpha D C_n \int_{-1}^{-1+eps} (1+s)^beta ds
             #                 = 2^alpha D C_n \int_{0}^{eps} r^beta dr
             #                 = 2^alpha D C_n / (beta+1) eps^(beta+1)  (beta + 1 > 0)
             #
-            # near -1: F_n(x) \approx 2^alpha D C_n  (1+x)^(beta+1)
-            # near u = 0: u \approx 2^alpha D C_n  (1+x)^(beta+1)
-            # near u = 0: (u / (2^alpha * D C_n))^(1/(beta+1)) - 1 = x
+            # Near -1: F_n(x) \approx 2^alpha D C_n  (1+x)^(beta+1)
+            # Near u = 0: u \approx 2^alpha D C_n  (1+x)^(beta+1)
+            # Near u = 0: (u / (2^alpha * D C_n))^(1/(beta+1)) - 1 = x
             #
-            # idistinv_helper: encode computation x = (u / (2^alpha * D * C_n))^(1/(beta+1)) - 1 (near x = -1)
-            #                                     x = u^(1/(beta+1)) / E_n   - 1
-            #                                           E_n = (1 / (2^alpha * D * C_n))^(1/(beta+1))
-            #                                      E_n (probably) should be computed with logs:
-            #                                       E_n = exp( -1/(beta+1) * (alpha*log(2) + log(D) + log(C_n) ) )
-            #                                           For D: there is a logbeta function
-            # temp(vgrid) ~ (1 + ugrid)^(beta + 1)
+            # The idistinv_helper encodes x = (u / (2^alpha * D * C_n))^(1/(beta+1)) - 1 (near x = -1)
+            #                             x = u^(1/(beta+1)) / E_n   - 1
+            #                                   E_n = (1 / (2^alpha * D * C_n))^(1/(beta+1))
+            #                              E_n (probably) should be computed with logs:
+            #                               E_n = exp( -1/(beta+1) * (alpha*log(2) + log(D) + log(C_n) ) )
+            #                                   For D, there is a logbeta function.
+            # Thus temp(vgrid) ~ (1 + ugrid)^(beta + 1).
             exps = np.array([1/(self.beta+1), 1/(self.alpha+1)])
             ug, exponents = fidistinv_setup_helper1(ug, exps)
 
             def idistinv(u):
                 return self.idistinv(u, nn)
 
-            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10, self.alpha, self.beta))  # , E_n?
+            # Whether E_n should also be passed to fidistinv_setup_helper2 is an open question.
+            data.append(fidistinv_setup_helper2(ug, idistinv, exponents, 10, self.alpha, self.beta))
 
         return data
 
     def fidistinv(self, u, n):
-        dirName = 'data_set'
+        dir_name = 'data_set'
         parent_dir = os.path.dirname(os.path.dirname(uSCI.__file__))
-        path = os.path.join(parent_dir, dirName)
-        # Path(path).mkdir(parents=True, exist_ok=True)
+        path = os.path.join(parent_dir, dir_name)
 
         try:
             os.makedirs(path)
-            print('Directory', dirName, 'created')
+            print('Directory', dir_name, 'created')
         except FileExistsError:
             pass
-            # print ('Directory ', dirName, 'already exists')
 
         filename = 'data_jacobi_{0:1.6f}_{1:1.6f}'.format(self.alpha, self.beta)
         try:
@@ -439,11 +423,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         return x
 
     def eval_1d(self, x, n):
-        """
-        Evaluates univariate orthonormal polynomials given their
-        three-term recurrence coefficients ab
-
-        """
+        """Evaluates univariate orthonormal polynomials given their three-term recurrence coefficients ab."""
         n = np.atleast_1d(n)
         x = np.atleast_1d(x)
 
@@ -471,9 +451,9 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
         return p[:, n.flatten()]
 
     def eval_nd(self, x, lambdas):
-        """
-        Evaluates tensorial orthonormal polynomials associated with the
-        univariate recurrence coefficients ab
+        """Evaluates tensorial orthonormal polynomials.
+
+        The polynomials are associated with the univariate recurrence coefficients ab.
         """
         try:
             M, d = x.shape
@@ -505,9 +485,7 @@ def hermite_recurrence_values(N, mu):
 
 
 def freud_idist(x, n, alpha, rho):
-    """
-    for x <= 0
-    """
+    """Computes the induced distribution for x <= 0."""
     x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
@@ -536,13 +514,12 @@ def freud_idistinv(u, n, alpha, rho):
         assert n.size == u.size
         evenflags = np.where(n % 2 == 0)
         oddflags = np.where(n % 2 != 0)
-        x[evenflags] = np.sqrt(hfreud_idistinv(np.abs(2*u[evenflags]-1), (n[evenflags]/2).astype(int), alpha/2, (rho-1)/2))
-        x[oddflags] = np.sqrt(hfreud_idistinv(np.abs(2*u[oddflags]-1), ((n[oddflags]-1)/2).astype(int), alpha/2, (rho+1)/2))
-
-#     if n % 2 == 0:
-#         x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
-#     else:
-#         x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int((n-1)/2), alpha/2, (rho+1)/2) )
+        x[evenflags] = np.sqrt(
+            hfreud_idistinv(np.abs(2*u[evenflags]-1), (n[evenflags]/2).astype(int), alpha/2, (rho-1)/2)
+        )
+        x[oddflags] = np.sqrt(
+            hfreud_idistinv(np.abs(2*u[oddflags]-1), ((n[oddflags]-1)/2).astype(int), alpha/2, (rho+1)/2)
+        )
 
     ind = np.where(u < 0.5)
     x[ind] = -x[ind]
@@ -558,15 +535,12 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
         self.rho = rho
 
     def recurrence_driver(self, N):
-
         ab = hermite_recurrence_values(N, self.rho/2)
         if self.probability_measure and N > 0:
             ab[0, 1] = 1.
-
         return ab
 
     def idist(self, x, n):
-
         alpha = self.alpha
         rho = self.rho
 
@@ -579,19 +553,14 @@ class HermitePolynomials(OrthogonalPolynomialBasis1D):
         return F
 
     def idistinv(self, u, n):
-
         alpha = self.alpha
         rho = self.rho
-
         return freud_idistinv(u, n, alpha, rho)
 
 
 def laguerre_recurrence_values(N, alpha, rho):
-    # Returns the first N+1 recurrence coefficient pairs for the Laguerre family.
+    """Returns the first N+1 recurrence coefficient pairs for the Laguerre family."""
     assert alpha == 1.
-
-#     if N < 1:
-#         return np.ones((0,2))
 
     ab = np.zeros((N+1, 2))
 
@@ -606,22 +575,12 @@ def laguerre_recurrence_values(N, alpha, rho):
 
 
 def hfreud_idist_driver(x, n, alpha, rho, M=25):
-    """
-    Evaluates the integral, F = \\int_{0}^x p_n^2(x) \\dx{\\mu(x)} for x <= x0
-    """
+    """Evaluates the integral, F = \\int_{0}^x p_n^2(x) \\dx{\\mu(x)} for x <= x0."""
     x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
 
-#     if alpha != 1:
-#         HF = LaguerrePolynomials(alpha, rho)
-#         x0 = HF.idist_medapprox(n)
-#         rflags = x > x0
-#         F[rflags] = 1 - hfreud_idistc_driver(x[rflags], n, alpha, rho, M)
-#     else:
-#         x0 = 50
-#         rflags = x > x0
-#         F[rflags] = 1 - hfreud_idistc_driver(x[rflags], n, alpha, rho, M)
+    # Points with x > x0 are not special-cased here; hfreud_idist sends them to hfreud_idistc_driver instead.
 
     if alpha == 1:
         ab = laguerre_recurrence_values(n, alpha, rho)
@@ -645,9 +604,6 @@ def hfreud_idist_driver(x, n, alpha, rho, M=25):
             F[ind] = 0
             continue
 
-#         if rflags[ind]:
-#             continue
-
         un = 2 * xn / x[ind] - 1
         ab = ab_J
         logfactor = logfactor0
@@ -659,20 +615,24 @@ def hfreud_idist_driver(x, n, alpha, rho, M=25):
 
         u, w = gauss_quadrature_driver(ab, M)
 
-        Ival = np.sum(w * np.exp(- (x[ind]/2)**alpha * (u+1)**alpha))
+        i_val = np.sum(w * np.exp(- (x[ind]/2)**alpha * (u+1)**alpha))
 
-        logfactor = logfactor + (2*n+rho+1) * np.log(x[ind]/2) + np.log(alpha) + \
-                                (rho+1) * np.log(2) - sp.gammaln((rho+1)/alpha) - np.log(rho+1)
+        logfactor = (
+            logfactor +
+            (2*n+rho+1) * np.log(x[ind]/2) +
+            np.log(alpha) +
+            (rho+1) * np.log(2) -
+            sp.gammaln((rho+1)/alpha) -
+            np.log(rho+1)
+        )
 
-        F[ind] = np.exp(logfactor + np.log(Ival))
+        F[ind] = np.exp(logfactor + np.log(i_val))
 
     return F
 
 
 def hfreud_idistc_driver(x, n, alpha, rho, M=25):
-    """
-    Evaluates the integral, F = \\int_{0}^x p_n^2(x) \\dx{\\mu(x)} for x >= x0
-    """
+    """Evaluates the integral, F = \\int_{0}^x p_n^2(x) \\dx{\\mu(x)} for x >= x0."""
     x = np.atleast_1d(x)
 
     F = np.zeros(x.size)
@@ -717,11 +677,11 @@ def hfreud_idistc_driver(x, n, alpha, rho, M=25):
             ab[0, 1] = 1
 
         u, w = gauss_quadrature_driver(ab, M)
-        Ival = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
+        i_val = np.sum(w * (u+x[ind])**(rho-R) * np.exp(u**alpha + x[ind]**alpha - (u+x[ind])**alpha))
 
         logfactor = logfactor + (-x[ind]**alpha) + sp.gammaln(1/alpha) - sp.gammaln((rho+1)/alpha)
 
-        F[ind] = np.exp(logfactor + np.log(Ival))
+        F[ind] = np.exp(logfactor + np.log(i_val))
 
     return F
 
@@ -730,13 +690,11 @@ def hfreud_idist_medapprox(n, alpha, rho):
     if n > 0:
         a = rho + 2*n + 2*np.sqrt(n**2 + n*rho)  # maxapprox
         a = a ** (1/alpha)
-        a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha)
-                                  - np.log(2) - sp.gammaln(alpha+1/2)))
+        a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) - np.log(2) - sp.gammaln(alpha+1/2)))
 
         b = rho + 2*n - 2*np.sqrt(n**2 + n*rho)  # minapprox
         b = b ** (1/alpha)
-        b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha)
-                                  - np.log(2) - sp.gammaln(alpha+1/2)))
+        b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) - np.log(2) - sp.gammaln(alpha+1/2)))
     else:
         a = gamma.ppf(1-1e-3, (rho+1)/alpha)
         a = a**(1/alpha)
@@ -764,22 +722,6 @@ def hfreud_idist(x, n, alpha, rho):
 
 def hfreud_idistc(x, n, alpha, rho):
     return 1 - hfreud_idist(x, n, alpha, rho)
-
-#     if isinstance(x, float) or isinstance(x, int):
-#         x = np.asarray([x])
-#     else:
-#         x = np.asarray(x)
-#
-#     if alpha != 1:
-#         x0 = sum( hfreud_idist_medapprox(n, alpha, rho) ) / 2
-#     else:
-#         x0 = 50
-#
-#     F = np.zeros(x.size,)
-#     F[np.where(x<=x0)] = 1 - hfreud_idist_driver(x[np.where(x<=x0)], n, alpha, rho)
-#     F[np.where(x>x0)] = hfreud_idistc_driver(x[np.where(x>x0)], n, alpha, rho)
-#
-#     return F
 
 
 def hfreud_tolerance(n, alpha, rho, tol):
@@ -871,27 +813,24 @@ class LaguerrePolynomials(OrthogonalPolynomialBasis1D):
     def idist_medapprox(self, n):
         alpha = self.alpha
         rho = self.rho
-
         return sum(hfreud_idist_medapprox(n, alpha, rho)) / 2
 
     def idist(self, x, n):
         alpha = self.alpha
         rho = self.rho
-
         return hfreud_idist(x, n, alpha, rho)
 
     def idistinv(self, u, n):
         alpha = self.alpha
         rho = self.rho
-
         return hfreud_idistinv(u, n, alpha, rho)
 
 
 def discrete_chebyshev_recurrence_values(N, M):
-    """
-    Returns the first N+1 recurrence coefficients pairs for the Discrete
-    Chebyshev measure, the N-point discrete uniform measure with equispaced
-    support on [0,1].
+    """Returns the first N+1 recurrence coefficient pairs for the Discrete Chebyshev measure.
+
+    The Discrete Chebyshev measure is the N-point discrete uniform measure with
+    equispaced support on [0,1].
     """
     assert M > 0, N < M
 
@@ -912,25 +851,23 @@ def discrete_chebyshev_recurrence_values(N, M):
 
 
 def discrete_chebyshev_idistinv_helper(u, support, idist_evals):
-    """
-    Performs the binning and subscripting for the idistinv routine.
-    """
-
+    """Performs the binning and subscripting for the idistinv routine."""
     M = len(idist_evals)
     bin_edges = np.concatenate([np.array([0.]), idist_evals])
     bins = np.digitize(u, bin_edges, right=True)
 
     bins -= 1
-    bins[bins < 0] = 0  # These points should correspond to u=0
-    bins[bins >= M] = M-1  # These points should correspond to u=1
+    bins[bins < 0] = 0  # These points should correspond to u=0.
+    bins[bins >= M] = M-1  # These points should correspond to u=1.
 
     return support[bins]
 
 
 class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
-    """
-    Class for polynomials orthonormal on [0,1] with respect to an M-point
-    discrete uniform measure with support equidistributed on the interval.
+    """Polynomials orthonormal on [0,1] with respect to a discrete uniform measure.
+
+    The measure is an M-point discrete uniform measure with support
+    equidistributed on the interval.
     """
 
     def __init__(self, M=2, domain=[0., 1.]):
@@ -947,22 +884,18 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
         self.standard_weights = 1/M*np.ones(M)
 
     def recurrence_driver(self, N):
-        # Returns the first N+1 recurrence coefficient pairs for the
-        # Discrete Chebyshev polynomial family.
+        """Returns the first N+1 recurrence coefficient pairs for the Discrete Chebyshev polynomial family."""
         assert (N < self.M)
         ab = discrete_chebyshev_recurrence_values(N, self.M)
         if self.probability_measure and N > 0:
             ab[0, 1] = 1.
-
         return ab
 
     def eval(self, x, n, **options):
-
         return super().eval(self.transform_to_standard.map(x), n, **options)
 
     def idist(self, x, n, nugget=False):
-        """
-        Evalutes the order-n induced distribution at the locations x.
+        """Evaluates the order-n induced distribution at the locations x.
 
         Optionally, add a nugget to ensure correct computation on the
         support points.
@@ -980,10 +913,7 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
         return cumulative_weights[bins]
 
     def idistinv(self, u, n):
-        """
-        Computes the inverse order-n induced distribution at the locations
-        u.
-        """
+        """Computes the inverse order-n induced distribution at the locations u."""
         u = to_numpy_array(u)
         assert np.all(u >= 0), "Input u must contain numbers between 0 and 1"
         assert np.all(u <= 1), "Input u must contain numbers between 0 and 1"
@@ -993,7 +923,6 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
         x = np.zeros(u.size)
 
         if n.size == 1:
-
             return discrete_chebyshev_idistinv_helper(u, self.support, self.idist(self.support, n[0], nugget=True))
 
         else:
@@ -1002,14 +931,16 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
 
             for i in range(nmax+1):
                 flags = ind == i+1
-                x[flags] = discrete_chebyshev_idistinv_helper(u[flags], self.support, self.idist(self.support, i, nugget=True))
+                x[flags] = discrete_chebyshev_idistinv_helper(
+                    u[flags], self.support, self.idist(self.support, i, nugget=True)
+                )
 
             return x
 
     def fidistinv(self, u, n):
-        """
-        Fast routine for idistinv.
-        (In this case, the "slow" routine is already very fast, so this
-        is just an alias for idistinv.)
+        """Computes idistinv using a fast routine.
+
+        In this case, the "slow" routine is already very fast, so this is just
+        an alias for idistinv.
         """
         return self.idistinv(u, n)
