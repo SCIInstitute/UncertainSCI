@@ -71,7 +71,8 @@ def quantile_plot(pce, bands=3, xvals=None, ax=None, datadim=1, **kwargs):
                             interpolate=True, facecolor='red', alpha=alpha,
                             label='{0:1.2f} probability mass (each band)'.format(band_mass))
         else:
-            ax.fill_between(x, quantiles[ind, :], quantiles[bands+ind, :], interpolate=True, facecolor='red', alpha=alpha)
+            ax.fill_between(x, quantiles[ind, :], quantiles[bands+ind, :],
+                            interpolate=True, facecolor='red', alpha=alpha)
 
     ax.set_title('Median + quantile bands')
     ax.set_xlabel('$x$')
@@ -113,7 +114,8 @@ def mean_stdev_plot(pce, ensemble=False, xvals=None, ax=None, datadim=1, **kwarg
     if ensemble:
         ax.plot(x, output[:ensemble, :].T, 'k', alpha=0.8, linewidth=0.2)
     ax.plot(x, mean, 'b', label='Mean')
-    ax.fill_between(x, mean-stdev, mean+stdev, interpolate=True, facecolor='red', alpha=0.5, label=r'$\pm 1$ stdev range')
+    ax.fill_between(x, mean-stdev, mean+stdev, interpolate=True,
+                    facecolor='red', alpha=0.5, label=r'$\pm 1$ stdev range')
 
     ax.set_xlabel('$x$')
     ax.set_title('Mean $\\pm$ standard deviation')

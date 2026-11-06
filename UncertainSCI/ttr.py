@@ -654,9 +654,9 @@ def dPI6(N, rho=0.):
     # initial values: x_0 = 0 (b_0 = 0), x_1, x_2 and x_3q
     ab[0, 1] = 0.
     for i in range(4, N):
-        ab[i, 1] = ((i-2 + rho * delta(i-2)) / (6 * ab[i-2, 1])
-                    - (ab[i-4, 1]*ab[i-3, 1] + ab[i-3, 1]**2 + 2*ab[i-3, 1]*ab[i-2, 1] + ab[i-3, 1]*ab[i-1, 1]
-                       + ab[i-2, 1]**2 + 2*ab[i-2, 1]*ab[i-1, 1] + ab[i-1, 1]**2)) / ab[i-1, 1]
+        ab[i, 1] = ((i-2 + rho * delta(i-2)) / (6 * ab[i-2, 1]) -
+                    (ab[i-4, 1]*ab[i-3, 1] + ab[i-3, 1]**2 + 2*ab[i-3, 1]*ab[i-2, 1] + ab[i-3, 1]*ab[i-1, 1] +
+                     ab[i-2, 1]**2 + 2*ab[i-2, 1]*ab[i-1, 1] + ab[i-1, 1]**2)) / ab[i-1, 1]
 
     ab[:, 1] = np.sqrt(ab[:, 1])
     ab[0, 1] = np.sqrt((1/3) * sp.gamma((1+rho)/6))

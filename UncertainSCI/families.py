@@ -312,8 +312,10 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
 
         F = np.zeros(x.size, )
         mrs_centroid = self.idist_medapprox(n)
-        F[np.where(x <= mrs_centroid)] = jacobi_idist_driver(x[np.where(x <= mrs_centroid)], n, self.alpha, self.beta, M)
-        F[np.where(x > mrs_centroid)] = 1 - jacobi_idist_driver(-x[np.where(x > mrs_centroid)], n, self.beta, self.alpha, M)
+        F[np.where(x <= mrs_centroid)] = jacobi_idist_driver(
+            x[np.where(x <= mrs_centroid)], n, self.alpha, self.beta, M)
+        F[np.where(x > mrs_centroid)] = 1 - \
+            jacobi_idist_driver(-x[np.where(x > mrs_centroid)], n, self.beta, self.alpha, M)
 
         return F
 
@@ -536,8 +538,10 @@ def freud_idistinv(u, n, alpha, rho):
         assert n.size == u.size
         evenflags = np.where(n % 2 == 0)
         oddflags = np.where(n % 2 != 0)
-        x[evenflags] = np.sqrt(hfreud_idistinv(np.abs(2*u[evenflags]-1), (n[evenflags]/2).astype(int), alpha/2, (rho-1)/2))
-        x[oddflags] = np.sqrt(hfreud_idistinv(np.abs(2*u[oddflags]-1), ((n[oddflags]-1)/2).astype(int), alpha/2, (rho+1)/2))
+        x[evenflags] = np.sqrt(hfreud_idistinv(np.abs(2*u[evenflags]-1),
+                               (n[evenflags]/2).astype(int), alpha/2, (rho-1)/2))
+        x[oddflags] = np.sqrt(hfreud_idistinv(np.abs(2*u[oddflags]-1),
+                              ((n[oddflags]-1)/2).astype(int), alpha/2, (rho+1)/2))
 
 #     if n % 2 == 0:
 #         x = np.sqrt( hfreud_idistinv(np.abs(2*u-1), int(n/2), alpha/2, (rho-1)/2) )
@@ -730,13 +734,13 @@ def hfreud_idist_medapprox(n, alpha, rho):
     if n > 0:
         a = rho + 2*n + 2*np.sqrt(n**2 + n*rho)  # maxapprox
         a = a ** (1/alpha)
-        a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha)
-                                  - np.log(2) - sp.gammaln(alpha+1/2)))
+        a = a * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) -
+                                  np.log(2) - sp.gammaln(alpha+1/2)))
 
         b = rho + 2*n - 2*np.sqrt(n**2 + n*rho)  # minapprox
         b = b ** (1/alpha)
-        b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha)
-                                  - np.log(2) - sp.gammaln(alpha+1/2)))
+        b = b * np.exp(1/alpha * (np.log(np.sqrt(np.pi)) + sp.gammaln(alpha) -
+                                  np.log(2) - sp.gammaln(alpha+1/2)))
     else:
         a = gamma.ppf(1-1e-3, (rho+1)/alpha)
         a = a**(1/alpha)
@@ -1002,7 +1006,8 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
 
             for i in range(nmax+1):
                 flags = ind == i+1
-                x[flags] = discrete_chebyshev_idistinv_helper(u[flags], self.support, self.idist(self.support, i, nugget=True))
+                x[flags] = discrete_chebyshev_idistinv_helper(
+                    u[flags], self.support, self.idist(self.support, i, nugget=True))
 
             return x
 

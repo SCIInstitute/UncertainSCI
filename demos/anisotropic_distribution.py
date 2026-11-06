@@ -61,7 +61,8 @@ plt.plot(x, median, 'b', label='PCE median')
 
 for ind in range(Q):
     alpha = (Q-ind) * 1/Q - (1/(2*Q))
-    plt.fill_between(x, quantiles_lower[ind, :], quantiles_upper[ind, :], interpolate=True, facecolor='red', alpha=alpha)
+    plt.fill_between(x, quantiles_lower[ind, :], quantiles_upper[ind, :],
+                     interpolate=True, facecolor='red', alpha=alpha)
 
 plt.xlabel('x')
 

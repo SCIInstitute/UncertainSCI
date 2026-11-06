@@ -11,10 +11,10 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 '''
 #########################
 Basic UQ example
-The purpose of this file is to demonstrate the UncerstainSCI UQ tool on a simple function with predictable output.
-This example uses a simple sinusoidal function with 4 parameters: amplitude, offset, phase, and frequency.
-Uncertainty quantification is performed on each of these 4 parameters and their interactions, and the resulting parameter
-sensitivities, model standard deviation and mean outputs are calculated and displayed.
+The purpose of this file is to demonstrate the UncerstainSCI UQ tool on a simple function with predictable
+output.  This example uses a simple sinusoidal function with 4 parameters: amplitude, offset, phase,
+and frequency.  Uncertainty quantification is performed on each of these 4 parameters and their interactions,
+and the resulting parameter sensitivities, model standard deviation and mean outputs are calculated and displayed.
 
 #########################
 '''

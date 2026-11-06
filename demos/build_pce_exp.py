@@ -135,10 +135,11 @@ plt.plot(x, MC_median, 'b', label='MC median')
 for ind in range(Q):
     alpha = (Q-ind) * 1/Q - (1/(2*Q))
     if ind == 0:
-        plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha,
-                         label='{0:1.2f} probability mass (each band)'.format(band_mass))
+        plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :], interpolate=True, facecolor='red',
+                         alpha=alpha, label='{0:1.2f} probability mass (each band)'.format(band_mass))
     else:
-        plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :], interpolate=True, facecolor='red', alpha=alpha)
+        plt.fill_between(x, MC_quantiles[ind, :], MC_quantiles[Q+ind, :],
+                         interpolate=True, facecolor='red', alpha=alpha)
 
 plt.title('MC Median + quantile bands')
 plt.xlabel('x')

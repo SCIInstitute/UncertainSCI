@@ -248,7 +248,8 @@ class PolynomialChaosExpansion():
 
             K = self.sampling_options.get('K')
             if K is None:
-                raise ValueError("The sampling option 'K' must be specified for induced sampling on Gauss quadrature grids.")
+                raise ValueError(
+                    "The sampling option 'K' must be specified for induced sampling on Gauss quadrature grids.")
 
             p_standard = self.distribution.opolys.idist_gq_sampling(K, self.indices, M=self.sampling_options.get('M'))
 
