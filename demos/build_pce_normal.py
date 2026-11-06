@@ -1,4 +1,3 @@
-from itertools import chain, combinations
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -9,7 +8,7 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 
 from UncertainSCI.vis import piechart_sensitivity, quantile_plot, mean_stdev_plot
 
-## Distribution setup: generating a correlated multivariate normal distribution
+# Distribution setup: generating a correlated multivariate normal distribution
 # Number of parameters
 dimension = 2
 
@@ -23,17 +22,17 @@ D = np.diag(1/np.sqrt(np.diag(cov)) * 1/(np.arange(1, dimension+1)**2))
 cov = D @ cov @ D
 dist = NormalDistribution(mean=mean, cov=cov, dim=dimension)
 
-## Define forward model
+# Define forward model
 N = int(1e2)  # Number of degrees of freedom of model
 left = -1.
 right = 1.
 x = np.linspace(left, right, N)
 model = sine_modulation(N=N)
 
-## Polynomial order
+# Polynomial order
 order = 5
 
-## Initializes a pce object
+# Initializes a pce object
 pce = PolynomialChaosExpansion(distribution=dist, order=order, plabels=['p1', 'p2'])
 pce.generate_samples()
 
@@ -51,7 +50,7 @@ pce2 = PolynomialChaosExpansion(distribution=dist, order=order)
 pce2.set_samples(parameter_samples)
 pce2.build(model)
 
-## Visualization
+# Visualization
 mean_stdev_plot(pce, ensemble=50)
 quantile_plot(pce, bands=3, xvals=x, xlabel='$x$')
 piechart_sensitivity(pce)

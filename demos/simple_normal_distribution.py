@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection on older matplotlib)
 
 from UncertainSCI.distributions import NormalDistribution
 from scipy.stats import multivariate_normal

@@ -10,6 +10,7 @@ from scipy.special import comb
 
 from UncertainSCI.utils.prob import discrete_sampling, choice
 
+
 def hyperbolic_cross_indices(d, k):
     """
     Returns indices associated with a d-dimensional (isotropic)
@@ -189,7 +190,6 @@ def pdjk(d, k):
 
 
 def sampling_total_degree_indices(N, d, k):
-
     """
     Chooses N random multi-indices (with the uniform probability law) from the
     set of d-variate multi-indices whose total degree is k and less
@@ -243,7 +243,7 @@ class MultiIndexSet():
         assert n > 0
 
         index_choices = choice(range(self.indices.shape[0]), size=n)
-        return self.indices[index_choices,:]
+        return self.indices[index_choices, :]
 
     def size(self):
         return self.indices.shape[0]
@@ -302,7 +302,7 @@ class MultiIndexSet():
 
         K, d = trial_indices.shape
         assert self.dim == d, \
-               "Input index array should have {0:d} columns".format(self.dim)
+            "Input index array should have {0:d} columns".format(self.dim)
 
         M = self.indices.shape[0]
         member = np.zeros(K, dtype=bool)
@@ -345,12 +345,12 @@ class MultiIndexSet():
 
         for m in range(M):
             candidates = np.tile(self.indices[m, :], [d, 1]) +\
-                         np.eye(d, dtype=self.indices.dtype)
+                np.eye(d, dtype=self.indices.dtype)
             membership_flags = ~self.isamember(candidates)
             if candidates[membership_flags, :].size > 0:
                 margin = np.unique(
-                          np.append(margin, candidates[membership_flags, :], axis=0),
-                          axis=0)
+                    np.append(margin, candidates[membership_flags, :], axis=0),
+                    axis=0)
 
         return margin
 
@@ -394,7 +394,7 @@ class MultiIndexSet():
 
         K, d = indices.shape
         assert d == self.dim, \
-               "Input index array should have {0:d} columns".format(self.dim)
+            "Input index array should have {0:d} columns".format(self.dim)
 
         membership_flags = self.isamember(indices)
         if np.any(~membership_flags):

@@ -19,7 +19,7 @@ import scipy as sp
 from scipy import sparse as sprs
 
 from UncertainSCI.families import JacobiPolynomials, \
-        HermitePolynomials, LaguerrePolynomials
+    HermitePolynomials, LaguerrePolynomials
 from UncertainSCI.families import DiscreteChebyshevPolynomials
 from UncertainSCI.opolynd import TensorialPolynomials
 from UncertainSCI.transformations import AffineTransform
@@ -79,7 +79,7 @@ class NormalDistribution(ProbabilityDistribution):
 
         else:
             # Option 1: Cholesky
-            #L = np.linalg.cholesky(self._cov)
+            # L = np.linalg.cholesky(self._cov)
 
             # Option 2: matrix square root
             W, V = np.linalg.eigh(self._cov)
@@ -559,7 +559,7 @@ class GammaDistribution(ProbabilityDistribution):
         try:
             kiter = iter(self.k)
             kiter = True
-        except:
+        except Exception:
             kiter = False
 
         for qd in range(self.dim):
@@ -660,6 +660,7 @@ class BetaDistribution(ProbabilityDistribution):
         beta: Shape parameter(s) beta.
         polys: Jacobi polynomial family or list thereof.
     """
+
     def __init__(self, alpha=None, beta=None, mean=None, stdev=None,
                  dim=None, domain=None, bounds=None):
 
@@ -682,7 +683,7 @@ class BetaDistribution(ProbabilityDistribution):
 
         for qd in range(self.dim):
             assert self.alpha[qd] > 0 and self.beta[qd] > 0, \
-                    "Parameter vectors alpha and beta must have strictly \
+                "Parameter vectors alpha and beta must have strictly \
                     positive components"
         assert self.dim > 0, "Dimension must be positive"
         assert self.domain.shape == (2, self.dim)
@@ -698,10 +699,10 @@ class BetaDistribution(ProbabilityDistribution):
         self.poly_domain = np.ones([2, self.dim])
         self.poly_domain[0, :] = -1.
         self.transform_standard_dist_to_poly = AffineTransform(
-                domain=self.standard_domain, image=self.poly_domain)
+            domain=self.standard_domain, image=self.poly_domain)
 
         self.transform_to_standard = AffineTransform(
-                domain=self.domain, image=self.standard_domain)
+            domain=self.domain, image=self.standard_domain)
 
         # Construct 1D polynomial families
         Js = []
@@ -971,7 +972,7 @@ class BetaDistribution(ProbabilityDistribution):
         density = np.ones(x.shape[0])
         for i in range(self.dim):
             density *= x[:, i]**(self.alpha[i]-1) * \
-                       (1 - x[:, i])**(self.beta[i]-1)
+                (1 - x[:, i])**(self.beta[i]-1)
             density /= sp.special.beta(self.alpha[i], self.beta[i])
 
         # Scale based on determinant of map
@@ -1071,10 +1072,10 @@ class DiscreteUniformDistribution(ProbabilityDistribution):
         self.poly_domain = np.ones([2, self.dim])
         self.poly_domain[0, :] = 0.
         self.transform_standard_dist_to_poly = AffineTransform(
-                domain=self.standard_domain, image=self.poly_domain)
+            domain=self.standard_domain, image=self.poly_domain)
 
         self.transform_to_standard = AffineTransform(
-                domain=self.domain, image=self.standard_domain)
+            domain=self.domain, image=self.standard_domain)
 
         Ps = []
         for qd in range(self.dim):
@@ -1148,12 +1149,12 @@ class TensorialDistribution(ProbabilityDistribution):
         self.dim = np.sum([dist.dim for dist in distributions])
 
         self.standard_domain = np.concatenate(
-                [dist.standard_domain.T for dist in distributions]
-                ).T
+            [dist.standard_domain.T for dist in distributions]
+        ).T
 
         self.poly_domain = np.concatenate(
-                [dist.poly_domain.T for dist in distributions]
-                ).T
+            [dist.poly_domain.T for dist in distributions]
+        ).T
 
         # Construct transform_standard_dist_to_poly
         Ts = [dist.transform_standard_dist_to_poly for dist in distributions]
@@ -1162,9 +1163,9 @@ class TensorialDistribution(ProbabilityDistribution):
         bs = [t.b for t in Ts]
 
         self.transform_standard_dist_to_poly = AffineTransform(
-                A=sp.linalg.block_diag(*As),
-                b=np.concatenate(bs)
-            )
+            A=sp.linalg.block_diag(*As),
+            b=np.concatenate(bs)
+        )
 
         # Construct transform_to_standard
         Ts = [dist.transform_to_standard for dist in distributions]
@@ -1173,9 +1174,9 @@ class TensorialDistribution(ProbabilityDistribution):
         bs = [t.b for t in Ts]
 
         self.transform_to_standard = AffineTransform(
-                A=sp.linalg.block_diag(*As),
-                b=np.concatenate(bs)
-            )
+            A=sp.linalg.block_diag(*As),
+            b=np.concatenate(bs)
+        )
 
         self.polys = TensorialPolynomials([poly for dist in distributions
                                           for poly in dist.polys.polys1d])
@@ -1191,7 +1192,7 @@ class TensorialDistribution(ProbabilityDistribution):
         counter = 0
         for dist in self.distributions:
             p[:, range(counter, counter+dist.dim)] = np.reshape(dist.MC_samples(M=M), [M, dist.dim])
-            #p[:, range(counter, counter+dist.dim)] = dist.MC_samples(M=M)
+            # p[:, range(counter, counter+dist.dim)] = dist.MC_samples(M=M)
             counter += dist.dim
 
         # Each component distribution already applies

@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import random
 
-from UncertainSCI.indexing import MultiIndexSet
 
 def mixture_tensor_discrete_sampling(M, grids, weights, iset):
     """
@@ -20,8 +19,6 @@ def mixture_tensor_discrete_sampling(M, grids, weights, iset):
 
     assert len(grids) == len(weights) == iset.dim
 
-    N = [grids[j].size for j in range(iset.dim)]
-
     x = np.zeros([M, iset.dim])
     indices = iset.choice(M)
 
@@ -32,7 +29,7 @@ def mixture_tensor_discrete_sampling(M, grids, weights, iset):
 
     for d in range(iset.dim):
         for k in range(max_indices[d]):
-            mask = indices[:,d] == k
-            x[mask,d] = random.choice(grids[d], probabilities=weights[d][:,k])
+            mask = indices[:, d] == k
+            x[mask, d] = random.choice(grids[d], probabilities=weights[d][:, k])
 
     return x

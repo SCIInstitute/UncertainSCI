@@ -52,13 +52,13 @@ for ind in range(pce.samples.shape[0]):
     model_output[ind, :] = model(pce.samples[ind, :])
 pce.build(model_output=model_output)
 
-## Postprocess PCE: statistics are computable:
+# Postprocess PCE: statistics are computable:
 mean = pce.mean()
 stdev = pce.stdev()
 global_sensitivity, variable_interactions = pce.global_sensitivity()
-quantiles = pce.quantile([0.25, 0.5, 0.75]) #  0.25, median, 0.75 quantile
+quantiles = pce.quantile([0.25, 0.5, 0.75])  # 0.25, median, 0.75 quantile
 
-## Visualization
+# Visualization
 mean_stdev_plot(pce, ensemble=50)
 quantile_plot(pce, bands=3, xvals=x, xlabel='$x$')
 piechart_sensitivity(pce)

@@ -2,8 +2,8 @@ import numpy as np
 import scipy.special as sp
 
 # from UncertainSCI.utils.compute_subintervals import compute_subintervals
-from UncertainSCI.utils.quad import compute_subintervals,\
-                                    gq_modification_composite
+from UncertainSCI.utils.quad import compute_subintervals, \
+    gq_modification_composite
 from UncertainSCI.utils.quad import gq_modification_unbounded_composite
 
 

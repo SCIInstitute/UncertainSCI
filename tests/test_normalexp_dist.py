@@ -28,7 +28,7 @@ class DistTestCase(unittest.TestCase):
         loc = 0.
         E = distributions.ExponentialDistribution(lbd=lbd, loc=loc)
 
-        delta = 1e-2  # FIXME: This is an unacceptably high tolerance. 
+        delta = 1e-2  # FIXME: This is an unacceptably high tolerance.
         errstr = 'Failed for n = {}, mean = {} and stdev = {}'.format(n, mean, stdev)
         self.assertAlmostEqual(E.lbd, [num[i] for i in range(len(num))], delta=delta, msg=errstr)
         self.assertAlmostEqual(E.loc, [0. for i in range(len(num))], delta=delta, msg=errstr)

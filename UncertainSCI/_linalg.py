@@ -27,7 +27,7 @@ def d_foerstner(a: jax.Array, b: jax.Array) -> jax.Array:
             Matrix ``a``.
         b (array):
             Matric ``b``.
-    
+
     Returns:
         A scalar array (``ndim == 0`` and ``shape == ()``) of the Förstner distance
         between ``a`` and ``b`` of complex float.
@@ -62,11 +62,11 @@ def eigh_generalized(
         eigenvectors (array):
             Matrix of shape (N, N) of columns of eigenvectors.
     """
-    l = jnp.linalg.cholesky(b)
-    x = jax.scipy.linalg.solve_triangular(l, a, lower=True)
-    c = jax.scipy.linalg.solve_triangular(l, x.conj().T, lower=True)
+    chol = jnp.linalg.cholesky(b)
+    x = jax.scipy.linalg.solve_triangular(chol, a, lower=True)
+    c = jax.scipy.linalg.solve_triangular(chol, x.conj().T, lower=True)
     evals, w = jnp.linalg.eigh(c)
-    evecs = jax.scipy.linalg.solve_triangular(l.conj().T, w, lower=False)
+    evecs = jax.scipy.linalg.solve_triangular(chol.conj().T, w, lower=False)
 
     return evals, evecs
 

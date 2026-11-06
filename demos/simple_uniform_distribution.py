@@ -10,10 +10,10 @@ uniform probability distribution on a rectangle.
 """
 
 dim = 2
-bounds = np.zeros([2,dim])
+bounds = np.zeros([2, dim])
 
-bounds[:,0] = [3, 5]    # Bounds for first parameter
-bounds[:,1] = [-5, -3]  # Bounds for second parameter
+bounds[:, 0] = [3, 5]    # Bounds for first parameter
+bounds[:, 1] = [-5, -3]  # Bounds for second parameter
 
 p = UniformDistribution(domain=bounds)
 
@@ -27,8 +27,8 @@ print(np.array2string(cov))
 
 # Create a grid to plot the density
 M = 100
-x = np.linspace(bounds[0,0], bounds[1,0], M)
-y = np.linspace(bounds[0,1], bounds[1,1], M)
+x = np.linspace(bounds[0, 0], bounds[1, 0], M)
+y = np.linspace(bounds[0, 1], bounds[1, 1], M)
 
 X, Y = np.meshgrid(x, y)
 XY = np.vstack([X.flatten(), Y.flatten()]).T

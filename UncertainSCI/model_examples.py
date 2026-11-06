@@ -8,6 +8,7 @@ from scipy import sparse
 from scipy.sparse import linalg as splinalg
 import scipy.optimize
 
+
 def ishigami_function(a, b):
     """
     Returns the Ishigami function,
@@ -25,6 +26,7 @@ def ishigami_function(a, b):
         return np.sin(p[0]) * (1 + b*p[2]**4) + a*np.sin(p[1])**2
 
     return f
+
 
 def borehole_function():
     """
@@ -54,9 +56,10 @@ def borehole_function():
 
     def f(p):
         g2val = g2(p)
-        return g1(p)/(g2val * g3(p,g2val))
+        return g1(p)/(g2val * g3(p, g2val))
 
     return f
+
 
 def taylor_frequency(p):
     """
@@ -307,6 +310,7 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
 
     return lambda p: solve_system(p)
 
+
 def laplace_ode_1d(Nparams, a=1., b=1., abar=3., N=100):
     """ Generates a 1D Laplace ODE model with parameterized diffusion.
 
@@ -326,13 +330,14 @@ def laplace_ode_1d(Nparams, a=1., b=1., abar=3., N=100):
     The Y_j are modeled as iid random variables.
     """
 
-    abarfun = lambda x: abar*np.ones(np.shape(x))
+    def abarfun(x): return abar*np.ones(np.shape(x))
     KLE = KLE_exponential_covariance_1d(Nparams, a, b, abarfun)
 
-    diffusion = lambda x, p: KLE(x, p)
+    def diffusion(x, p): return KLE(x, p)
     x = laplace_grid_x(-b, b, N)
 
     return x, laplace_ode(left=-b, right=b, N=N, diffusion=diffusion)
+
 
 def laplace_grid_xy(left, right, N1, down, up, N2):
     """

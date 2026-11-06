@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 def piechart_sensitivity(pce, ax=None, scalarization=None, interaction_orders=None, **kwargs):
     """Constructs and plots a pie chart of global sensitivities.
     """
@@ -28,6 +29,7 @@ def piechart_sensitivity(pce, ax=None, scalarization=None, interaction_orders=No
     ax.set(**kwargs)
 
     return ax
+
 
 def quantile_plot(pce, bands=3, xvals=None, ax=None, datadim=1, **kwargs):
     """Plots quantiles.
@@ -66,8 +68,8 @@ def quantile_plot(pce, bands=3, xvals=None, ax=None, datadim=1, **kwargs):
         alpha = (bands-ind) * 1/bands - (1/(2*bands))
         if ind == 0:
             ax.fill_between(x, quantiles[ind, :], quantiles[bands+ind, :],
-                             interpolate=True, facecolor='red', alpha=alpha,
-                             label='{0:1.2f} probability mass (each band)'.format(band_mass))
+                            interpolate=True, facecolor='red', alpha=alpha,
+                            label='{0:1.2f} probability mass (each band)'.format(band_mass))
         else:
             ax.fill_between(x, quantiles[ind, :], quantiles[bands+ind, :], interpolate=True, facecolor='red', alpha=alpha)
 
@@ -78,6 +80,7 @@ def quantile_plot(pce, bands=3, xvals=None, ax=None, datadim=1, **kwargs):
     ax.set(**kwargs)
 
     return ax
+
 
 def mean_stdev_plot(pce, ensemble=False, xvals=None, ax=None, datadim=1, **kwargs):
     """Plots mean, standard deviation, with optional ensemble overlay.
@@ -98,7 +101,7 @@ def mean_stdev_plot(pce, ensemble=False, xvals=None, ax=None, datadim=1, **kwarg
         output = np.zeros([ensemble, pce.coefficients.shape[1]])
         p = pce.distribution.MC_samples(ensemble)
         for j in range(ensemble):
-            output[j,:] = pce.eval(p[j,:])
+            output[j, :] = pce.eval(p[j, :])
 
     if ax is None:
         ax = plt.figure().gca()
@@ -110,7 +113,7 @@ def mean_stdev_plot(pce, ensemble=False, xvals=None, ax=None, datadim=1, **kwarg
     if ensemble:
         ax.plot(x, output[:ensemble, :].T, 'k', alpha=0.8, linewidth=0.2)
     ax.plot(x, mean, 'b', label='Mean')
-    ax.fill_between(x, mean-stdev, mean+stdev, interpolate=True, facecolor='red', alpha=0.5, label='$\pm 1$ stdev range')
+    ax.fill_between(x, mean-stdev, mean+stdev, interpolate=True, facecolor='red', alpha=0.5, label=r'$\pm 1$ stdev range')
 
     ax.set_xlabel('$x$')
     ax.set_title('Mean $\\pm$ standard deviation')

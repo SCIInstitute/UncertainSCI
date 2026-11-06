@@ -18,9 +18,10 @@ from scipy import special as sp
 from scipy.stats import beta as bbeta
 from scipy.stats import gamma
 
+
 def jacobi_weight_normalized(x, alpha, beta):
     """
-    Evaluates the Jacobi weight function defined as 
+    Evaluates the Jacobi weight function defined as
 
       w(x) = C(alpha,beta) * (1-x)**alpha, (1+x)**beta,
 
@@ -30,7 +31,8 @@ def jacobi_weight_normalized(x, alpha, beta):
     density on [-1,1].
     """
 
-    return 1/(2**(alpha+beta+1)*sp.beta(beta+1,alpha+1)) * (1-x)**alpha * (1+x)**beta
+    return 1/(2**(alpha+beta+1)*sp.beta(beta+1, alpha+1)) * (1-x)**alpha * (1+x)**beta
+
 
 def jacobi_recurrence_values(N, alpha, beta):
     """
@@ -56,11 +58,11 @@ def jacobi_recurrence_values(N, alpha, beta):
                       sp.gammaln(alpha + beta + 2.))
 
     ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / (
-                   (alpha + beta + 2.)**2 * (alpha + beta + 3.))
+        (alpha + beta + 2.)**2 * (alpha + beta + 3.))
 
     if N > 1:
         ab[1, 1] = 4. * (alpha + 1.) * (beta + 1.) / (
-                   (alpha + beta + 2.)**2 * (alpha + beta + 3.))
+            (alpha + beta + 2.)**2 * (alpha + beta + 3.))
 
         ab[2, 0] /= (2. + alpha + beta) * (4. + alpha + beta)
         inds = 2
@@ -269,6 +271,7 @@ class JacobiPolynomials(OrthogonalPolynomialBasis1D):
     """
     Jacobi Polynomial family.
     """
+
     def __init__(self, alpha=0., beta=0., domain=[-1., 1.], **options):
         OrthogonalPolynomialBasis1D.__init__(self, **options)
         assert alpha > -1., beta > -1.
@@ -929,6 +932,7 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
     Class for polynomials orthonormal on [0,1] with respect to an M-point
     discrete uniform measure with support equidistributed on the interval.
     """
+
     def __init__(self, M=2, domain=[0., 1.]):
         OrthogonalPolynomialBasis1D.__init__(self)
         assert M > 1
@@ -945,7 +949,7 @@ class DiscreteChebyshevPolynomials(OrthogonalPolynomialBasis1D):
     def recurrence_driver(self, N):
         # Returns the first N+1 recurrence coefficient pairs for the
         # Discrete Chebyshev polynomial family.
-        assert(N < self.M)
+        assert (N < self.M)
         ab = discrete_chebyshev_recurrence_values(N, self.M)
         if self.probability_measure and N > 0:
             ab[0, 1] = 1.

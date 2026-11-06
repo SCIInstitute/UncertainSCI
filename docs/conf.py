@@ -16,7 +16,8 @@ sys.path.insert(0, str((pathlib.Path(__file__) / '../').resolve()))
 
 project = 'UncertainSCI'
 copyright = '2020, The Scientific Computing and Imaging Institute at the University of Utah'
-author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sumientra Rampersad, Lindsay Rupp, Jess Tate, Dan White'
+author = ('Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sumientra Rampersad, '
+          'Lindsay Rupp, Jess Tate, Dan White')
 
 # FIXME: This versioning makes no sense: we should import it from a local import of
 # module itself; also need to clarify what "version" vs "release" means and adopt

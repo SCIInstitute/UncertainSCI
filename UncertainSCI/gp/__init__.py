@@ -14,13 +14,14 @@ import optax
 
 from . import kernel
 from . import mean
-from . import vis
+from . import vis  # noqa: F401  (exposes gp.vis as part of the public API)
 
 
 DEFAULT_OPTIM = optax.adam
 DEFAULT_OPTIM_KWARGS = {
     'learning_rate': 1e-2
 }
+
 
 class GaussianProcess:
     """
@@ -31,7 +32,7 @@ class GaussianProcess:
     .. math::
 
         f \\sim \\mathcal{GP}(\\mu, k)
-    
+
     where :math:`f` is an unknown function, :math:`\\mu` is a mean function and
     :math:`k` is a positive definite covariance kernel.
 
@@ -202,7 +203,7 @@ class GaussianProcess:
         """
         if x.ndim != 2:
             raise ValueError
-        
+
         n, d = x.shape
         if x.shape[1] != self.dim:
             raise ValueError
@@ -282,7 +283,7 @@ class GaussianProcess:
     def tune(
         self,
         n: int = 1000,
-        optim = DEFAULT_OPTIM,
+        optim=DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
     ) -> jax.Array:
         """
@@ -385,6 +386,49 @@ class GaussianProcess:
             cov_factor.log_sqrt_det()
         )
 
+    @staticmethod
+    def _make_domain_predicate(
+        dim: int,
+        hull: spatial.ConvexHull | None,
+        ranges: jax.Array | npt.NDArray | None,
+        inside_domain: Callable[[jax.Array], bool | jax.Array] | None,
+        tol: float,
+    ) -> Callable[[jax.Array], bool | jax.Array]:
+        """
+        Validate the mutually exclusive domain specifications of
+        :meth:`get_sample_point` and return the corresponding inclusion
+        predicate.
+        """
+        domain_specs = (hull, ranges, inside_domain)
+        if sum(spec is not None for spec in domain_specs) != 1:
+            raise ValueError(
+                'Supply exactly one of hull, ranges, or inside_domain.'
+            )
+
+        if inside_domain is not None:
+            domain_contains = inside_domain
+        elif hull is not None:
+            equations = jnp.asarray(hull.equations)
+
+            def domain_contains(x_cand: jax.Array) -> jax.Array:
+                return jnp.all(
+                    x_cand @ equations[:, :-1].T + equations[:, -1] <= tol
+                )
+        else:
+            ranges = jnp.asarray(ranges)
+            if ranges.shape != (2, dim):
+                raise ValueError(
+                    f'ranges must have shape (2, {dim}).'
+                )
+
+            def domain_contains(x_cand: jax.Array) -> jax.Array:
+                return jnp.all(
+                    (x_cand >= ranges[0] - tol) &
+                    (x_cand <= ranges[1] + tol)
+                )
+
+        return domain_contains
+
     def get_sample_point(
         self,
         x: jax.Array | npt.NDArray,
@@ -392,7 +436,7 @@ class GaussianProcess:
         ranges: jax.Array | npt.NDArray | None = None,
         tol: float = 1e-6,
         n: int = 1000,
-        optim = DEFAULT_OPTIM,
+        optim=DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
         inside_domain: Callable[[jax.Array], bool | jax.Array] | None = None,
     ) -> jax.Array:
@@ -435,33 +479,9 @@ class GaussianProcess:
             raise ValueError
         x = x.reshape((1, self.dim))
 
-        domain_specs = (hull, ranges, inside_domain)
-        if sum(spec is not None for spec in domain_specs) != 1:
-            raise ValueError(
-                'Supply exactly one of hull, ranges, or inside_domain.'
-            )
-
-        if inside_domain is not None:
-            domain_contains = inside_domain
-        elif hull is not None:
-            equations = jnp.asarray(hull.equations)
-
-            def domain_contains(x_cand: jax.Array) -> jax.Array:
-                return jnp.all(
-                    x_cand @ equations[:, :-1].T + equations[:, -1] <= tol
-                )
-        else:
-            ranges = jnp.asarray(ranges)
-            if ranges.shape != (2, self.dim):
-                raise ValueError(
-                    f'ranges must have shape (2, {self.dim}).'
-                )
-
-            def domain_contains(x_cand: jax.Array) -> jax.Array:
-                return jnp.all(
-                    (x_cand >= ranges[0] - tol) &
-                    (x_cand <= ranges[1] + tol)
-                )
+        domain_contains = GaussianProcess._make_domain_predicate(
+            self.dim, hull, ranges, inside_domain, tol
+        )
 
         if not domain_contains(x):
             raise ValueError('Initial coordinate is outside the domain.')
@@ -540,7 +560,7 @@ class GaussianProcess:
     def prior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
         """
         Produce ``p`` realizations of the prior at locations ``x``.
-        
+
         Args:
             x (jax.Array or numpy.ndarray):
                 x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
@@ -561,7 +581,7 @@ class GaussianProcess:
             self.prior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
         return (
-            self.prior_mean(x).reshape(n, self.cdim, 1) + 
+            self.prior_mean(x).reshape(n, self.cdim, 1) +
             (L @ jax.random.normal(key, (n * self.cdim, p))).reshape(n, self.cdim, p)
         )
 
@@ -603,7 +623,7 @@ class GaussianProcess:
     def posterior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
         """
         Produce ``p`` realizations of the posterior at locations ``x``.
-        
+
         Args:
             x (jax.Array or numpy.ndarray):
                 x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
@@ -624,6 +644,6 @@ class GaussianProcess:
             self.posterior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
         return (
-            self.posterior_mean(x).reshape(n, self.cdim, 1) + 
+            self.posterior_mean(x).reshape(n, self.cdim, 1) +
             (L @ jax.random.normal(key, (n * self.cdim, p))).reshape(n, self.cdim, p)
         )

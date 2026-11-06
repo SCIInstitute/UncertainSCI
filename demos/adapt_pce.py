@@ -8,7 +8,7 @@ import matplotlib.animation as animation
 
 from UncertainSCI.distributions import BetaDistribution
 from UncertainSCI.model_examples import KLE_exponential_covariance_1d, \
-                                        laplace_ode, laplace_grid_x
+    laplace_ode, laplace_grid_x
 from UncertainSCI.indexing import TotalDegreeSet
 from UncertainSCI.pce import PolynomialChaosExpansion
 from UncertainSCI.utils.version import version_lessthan
@@ -46,10 +46,14 @@ The p_j are modeled as iid random variables.
 # Define diffusion coefficient
 a = 1.
 b = 1.  # Interval is [-b,b]
-abar = lambda x: 1*np.ones(np.shape(x))
+def abar(x): return 1*np.ones(np.shape(x))
+
+
 KLE = KLE_exponential_covariance_1d(dimension, a, b, abar)
 
-diffusion = lambda x, p: KLE(x, p)
+
+def diffusion(x, p): return KLE(x, p)
+
 
 N = int(1e2)  # Number of spatial degrees of freedom of model
 left = -1.
@@ -113,7 +117,7 @@ for j in range(M):
 
 MC_mean = np.mean(output, axis=0)
 MC_stdev = np.std(output, axis=0)
-if version_lessthan(np,'1.15'):
+if version_lessthan(np, '1.15'):
     from scipy.stats.mstats import mquantiles
     MC_quantiles = mquantiles(output, quantile_levels, axis=0)
 else:

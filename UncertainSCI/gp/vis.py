@@ -18,11 +18,11 @@ if typing.TYPE_CHECKING:
 
 
 def stats(
-        g: GaussianProcess,
-        x: jax.Array | npt.NDArray,
-        which: str = 'posterior',
-        p: int = 100
-    ):
+    g: GaussianProcess,
+    x: jax.Array | npt.NDArray,
+    which: str = 'posterior',
+    p: int = 100
+):
     """
     Evaluate summary statistics and realizations of a Gaussian process.
 
@@ -60,13 +60,13 @@ def stats(
 
 
 def plot_distribution_mean(
-        ax: axes.Axes,
-        g: GaussianProcess,
-        x: jax.Array | npt.NDArray,
-        f_true: typing.Callable | None,
-        which: str = 'posterior',
-        p: int = 100
-    ):
+    ax: axes.Axes,
+    g: GaussianProcess,
+    x: jax.Array | npt.NDArray,
+    f_true: typing.Callable | None,
+    which: str = 'posterior',
+    p: int = 100
+):
     """
     Plot a Gaussian process distribution and (optionally) a reference function.
 
@@ -124,13 +124,13 @@ def plot_distribution_mean(
 
 
 def plot_distribution_variance(
-        ax: axes.Axes,
-        g: GaussianProcess,
-        x: jax.Array | npt.NDArray,
-        which: str = 'posterior',
-        p: int = 100,
-        colorlast: bool = True
-    ):
+    ax: axes.Axes,
+    g: GaussianProcess,
+    x: jax.Array | npt.NDArray,
+    which: str = 'posterior',
+    p: int = 100,
+    colorlast: bool = True
+):
     """
     Plot the marginal variance of a Gaussian process distribution.
 
@@ -174,15 +174,15 @@ def plot_distribution_variance(
 
 
 def plot_loss_landscape(
-        ax: axes.Axes,
-        g: GaussianProcess,
-        p_name: tuple[str, ...],
-        p_range: jax.Array | npt.NDArray,
-        x: jax.Array | npt.NDArray | None = None,
-        ymin: jax.Array | npt.NDArray | float | int | None = None,
-        ymax: jax.Array | npt.NDArray | float | int | None = None,
-        ytop: float = 1e2
-    ):
+    ax: axes.Axes,
+    g: GaussianProcess,
+    p_name: tuple[str, ...],
+    p_range: jax.Array | npt.NDArray,
+    x: jax.Array | npt.NDArray | None = None,
+    ymin: jax.Array | npt.NDArray | float | int | None = None,
+    ymax: jax.Array | npt.NDArray | float | int | None = None,
+    ytop: float = 1e2
+):
     """
     Plot a Gaussian process loss landscape for a scalar parameter.
 

@@ -3,11 +3,9 @@ Kernels for Gaussian processes.
 """
 
 import abc
-from typing import Any
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from numpy._typing import NDArray
 import numpy.typing as npt
 
 from .. import _equinox
@@ -333,7 +331,7 @@ class Gaussian(Kernel):
         """
         if cdim != 1:
             raise ValueError
-        
+
         super().__init__(dim=dim, cdim=cdim)
         self.D = _equinox.PositiveDefinite(D=D, is_static=D_is_static)
 
@@ -344,8 +342,8 @@ class Gaussian(Kernel):
     ):
         d = x.reshape((-1, 1, self.dim)) - y.reshape((1, -1, self.dim))
         return jnp.exp(-1 * jnp.einsum(
-                'ijk,kl,ijl->ij', d, self.D(), d
-            )
+            'ijk,kl,ijl->ij', d, self.D(), d
+        )
         )
 
     def covariance_factor(
@@ -354,6 +352,7 @@ class Gaussian(Kernel):
         s: jax.Array | npt.NDArray | float | int
     ) -> CovarianceFactor:
         return super().covariance_factor(x, s)
+
 
 class Kronecker(Kernel):
     r"""

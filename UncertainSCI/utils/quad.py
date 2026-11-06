@@ -1,7 +1,7 @@
 import numpy as np
 
-from UncertainSCI.families import jacobi_recurrence_values,\
-                                  jacobi_weight_normalized
+from UncertainSCI.families import jacobi_recurrence_values, \
+    jacobi_weight_normalized
 
 from UncertainSCI.opoly1d import linear_modification, quadratic_modification
 from UncertainSCI.opoly1d import gauss_quadrature_driver

@@ -39,10 +39,14 @@ index_set = TotalDegreeSet(dim=dimension, order=order)
 # Define diffusion coefficient
 a = 1.
 b = 1.  # Interval is [-b,b]
-abar = lambda x: 3*np.ones(np.shape(x))
+def abar(x): return 3*np.ones(np.shape(x))
+
+
 KLE = KLE_exponential_covariance_1d(dimension, a, b, abar)
 
-diffusion = lambda x, p: KLE(x, p)
+
+def diffusion(x, p): return KLE(x, p)
+
 
 N = int(1e2)  # Number of spatial degrees of freedom of model
 left = -1.
@@ -59,7 +63,7 @@ total_sensitivity = pce.total_sensitivity()
 global_sensitivity = pce.global_sensitivity([[val] for val in range(dimension)])
 global_derivative_sensitivity = pce.global_derivative_sensitivity(range(dimension))
 
-sensitivities = [total_sensitivity, global_sensitivity, \
+sensitivities = [total_sensitivity, global_sensitivity,
                  global_derivative_sensitivity]
 
 sensbounds = [[0, 1], [0, 1], [np.min(global_derivative_sensitivity), np.max(global_derivative_sensitivity)]]
@@ -70,17 +74,17 @@ dimlabels = ['Dimension 1', 'Dimension 2', 'Dimension 3']
 fig, ax = plt.subplots(3, 3)
 for row in range(3):
     for col in range(3):
-        ax[row][col].plot(x, sensitivities[row][col,:])
+        ax[row][col].plot(x, sensitivities[row][col, :])
         ax[row][col].set_ylim(sensbounds[row])
-        if row==2:
+        if row == 2:
             ax[row][col].set(xlabel='$x$')
-        if col==0:
+        if col == 0:
             ax[row][col].set(ylabel=senslabels[row])
-        if row==0:
+        if row == 0:
             ax[row][col].set_title(dimlabels[col])
-        if row<2:
+        if row < 2:
             ax[row][col].xaxis.set_ticks([])
-        if col>0:
+        if col > 0:
             ax[row][col].yaxis.set_ticks([])
 
 plt.show()

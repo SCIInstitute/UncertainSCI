@@ -1,12 +1,10 @@
-#exec(open('basic_uq_example.py').read())
-import sys
+# exec(open('basic_uq_example.py').read())
 from itertools import chain, combinations
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 from UncertainSCI.distributions import BetaDistribution
-from UncertainSCI.model_examples import laplace_grid_x, laplace_ode, KLE_exponential_covariance_1d
 from UncertainSCI.indexing import TotalDegreeSet
 from UncertainSCI.pce import PolynomialChaosExpansion
 
@@ -14,7 +12,7 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 #########################
 Basic UQ example
 The purpose of this file is to demonstrate the UncerstainSCI UQ tool on a simple function with predictable output.
-This example uses a simple sinusoidal function with 4 parameters: amplitude, offset, phase, and frequency. 
+This example uses a simple sinusoidal function with 4 parameters: amplitude, offset, phase, and frequency.
 Uncertainty quantification is performed on each of these 4 parameters and their interactions, and the resulting parameter
 sensitivities, model standard deviation and mean outputs are calculated and displayed.
 
@@ -25,7 +23,9 @@ sensitivities, model standard deviation and mean outputs are calculated and disp
 # f(x) = p0 sin(p1 * x + p2) +p3
 #
 #
-def modelFunction(p,x,paramBounds):
+
+
+def modelFunction(p, x, paramBounds):
     '''
 
     :param p: Parameters of our model:
@@ -37,8 +37,8 @@ def modelFunction(p,x,paramBounds):
     :param paramBounds:
     :return:
     '''
-    #first we scale our input parameters according to the bounds we defined for them
-    #UncertainSCI treats all parameters as 0 to 1, so we scale to our desired range
+    # first we scale our input parameters according to the bounds we defined for them
+    # UncertainSCI treats all parameters as 0 to 1, so we scale to our desired range
     p0Range = paramBounds[1] - paramBounds[0]
     p1Range = paramBounds[3] - paramBounds[2]
     p2Range = paramBounds[5] - paramBounds[4]
@@ -53,11 +53,12 @@ def modelFunction(p,x,paramBounds):
     p1 = float(p1Range * p[1] + p1_offset)
     p2 = float(p2Range * p[2] + p2_offset)
     p3 = float(p3Range * p[3] + p3_offset)
-    #we then calculate the output value(S) from our model function and return this output
+    # we then calculate the output value(S) from our model function and return this output
     fx = p0 * np.sin(p1 * x + p2) + p3
     return fx
 
-#This model has four input parameters so we set the dimensionality to 4
+
+# This model has four input parameters so we set the dimensionality to 4
 dimension = 4
 
 # # Next we specify the distribution we expect for our input parameters.
@@ -70,7 +71,7 @@ dist = BetaDistribution(alpha=alpha, beta=beta, dim=dimension)
 # # Expressivity setup
 # Expressivity determines what order of polynomial to use when emulating
 # our model function. This is a tuneable hyper parameter, however UncertainSCI
-# also has the cabability to auto determine this value. 
+# also has the cabability to auto determine this value.
 order = 5
 index_set = TotalDegreeSet(dim=dimension, order=order)
 
@@ -80,22 +81,25 @@ index_set = TotalDegreeSet(dim=dimension, order=order)
 # our model needs to know wthat the x value(s) is/are and what are the bounds on our
 # parameters
 # first we define our input range x
-xVals = np.linspace(-1*np.pi,1*np.pi,100)
-#define our parameter bounds
-#p0: amplitude
-#p1: frequency
-#p2: phase
-#p3: offset
-bounds = [0.5, 1,\
-          1, 1,\
-          1, 1,\
+xVals = np.linspace(-1*np.pi, 1*np.pi, 100)
+# define our parameter bounds
+# p0: amplitude
+# p1: frequency
+# p2: phase
+# p3: offset
+bounds = [0.5, 1,
+          1, 1,
+          1, 1,
           -1, 1]
 
 # next we create a model function that takes parameter values and returns the model output
 # a lambda function is used to pass in the parameter bounds, however if parameter
-# bounds are fixed then they can be hard coded into the model function and a 
+# bounds are fixed then they can be hard coded into the model function and a
 # function handle for the model can be used instead of a lambda function
-model = lambda p: modelFunction(p,x = xVals,paramBounds=bounds)
+
+
+def model(p): return modelFunction(p, x=xVals, paramBounds=bounds)
+
 
 # # Building the PCE
 #  First provide the indicies and distribution
@@ -129,7 +133,7 @@ global_sensitivity = pce.global_sensitivity(variable_interactions)
 
 
 # # Visualization
-V = 100 # Generate Monte Carlo samples for comparison
+V = 100  # Generate Monte Carlo samples for comparison
 p_mc = dist.MC_samples(V)
 output = np.zeros([V, len(xVals)])
 
@@ -158,4 +162,3 @@ ax.pie(average_global_SI*100, labels=labels, autopct='%1.1f%%',
 ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 plt.title('Sensitivity due to variable interactions')
 plt.show()
-

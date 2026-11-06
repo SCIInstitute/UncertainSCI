@@ -50,14 +50,14 @@ class Affine(Mean):
     b_is_static: bool = eqx.field(static=True)
 
     def __init__(
-            self,
-            dim: int,
-            cdim: int,
-            a: jax.Array | npt.NDArray,
-            b: jax.Array | npt.NDArray | float | int,
-            a_is_static: bool = False,
-            b_is_static: bool = False
-        ):
+        self,
+        dim: int,
+        cdim: int,
+        a: jax.Array | npt.NDArray,
+        b: jax.Array | npt.NDArray | float | int,
+        a_is_static: bool = False,
+        b_is_static: bool = False
+    ):
         """
         Like:
 
@@ -102,9 +102,9 @@ class Affine(Mean):
         self.b_is_static = b_is_static
 
     def __call__(
-            self,
-            x: jax.Array | npt.NDArray
-        ) -> jax.Array:
+        self,
+        x: jax.Array | npt.NDArray
+    ) -> jax.Array:
         a = jax.lax.stop_gradient(self.a) if self.a_is_static else self.a
         b = jax.lax.stop_gradient(self.b) if self.b_is_static else self.b
         return jnp.einsum('id,cd->ic', x.reshape(-1, self.dim), a) + b

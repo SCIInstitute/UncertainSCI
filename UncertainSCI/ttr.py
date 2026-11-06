@@ -2,11 +2,11 @@ import numpy as np
 import scipy.special as sp
 
 from UncertainSCI.opoly1d import eval_driver, \
-        leading_coefficient_driver, gauss_quadrature_driver
+    leading_coefficient_driver, gauss_quadrature_driver
 
 # from UncertainSCI.utils.compute_subintervals import compute_subintervals
 from UncertainSCI.utils.quad import gq_modification_composite, \
-        gq_modification_unbounded_composite, compute_subintervals
+    gq_modification_unbounded_composite, compute_subintervals
 
 """
 Predictor-corrector method
@@ -32,19 +32,19 @@ def predict_correct_bounded(a, b, weight, N, singularity_list, Nquad=10):
     ab[0, 1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad,
                        subintervals=subintervals))
 
-    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+    def peval(x, n): return eval_driver(x, np.array([n]), 0, ab)
 
     for n in range(0, N-1):
         # Guess next coefficients
         ab[n+1, 0], ab[n+1, 1] = ab[n, 0], ab[n, 1]
 
-        integrand = lambda x: weight(x) * peval(x, n).flatten() *\
-                      peval(x, n+1).flatten()
+        def integrand(x): return weight(x) * peval(x, n).flatten() *\
+            peval(x, n+1).flatten()
         ab[n+1, 0] += ab[n, 1] * gq_modification_composite(integrand, a, b,
                                                            n+1+Nquad,
                                                            subintervals)
 
-        integrand = lambda x: weight(x) * peval(x, n+1).flatten()**2
+        def integrand(x): return weight(x) * peval(x, n+1).flatten()**2
         ab[n+1, 1] *= np.sqrt(gq_modification_composite(integrand, a, b,
                                                         n+1+Nquad,
                                                         subintervals))
@@ -58,20 +58,20 @@ def predict_correct_unbounded(a, b, weight, N, singularity_list, Nquad=10):
     ab[0, 1] = np.sqrt(gq_modification_unbounded_composite(weight, a, b, Nquad,
                                                            singularity_list))
 
-    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+    def peval(x, n): return eval_driver(x, np.array([n]), 0, ab)
 
     for n in range(0, N-1):
         # Guess next coefficients
         ab[n+1, 0], ab[n+1, 1] = ab[n, 0], ab[n, 1]
 
-        integrand = lambda x: weight(x) * peval(x, n).flatten() *\
-                              peval(x, n+1).flatten()
+        def integrand(x): return weight(x) * peval(x, n).flatten() *\
+            peval(x, n+1).flatten()
         ab[n+1, 0] += ab[n, 1] * gq_modification_unbounded_composite(integrand,
-                                    a, b, n+1+Nquad, singularity_list)
+                                                                     a, b, n+1+Nquad, singularity_list)
 
-        integrand = lambda x: weight(x) * peval(x, n+1).flatten()**2
+        def integrand(x): return weight(x) * peval(x, n+1).flatten()**2
         ab[n+1, 1] *= np.sqrt(gq_modification_unbounded_composite(integrand, a,
-                                b, n+1+Nquad, singularity_list))
+                                                                  b, n+1+Nquad, singularity_list))
 
     return ab
 
@@ -84,16 +84,16 @@ def predict_correct_discrete(xg, wg, N):
     ab = np.zeros([N, 2])
     ab[0, 1] = np.sqrt(np.sum(wg))
 
-    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+    def peval(x, n): return eval_driver(x, np.array([n]), 0, ab)
 
     for n in range(0, N-1):
         # Guess next coefficients
         ab[n+1, 0], ab[n+1, 1] = ab[n, 0], ab[n, 1]
 
-        integrand = lambda x: peval(x, n).flatten() * peval(x, n+1).flatten()
+        def integrand(x): return peval(x, n).flatten() * peval(x, n+1).flatten()
         ab[n+1, 0] += ab[n, 1] * np.sum(integrand(xg) * wg)
 
-        integrand = lambda x: peval(x, n+1).flatten()**2
+        def integrand(x): return peval(x, n+1).flatten()**2
         ab[n+1, 1] *= np.sqrt(np.sum(integrand(xg) * wg))
 
     return ab
@@ -104,7 +104,7 @@ def predict_correct_bounded_composite(a, b, weight, N, singularity_list,
     """ Three-term recurrence coefficients from composite quadrature
 
     Computes the first N three-term recurrence coefficient pairs associated to
-    weight on the bounded interval [a, b]. 
+    weight on the bounded interval [a, b].
 
     Performs composite quadrature on [a, b] using
     utils.quad.gq_modification_composite.
@@ -116,8 +116,8 @@ def predict_correct_bounded_composite(a, b, weight, N, singularity_list,
     global_subintervals = compute_subintervals(a, b, singularity_list)
 
     ab = np.zeros([N, 2])
-    ab[0, 1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad, 
-                        subintervals=global_subintervals))
+    ab[0, 1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad,
+                                                 subintervals=global_subintervals))
 
     integrand = weight
 
@@ -148,10 +148,11 @@ def predict_correct_bounded_composite(a, b, weight, N, singularity_list,
         qlc = (leading_coefficient_driver(n+2, ab)[-1])**2
 
         ab[n+1, 1] *= np.sqrt(gq_modification_composite(integrand, a, b,
-                                n+1+Nquad, global_subintervals,
-                                quadroots=pn1_zeros, leading_coefficient=qlc))
+                                                        n+1+Nquad, global_subintervals,
+                                                        quadroots=pn1_zeros, leading_coefficient=qlc))
 
     return ab
+
 
 def predict_correct_unbounded_composite(a, b, weight, N, singularity_list,
                                         Nquad=10):
@@ -179,16 +180,16 @@ def predict_correct_unbounded_composite(a, b, weight, N, singularity_list,
         qlc = np.prod(leading_coefficient_driver(n+2, ab)[-2:])
 
         ab[n+1, 0] += ab[n, 1] * gq_modification_unbounded_composite(integrand,
-                                    a, b, n+1+Nquad, breaks, roots=roots,
-                                    leading_coefficient=qlc)
+                                                                     a, b, n+1+Nquad, breaks, roots=roots,
+                                                                     leading_coefficient=qlc)
 
         # Here subintervals are the global ones
         pn1_zeros = gauss_quadrature_driver(ab, n+1)[0]
         qlc = (leading_coefficient_driver(n+2, ab)[-1])**2
 
         ab[n+1, 1] *= np.sqrt(gq_modification_unbounded_composite(integrand, a,
-                                b, n+1+Nquad, singularity_list,
-                                quadroots=pn1_zeros, leading_coefficient=qlc))
+                                                                  b, n+1+Nquad, singularity_list,
+                                                                  quadroots=pn1_zeros, leading_coefficient=qlc))
 
     return ab
 
@@ -196,8 +197,9 @@ def predict_correct_unbounded_composite(a, b, weight, N, singularity_list,
 """
 Stieltjes procedure
 """
-def stieltjes_bounded(a, b, weight, N, singularity_list, Nquad=10):
 
+
+def stieltjes_bounded(a, b, weight, N, singularity_list, Nquad=10):
 
     assert a < b
 
@@ -207,23 +209,24 @@ def stieltjes_bounded(a, b, weight, N, singularity_list, Nquad=10):
     ab[0, 1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad,
                                                  subintervals=subintervals))
 
-    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+    def peval(x, n): return eval_driver(x, np.array([n]), 0, ab)
 
     for n in range(1, N):
-        integrand = lambda x: weight(x) * x * peval(x, n-1).flatten()**2
+        def integrand(x): return weight(x) * x * peval(x, n-1).flatten()**2
         ab[n, 0] = gq_modification_composite(integrand, a, b, n+1+Nquad,
                                              subintervals)
         if n == 1:
-            integrand = lambda x: weight(x) * ((x - ab[n, 0]) *
-                                  peval(x, n-1).flatten())**2
+            def integrand(x): return weight(x) * ((x - ab[n, 0]) *
+                                                  peval(x, n-1).flatten())**2
         else:
-            integrand = lambda x: weight(x) * ((x - ab[n, 0]) *
-                                  peval(x, n-1).flatten() - ab[n-1, 1] *
-                                  peval(x, n-2).flatten())**2
+            def integrand(x): return weight(x) * ((x - ab[n, 0]) *
+                                                  peval(x, n-1).flatten() - ab[n-1, 1] *
+                                                  peval(x, n-2).flatten())**2
         ab[n, 1] = np.sqrt(gq_modification_composite(integrand, a, b,
-                                                      n+1+Nquad, subintervals))
+                                                     n+1+Nquad, subintervals))
 
     return ab
+
 
 def stieltjes_unbounded(a, b, weight, N, singularity_list, Nquad=10):
 
@@ -233,47 +236,49 @@ def stieltjes_unbounded(a, b, weight, N, singularity_list, Nquad=10):
     ab[0, 1] = np.sqrt(gq_modification_unbounded_composite(weight, a, b, Nquad,
                                                            singularity_list))
 
-    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+    def peval(x, n): return eval_driver(x, np.array([n]), 0, ab)
 
     for n in range(1, N):
-        integrand = lambda x: weight(x) * x * peval(x, n-1).flatten()**2
+        def integrand(x): return weight(x) * x * peval(x, n-1).flatten()**2
         ab[n, 0] = gq_modification_unbounded_composite(integrand, a, b,
                                                        n+1+Nquad,
                                                        singularity_list)
         if n == 1:
-            integrand = lambda x: weight(x) * ((x - ab[n, 0]) *\
-                                  peval(x, n-1).flatten())**2
+            def integrand(x): return weight(x) * ((x - ab[n, 0]) *
+                                                  peval(x, n-1).flatten())**2
         else:
-            integrand = lambda x: weight(x) * ((x - ab[n, 0]) *\
-                                  peval(x, n-1).flatten() - ab[n-1, 1] *\
-                                  peval(x, n-2).flatten())**2
+            def integrand(x): return weight(x) * ((x - ab[n, 0]) *
+                                                  peval(x, n-1).flatten() - ab[n-1, 1] *
+                                                  peval(x, n-2).flatten())**2
         ab[n, 1] = np.sqrt(gq_modification_unbounded_composite(integrand, a,
-                                b, n+1+Nquad, singularity_list))
+                                                               b, n+1+Nquad, singularity_list))
 
     return ab
 
+
 def stieltjes_discrete(xg, wg, N):
 
-    assert all(i >=0 for i in wg)
+    assert all(i >= 0 for i in wg)
     assert N <= len(xg)
 
     ab = np.zeros([N, 2])
     ab[0, 1] = np.sqrt(np.sum(wg))
 
-    peval = lambda x, n: eval_driver(x, np.array([n]), 0, ab)
+    def peval(x, n): return eval_driver(x, np.array([n]), 0, ab)
 
     for n in range(1, N):
-        integrand = lambda x: x * peval(x, n-1).flatten()**2
+        def integrand(x): return x * peval(x, n-1).flatten()**2
         ab[n, 0] = np.sum(integrand(xg) * wg)
         if n == 1:
-            integrand = lambda x: ((x - ab[n, 0]) *\
-                                    peval(x, n-1).flatten())**2
+            def integrand(x): return ((x - ab[n, 0]) *
+                                      peval(x, n-1).flatten())**2
         else:
-            integrand = lambda x: ((x - ab[n, 0]) * peval(x, n-1).flatten() -\
-                                    ab[n-1, 1] * peval(x, n-2).flatten())**2
+            def integrand(x): return ((x - ab[n, 0]) * peval(x, n-1).flatten() -
+                                      ab[n-1, 1] * peval(x, n-2).flatten())**2
         ab[n, 1] = np.sqrt(np.sum(integrand(xg) * wg))
 
     return ab
+
 
 def stieltjes_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
 
@@ -283,8 +288,8 @@ def stieltjes_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
     global_subintervals = compute_subintervals(a, b, singularity_list)
 
     ab = np.zeros([N, 2])
-    ab[0, 1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad, 
-                                             subintervals=global_subintervals))
+    ab[0, 1] = np.sqrt(gq_modification_composite(weight, a, b, Nquad,
+                                                 subintervals=global_subintervals))
 
     integrand = weight
 
@@ -324,7 +329,7 @@ def stieltjes_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
                                             leading_coefficient=qlc)
 
             # below pnminus1_zeros already includes ab[n, 0]
-            roots = np.hstack([pnminus1_zeros, pnminus2_zeros]) 
+            roots = np.hstack([pnminus1_zeros, pnminus2_zeros])
             breaks_new = singularity_list.copy()
             breaks_new += [[z, 0, 0] for z in roots]
             subintervals = compute_subintervals(a, b, breaks_new)
@@ -338,6 +343,7 @@ def stieltjes_bounded_composite(a, b, weight, N, singularity_list, Nquad=10):
         ab[n, 1] = np.sqrt(s)
 
     return ab
+
 
 def stieltjes_unbounded_composite(a, b, weight, N, singularity_list, Nquad=10):
 
@@ -393,7 +399,7 @@ def stieltjes_unbounded_composite(a, b, weight, N, singularity_list, Nquad=10):
             # note this roots may cause issues since it contains two very close
             # numbers
             # below pnminus1_zeros already includes ab[n, 0]
-            roots = np.hstack([pnminus1_zeros, pnminus2_zeros]) 
+            roots = np.hstack([pnminus1_zeros, pnminus2_zeros])
             breaks_new = singularity_list.copy()
             breaks_new += [[z, 0, 0] for z in roots]
             qlc = np.prod(leading_coefficient_driver(n, ab)[-2:])
@@ -409,12 +415,13 @@ def stieltjes_unbounded_composite(a, b, weight, N, singularity_list, Nquad=10):
     return ab
 
 
-
 """
 Arbitrary polynomial chaos expansion method
 """
+
+
 def expansion_coeff(m, n):
-    """
+    r"""
     Params
     ______
     m: numpy array
@@ -446,8 +453,9 @@ def expansion_coeff(m, n):
     c = np.linalg.solve(M, b)
     return c
 
+
 def normal_const(m, n, c):
-    """
+    r"""
     Params
     ------
     m: numpy array
@@ -456,7 +464,7 @@ def normal_const(m, n, c):
         .
         .
         m_{n-1} ... m_{2n-1}
-        m_n     ... m_{2n} 
+        m_n     ... m_{2n}
     requires [m_0, ...m_{2n}], i.e. len(m) >= 2n+1
 
     n: int
@@ -479,6 +487,7 @@ def normal_const(m, n, c):
     normal_c = np.sqrt(c.dot(M).dot(c))
     return normal_c
 
+
 def aPC(m, N):
     C = np.zeros([N, N])
     NC = np.zeros(N,)
@@ -498,10 +507,11 @@ def aPC(m, N):
     return ab
 
 
-
 """
 Hankel determinants method (Classic moment method)
 """
+
+
 def deter(m, n):
     """
     compute the Hankel determinant of order n, H_n
@@ -520,6 +530,7 @@ def deter(m, n):
         assert A.shape == (n, n)
     return np.linalg.det(A)
 
+
 def deter_mod(m, n):
     """
     compute the Hankel determinant of order n+1, H_{n+1}
@@ -536,10 +547,11 @@ def deter_mod(m, n):
         A = np.zeros((n+1, n+1))
         for i in range(n+1):
             A[i, :] = m[i:i+n+1]
-        B = np.delete(A, -1, axis = 0)
-        B = np.delete(B, -2, axis = 1)
+        B = np.delete(A, -1, axis=0)
+        B = np.delete(B, -2, axis=1)
         assert B.shape == (n, n)
     return np.linalg.det(B)
+
 
 def hankel_deter(N, m):
     assert len(m) >= 2*N-1, 'need more moments'
@@ -547,18 +559,19 @@ def hankel_deter(N, m):
     ab[0, 1] = m[0]
     for i in range(1, N):
         ab[i, 0] = deter_mod(m, i) / deter(m, i) \
-                - deter_mod(m, i-1) / deter(m, i-1)
+            - deter_mod(m, i-1) / deter(m, i-1)
         ab[i, 1] = deter(m, i+1) * deter(m, i-1) / deter(m, i)**2
     ab[:, 1] = np.sqrt(ab[:, 1])
     return ab
 
 
-
 """
 Modified Chebyshev Algorithm
 """
+
+
 def mod_cheb(N, mod_m, lbd):
-    """ compute the first N recurrence coefficients wrt d\mu
+    """ compute the first N recurrence coefficients wrt d\\mu
 
     Params:
     d\\mu: given measure,
@@ -578,13 +591,13 @@ def mod_cheb(N, mod_m, lbd):
     a_1 = al[1] + be[1] * mod_m[1] / mod_m[0]
     for k in range(1, 2*N-2):
         sigma[1, k] = be[k] * sigma[0, k-1] + \
-                (al[k+1] - a_1) * sigma[0, k] + be[k+1] * sigma[0, k+1]
+            (al[k+1] - a_1) * sigma[0, k] + be[k+1] * sigma[0, k+1]
 
     for n in range(2, N):
         for k in range(n, 2*N-n-1):
             sigma[n, k] = be[k] * sigma[n-1, k-1] + \
-                (al[k+1] - (al[n] + be[n] * sigma[n-1, n] / sigma[n-1, n-1] - \
-                be[n-1] * sigma[n-2, n-1] / sigma[n-2, n-2])) * sigma[n-1, k] + \
+                (al[k+1] - (al[n] + be[n] * sigma[n-1, n] / sigma[n-1, n-1] -
+                            be[n-1] * sigma[n-2, n-1] / sigma[n-2, n-2])) * sigma[n-1, k] + \
                 be[k+1] * sigma[n-1, k+1] - \
                 (be[n-1] * sigma[n-1, n-1] / sigma[n-2, n-2]) * sigma[n-2, k]
 
@@ -593,7 +606,7 @@ def mod_cheb(N, mod_m, lbd):
     ab[1, 0] = a_1
     for j in range(2, N):
         ab[j, 0] = al[j] + be[j] * sigma[j-1, j] / sigma[j-1, j-1] - \
-                be[j-1] * sigma[j-2, j-1] / sigma[j-2, j-2]
+            be[j-1] * sigma[j-2, j-1] / sigma[j-2, j-2]
 
         ab[j-1, 1] = be[j-1] * sigma[j-1, j-1] / sigma[j-2, j-2]
 
@@ -602,12 +615,14 @@ def mod_cheb(N, mod_m, lbd):
     return ab
 
 
-
 """
 Discrete Painlevé I equation method
 """
+
+
 def delta(n):
-        return (1 - (-1)**n) / 2
+    return (1 - (-1)**n) / 2
+
 
 def dPI4(N, rho=0.):
     ab = np.zeros((N, 2))
@@ -624,33 +639,35 @@ def dPI4(N, rho=0.):
 
     return ab
 
-def dPI6(N, rho = 0.):
+
+def dPI6(N, rho=0.):
     ab = np.zeros((N, 2))
     ab[0, 1] = (1/3) * sp.gamma((1+rho)/6)
     ab[1, 1] = (1/3) * sp.gamma((3+rho)/6) / ab[0, 1]
     ab[2, 1] = 1 / (ab[1, 1]*ab[0, 1]) * (1/3) * sp.gamma((5+rho)/6) \
-            - 2 / ab[0, 1] * (1/3) * sp.gamma((3+rho)/6) \
-            + ab[1, 1] / ab[0, 1] * (1/3) * sp.gamma((1+rho)/6)
+        - 2 / ab[0, 1] * (1/3) * sp.gamma((3+rho)/6) \
+        + ab[1, 1] / ab[0, 1] * (1/3) * sp.gamma((1+rho)/6)
     ab[3, 1] = 1 / (ab[2, 1]*ab[1, 1]*ab[0, 1]) * (1/3) * sp.gamma((7+rho)/6) \
-            - 2*(ab[1, 1] + ab[2, 1]) / (ab[2, 1]*ab[1, 1]*ab[0, 1]) * (1/3) * sp.gamma((5+rho)/6) \
-            + (ab[1, 1] + ab[2, 1])**2 / (ab[2, 1]*ab[1, 1]*ab[0, 1]) * (1/3) * sp.gamma((3+rho)/6)
+        - 2*(ab[1, 1] + ab[2, 1]) / (ab[2, 1]*ab[1, 1]*ab[0, 1]) * (1/3) * sp.gamma((5+rho)/6) \
+        + (ab[1, 1] + ab[2, 1])**2 / (ab[2, 1]*ab[1, 1]*ab[0, 1]) * (1/3) * sp.gamma((3+rho)/6)
 
     # initial values: x_0 = 0 (b_0 = 0), x_1, x_2 and x_3q
     ab[0, 1] = 0.
     for i in range(4, N):
-        ab[i, 1] = ((i-2 + rho * delta(i-2)) / (6 * ab[i-2, 1]) \
-                - (ab[i-4, 1]*ab[i-3, 1] + ab[i-3, 1]**2 + 2*ab[i-3, 1]*ab[i-2, 1] + ab[i-3, 1]*ab[i-1, 1] \
-                + ab[i-2, 1]**2 + 2*ab[i-2, 1]*ab[i-1, 1] + ab[i-1, 1]**2)) / ab[i-1, 1]
+        ab[i, 1] = ((i-2 + rho * delta(i-2)) / (6 * ab[i-2, 1])
+                    - (ab[i-4, 1]*ab[i-3, 1] + ab[i-3, 1]**2 + 2*ab[i-3, 1]*ab[i-2, 1] + ab[i-3, 1]*ab[i-1, 1]
+                       + ab[i-2, 1]**2 + 2*ab[i-2, 1]*ab[i-1, 1] + ab[i-1, 1]**2)) / ab[i-1, 1]
 
     ab[:, 1] = np.sqrt(ab[:, 1])
     ab[0, 1] = np.sqrt((1/3) * sp.gamma((1+rho)/6))
     return ab
 
 
-
 """
 Stabilized Lanczos algorithm
 """
+
+
 def lanczos_stable(x, w, N):
 
     assert len(x) == len(w)
@@ -705,19 +722,19 @@ def lanczos_stable(x, w, N):
     # b = np.zeros(n-1)
 #
     # for s in range(n):
-        # z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
+    # z = np.hstack([ v[0] + np.sum(w*v[1:n]), w*v[0] + x * v[1:n] ])
 #
-        # if s > 0:
-            # a[s-1] = v.dot(z)
+    # if s > 0:
+    # a[s-1] = v.dot(z)
 #
-        # z = z - qs[:, 0:s+1].dot((qs[:, 0:s+1].T.dot(z)))
-        # z = z - qs[:, 0:s+1].dot((qs[:, 0:s+1].T.dot(z)))
+    # z = z - qs[:, 0:s+1].dot((qs[:, 0:s+1].T.dot(z)))
+    # z = z - qs[:, 0:s+1].dot((qs[:, 0:s+1].T.dot(z)))
 #
-        # if s < n-1:
-            # znorm = np.linalg.norm(z)
-            # b[s] = znorm**2
-            # v = z / znorm
-            # qs[:, s+1] = v
+    # if s < n-1:
+    # znorm = np.linalg.norm(z)
+    # b[s] = znorm**2
+    # v = z / znorm
+    # qs[:, s+1] = v
 #
     # ab = np.zeros([n, 2])
     # ab[1:, 0] = a
@@ -743,13 +760,12 @@ def lanczos_stable(x, w, N):
     # tilde_v[:, 0] = np.sqrt(w)
 #
     # for i in range(N):
-        # ab[i, 1] = np.linalg.norm(tilde_v[:, i], None)
-        # v[:, i] = tilde_v[:, i] / ab[i, 1]
-        # ab[i+1, 0] = np.sum(x * v[:, i]**2)
-        # if i == 0:
-            # tilde_v[:, i+1] = (x - ab[i+1, 0]) * v[:, i]
-        # else:
-            # tilde_v[:, i+1] = (x - ab[i+1, 0]) * v[:, i] - ab[i, 1] * v[:, i-1]
+    # ab[i, 1] = np.linalg.norm(tilde_v[:, i], None)
+    # v[:, i] = tilde_v[:, i] / ab[i, 1]
+    # ab[i+1, 0] = np.sum(x * v[:, i]**2)
+    # if i == 0:
+    # tilde_v[:, i+1] = (x - ab[i+1, 0]) * v[:, i]
+    # else:
+    # tilde_v[:, i+1] = (x - ab[i+1, 0]) * v[:, i] - ab[i, 1] * v[:, i-1]
 #
     # return ab[:N]
-

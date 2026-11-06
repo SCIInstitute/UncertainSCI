@@ -5,6 +5,7 @@ from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
 from UncertainSCI.utils.linalg import greedy_d_optimal
 from UncertainSCI.sampling import mixture_tensor_discrete_sampling
 
+
 def opolynd_eval(x, lambdas, ab):
     # Evaluates tensorial orthonormal polynomials associated with the
     # univariate recurrence coefficients ab.
@@ -179,7 +180,7 @@ class TensorialPolynomials:
         else:
             try:
                 iter(M)
-            except:
+            except Exception:
                 M = [M,]*self.dim
 
         # Construct all tensorial measures
@@ -197,7 +198,7 @@ class TensorialPolynomials:
 
             for k in range(kj):
                 # Ensure probabilities sum to 1
-                weights[:,k] = V[:,k]/np.sum(V[:,k])
+                weights[:, k] = V[:, k]/np.sum(V[:, k])
 
         return mixture_tensor_discrete_sampling(K, grids, weights, iset)
 

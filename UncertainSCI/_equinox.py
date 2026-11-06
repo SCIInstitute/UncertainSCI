@@ -20,7 +20,7 @@ class ComputedArray(eqx.Module, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_array(cls, a: jax.Array, is_static: bool=False, **kwargs):
+    def from_array(cls, a: jax.Array, is_static: bool = False, **kwargs):
         """
         Convenience method for in-place replacement of types of
         :class:`ComputedArray`, though not generally intended for use as a long-lived
@@ -107,7 +107,6 @@ class PositiveDefinite(ComputedArray):
                 raise ValueError(
                     f'Expected ndim = 1 for L_off_diag, got L_off_diag.ndim = {L_off_diag.ndim}!'
                 )
-            
 
             n = L_log_diag.shape[0]
             if L_off_diag.shape[0] != (n) * (n - 1) / 2:
