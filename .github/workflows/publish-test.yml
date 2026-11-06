@@ -11,15 +11,18 @@ jobs:
   lint:
     uses: ./.github/workflows/lint.yml
 
+  style:
+    uses: ./.github/workflows/style.yml
+
   build:
     uses: ./.github/workflows/build.yml
 
   test:
     uses: ./.github/workflows/test.yml
 
-  upload_testpypi:
+  upload-testpypi:
     name: Publish build to TestPyPI
-    needs: [lint, build, test]
+    needs: [lint, style, build, test]
     runs-on: ubuntu-latest
     environment:
       name: pypi

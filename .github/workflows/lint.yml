@@ -8,13 +8,13 @@ on:
 
 jobs:
   lint:
-    name: Lint UncertainSCI
+    name: Lint UncertainSCI syntax
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v6
 
-    - name: Setup Python 3.12
+    - name: Set up Python 3.12
       uses: actions/setup-python@v6
       with:
         python-version: 3.12
@@ -28,9 +28,3 @@ jobs:
     - name: Lint with flake8 (syntax errors and undefined names)
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    # Advisory only until the legacy PCE code is replaced
-    - name: Lint with flake8 (style and complexity)
-      continue-on-error: true
-      run: |
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
