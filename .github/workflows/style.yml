@@ -25,14 +25,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install --editable .["dev"]
 
-    - name: Lint with flake8 (style and complexity)
-      run: |
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
-
     - name: Verify code was autopep8-formatted or equivalent
       run: |
-        autopep8 --in-place --recursive --max-line-length=127 .
+        autopep8 --in-place --recursive --exclude='build,docs/tutorials/copied,*.egg-info' --max-line-length=127 .
         if ! git diff --exit-code; then
-          echo "::error::Code is not autopep8-formatted. Run 'autopep8 --in-place --recursive --max-line-length=127 .' and commit the result."
+          echo "::error::Code is not autopep8-formatted. Run autopep8 and commit the result."
           exit 1
         fi
+
+    - name: Lint with flake8 (style and complexity)
+      run: |
+        flake8 . --extend-exclude=build,docs/tutorials/copied,*.egg-info --count --max-complexity=10 --max-line-length=127 --statistics
+

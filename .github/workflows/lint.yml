@@ -27,4 +27,4 @@ jobs:
 
     - name: Lint with flake8 (syntax errors and undefined names)
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --extend-exclude=build,docs/tutorials/copied,*.egg-info --count --select=E9,F63,F7,F82 --show-source --statistics
