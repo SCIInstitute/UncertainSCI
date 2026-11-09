@@ -20,13 +20,15 @@ from scipy.special import gammaln
 
 
 def eval_driver(x, n, d, ab):
-    # Evaluates univariate orthonormal polynomials given their
-    # three-term recurrence coefficients ab (a, b).
-    #
-    # Evaluates the d'th derivative. (Default = 0)
-    #
-    # Returns a numel(x) x numel(n) x numel(d) array.
+    """Evaluates univariate orthonormal polynomials or their derivatives.
 
+    Evaluates univariate orthonormal polynomials given their three-term
+    recurrence coefficients ab (a, b). Evaluates the d'th derivative
+    (default = 0).
+
+    Returns:
+        A numel(x) x numel(n) x numel(d) array.
+    """
     nmax = np.max(n)
 
     p = np.zeros(x.shape + (nmax+1,))
@@ -40,22 +42,13 @@ def eval_driver(x, n, d, ab):
     for j in range(2, nmax+1):
         p[:, j] = 1/ab[j, 1] * ((xf - ab[j, 0])*p[:, j-1] - ab[j-1, 1]*p[:, j-2])
 
-    if type(d) == int:
+    if type(d) is int:
         d = [d]
-#        if d == 0:
-#            return p[:, n.flatten()]
-#        else:
-#            d = [d]
 
     preturn = np.zeros([p.shape[0], n.size, len(d)])
 
     def assign_p_d(dval, parray):
-        """
-        Assigns dimension 2 of the nonlocal array preturn according to values
-        in the derivative list d.
-        """
-        nonlocal preturn
-
+        """Assigns dimension 2 of the nonlocal array preturn according to values in the derivative list d."""
         indlocations = [i for i, val in enumerate(d) if val == dval]
         for i in indlocations:
             preturn[:, :, i] = parray[:, n.flatten()]
@@ -63,7 +56,6 @@ def eval_driver(x, n, d, ab):
     assign_p_d(0, p)
 
     for qd in range(1, max(d)+1):
-
         pd = np.zeros(p.shape)
 
         for qn in range(qd, nmax+1):
@@ -72,7 +64,7 @@ def eval_driver(x, n, d, ab):
                 # compute ( qd! * kappa_{qd} ), where qd is the
                 # derivative order and kappa_{qd} is the leading-order
                 # coefficient of the degree-qd orthogonal polynomial.
-                # The explicit formula for the lading coefficient of the
+                # The explicit formula for the leading coefficient of the
                 # degree-qd orthonormal polynomial is prod(1/b[j]) for
                 # j=0...qd.
                 pd[:, qn] = np.exp(sp.gammaln(qd+1) - np.sum(np.log(ab[:(qd+1), 1])))
@@ -88,20 +80,22 @@ def eval_driver(x, n, d, ab):
     else:
         return preturn
 
+
 def leading_coefficient_driver(N, ab):
-    """
-    Returns the leading coefficients for the first N polynomial basis elements.
-    """
+    """Returns the leading coefficients for the first N polynomial basis elements."""
     assert N > 0
     return np.cumprod(1 / ab[:N, 1])
 
+
 def ratio_driver(x, n, d, ab):
-    """
-    Evalutes ratios of orthonormal polynomials. These are given by
+    """Evaluates ratios of orthonormal polynomials.
+
+    These are given by
 
       r_n(x) = p_n(x) / p_{n-1}(x),  n >= 1
 
-    The output is a x.size x n.size array.
+    Returns:
+        An x.size x n.size array.
     """
     nmax = np.max(n)
 
@@ -117,7 +111,7 @@ def ratio_driver(x, n, d, ab):
 
     r = r[:, n.flatten()]
 
-    if type(d) == int:
+    if type(d) is int:
         if d == 0:
             return r
         else:
@@ -127,8 +121,9 @@ def ratio_driver(x, n, d, ab):
 
 
 def s_driver(x, n, ab):
-    """
-    The output is a x.size x (n+1) array.
+    """Evaluates the normalized polynomials s_n(x).
+
+    These are given by
 
     s_n(x) = p_n(x) / sqrt(sum_{j=1}^{n-1} p_j^2(x)), n >= 0
 
@@ -138,9 +133,11 @@ def s_driver(x, n, ab):
 
     s_2(x) = 1 / (b_2 * sqrt(1+s_1^2)) * ((x - a_2)*s_1 - b_1)
 
-    Need {a_k, b_k} k up to n
-    """
+    This needs {a_k, b_k} for k up to n.
 
+    Returns:
+        An x.size x (n+1) array.
+    """
     xf = x.flatten()
     nmax = np.max(n)
 
@@ -156,28 +153,28 @@ def s_driver(x, n, ab):
         s[:, 2] = s[:, 2] / ab[2, 1]
 
     for j in range(3, nmax+1):
-        s[:, j] = 1 / np.sqrt(1 + s[:, j-1]**2) * \
-                  ((x - ab[j, 0]) * s[:, j-1] - ab[j-1, 1] * s[:, j-2] / np.sqrt(1 + s[:, j-2]**2))
+        s[:, j] = (
+            1 / np.sqrt(1 + s[:, j-1]**2) *
+            ((x - ab[j, 0]) * s[:, j-1] - ab[j-1, 1] * s[:, j-2] / np.sqrt(1 + s[:, j-2]**2))
+        )
         s[:, j] = s[:, j] / ab[j, 1]
 
     return s[:, n.flatten()]
 
 
 def jacobi_matrix_driver(ab, N):
-    """
-    Returns the N x N jacobi matrix associated to the input recurrence
-    coefficients ab. (Requires ab.shape[0] >= N+1.)
-    """
+    """Returns the N x N Jacobi matrix associated to the input recurrence coefficients ab.
 
+    Requires ab.shape[0] >= N+1.
+    """
     return np.diag(ab[1:N, 1], k=1) + np.diag(ab[1:(N+1), 0], k=0) + np.diag(ab[1:N, 1], k=-1)
 
 
 def gauss_quadrature_driver(ab, N):
-    """
-    Computes the N-point Gauss quadrature rule associated to the
-    recurrence coefficients ab. (Requires ab.shape[0] >= N+1.)
-    """
+    """Computes the N-point Gauss quadrature rule associated to the recurrence coefficients ab.
 
+    Requires ab.shape[0] >= N+1.
+    """
     from numpy.linalg import eigh
 
     if N > 0:
@@ -188,12 +185,14 @@ def gauss_quadrature_driver(ab, N):
 
 
 def quadratic_modification(alphbet, z0):
-    """
-    The input is a single (N+1) x 2 array
+    """Computes recurrence coefficients for a quadratic measure modification.
 
-    The output is a single (N) x 2 array
-    """
+    Args:
+        alphbet: A single (N+1) x 2 array of recurrence coefficients.
 
+    Returns:
+        A single (N) x 2 array.
+    """
     ab = np.zeros([alphbet.shape[0] - 1, 2])
     C = s_driver(z0, np.arange(alphbet.shape[0], dtype=int), alphbet)[0, :]
 
@@ -212,37 +211,26 @@ def quadratic_modification(alphbet, z0):
 
 
 def markov_stiltjies(u, n, ab, supp):
+    """Computes a bounding interval for the solution x to F_n(x) = u.
 
-    """ Uses the Markov-Stiltjies inequalities to provide a bounding interval for x,
-    the solution to F_n(x) = u
+    Uses the Markov-Stiltjies inequalities to provide a bounding interval for
+    x, the solution to F_n(x) = u.
 
-    Parameters
-    ------
-    param1: u
-    given, u in [0,1]
+    Requires a.size >> n.
 
-    param2: n
-    the order-n induced distribution function associated to the measure with
-    three-term recurrrence coefficients a, b, having support on the real-line
-    interval defined by the length-2 vector supp
+    Args:
+        u: Given value, u in [0,1].
+        n: The order of the order-n induced distribution function associated
+          to the measure with three-term recurrrence coefficients a, b, having
+          support on the real-line interval defined by the length-2 vector
+          supp.
+        ab: Three-term recurrrence coefficients a, b.
+        supp: Support on the real-line interval defined by the length-2 vector
+          supp.
 
-    param3,4: a, b
-    three-term recurrrence coefficients a, b
-
-    param5: supp
-    support on the real-line interval defined by the length-2 vector supp
-
-
-    Returns
-    ------
-    intervals: an (M x 2) matrix if u is a length-M vector
-
-    Requires
-    ------
-    a.size >> n
-
+    Returns:
+        intervals: An (M x 2) matrix if u is a length-M vector.
     """
-
     assert type(n) is int
 
     x, v = gauss_quadrature_driver(ab, n)
@@ -260,7 +248,6 @@ def markov_stiltjies(u, n, ab, supp):
     if supp[1] > y[-1]:
         X = np.insert(y, [0, y.size], [supp[0], supp[1]])
         W = np.insert(np.cumsum(w), 0, 0)
-
     else:
         X = np.insert(y, [0, y.size], [supp[0], y[-1]])
         W = np.insert(np.cumsum(w), 0, 0)
@@ -286,21 +273,17 @@ def markov_stiltjies(u, n, ab, supp):
 
 
 def idistinv_driver(u, n, primitive, ab, supp):
+    """Computes the inverse of the order-n induced primitive function F_n.
 
-    """
     Uses bisection to compute the (approximate) inverse of the order-n induced
-    primitive function F_n
+    primitive function F_n.
 
-    Parameters
-    ------
-    param3: primitive
-    The input function primitive should be a function handle accepting a single input
-    and outputs the primitive F_n evaluated at the input
+    Args:
+        primitive: A function handle accepting a single input and returning
+          the primitive F_n evaluated at the input.
 
-    Returns
-    ------
-    The ouptut x = F_n^{-1}(u)
-
+    Returns:
+        The output x = F_n^{-1}(u).
     """
     u = np.atleast_1d(u)
 
@@ -324,14 +307,17 @@ def idistinv_driver(u, n, primitive, ab, supp):
 
 
 def linear_modification(alphbet, x0):
-    """
-    The input is a single (N+1) x 2 array
-
-    The output is a single N x 2 array
+    """Computes recurrence coefficients for a linear measure modification.
 
     The appropriate sign of the modification (+/- (x-x0)) is inferred from the
     sign of (alph(1) - x0). Since alph(1) is the zero of p_1, then it is in
-    \\supp \\mu
+    \\supp \\mu.
+
+    Args:
+        alphbet: A single (N+1) x 2 array of recurrence coefficients.
+
+    Returns:
+        A single N x 2 array.
     """
     sgn = np.sign(alphbet[1, 0] - x0)
 
@@ -348,19 +334,20 @@ def linear_modification(alphbet, x0):
     bcorrect = alphbet[1:, 1] * r
     bcorrect[1:] = bcorrect[1:] / bcorrect[:-1]
     ab[:, 1] = alphbet[:-1, 1] * np.sqrt(bcorrect)
-    
+
     return ab
 
 
 def derivative_expansion_driver(ab, s, N, K):
-    """
-    Computes the coefficients 
+    """Computes expansion coefficients of polynomial derivatives.
+
+    Computes the coefficients
 
     .. math::
 
       \\sigma^{(s)}_{n,k} = \\left\\langle p_n^{(s)}, p_k \\right\\rangle,
 
-    where :math:`p_n^{(s)}` is the :math:`s`th derivative of the 
+    where :math:`p_n^{(s)}` is the :math:`s`th derivative of the
     degree-:math:`k` orthonormal polynomial :math:`p_k`. These are,
     equivalently, expansion coefficients of :math:`p_n^{(s)}` in the basis
     :math:`\\{p_k\\}_k`.
@@ -371,10 +358,10 @@ def derivative_expansion_driver(ab, s, N, K):
         s: The integer order of the derivative. Must be non-negative.
         N: Computes coefficients for :math:`n \\leq N`
         K: Computes coefficients for :math:`k \\leq K`.
+
     Returns:
         Coefficient array with shape (N+1, K+1).
     """
-
     assert ab.shape[1] == 2
 
     M = ab.shape[0]
@@ -382,37 +369,38 @@ def derivative_expansion_driver(ab, s, N, K):
 
     assert M >= NK+1
 
-    if s==0:
+    if s == 0:
         return np.eye(NK+1)[:(N+1), :(K+1)]
     if N < s:
         return np.zeros([N+1, K+1])
 
-    # s=0 coefficients
+    # These are the s=0 coefficients.
     Cp = np.eye(NK+1)
     C = np.zeros([NK+1, NK+1])
 
-    # Iterate over values of s
+    # Iterate over values of s.
     for q in range(1, s+1):
-
-        # Explicit starting value
-        C[q,0] = np.exp(gammaln(q+1) - np.sum(np.log(ab[1:(q+1), 1])))
+        # Use the explicit starting value.
+        C[q, 0] = np.exp(gammaln(q+1) - np.sum(np.log(ab[1:(q+1), 1])))
 
         for n in range(q+1, N+1):
-            # k=0 is special
-            C[n, 0] = q*Cp[n-1, 0] + (ab[1, 0] - ab[n, 0])*C[n-1, 0] - \
-                     ab[n-1, 1]*C[n-2, 0] + ab[1, 1]*C[n-1, 1]
+            # The k=0 case is special.
+            C[n, 0] = q*Cp[n-1, 0] + (ab[1, 0] - ab[n, 0])*C[n-1, 0] - ab[n-1, 1]*C[n-2, 0] + ab[1, 1]*C[n-1, 1]
             C[n, 0] /= ab[n, 1]
 
             for k in range(1, n-q+1):
-                C[n, k] = q*Cp[n-1, k] + (ab[k+1, 0] - ab[n, 0])*C[n-1, k] - \
-                          ab[n-1, 1]*C[n-2, k] + ab[k+1, 1]*C[n-1, k+1] + \
-                          ab[k, 1]*C[n-1, k-1]
+                C[n, k] = (
+                    q*Cp[n-1, k] + (ab[k+1, 0] - ab[n, 0])*C[n-1, k] -
+                    ab[n-1, 1]*C[n-2, k] + ab[k+1, 1]*C[n-1, k+1] +
+                    ab[k, 1]*C[n-1, k-1]
+                )
                 C[n, k] /= ab[n, 1]
 
         Cp = C.copy()
         C = np.zeros([NK+1, NK+1])
 
-    return Cp[:(N+1),:(K+1)]
+    return Cp[:(N+1), :(K+1)]
+
 
 class OrthogonalPolynomialBasis1D:
     def __init__(self, recurrence=[], probability_measure=True):
@@ -420,8 +408,8 @@ class OrthogonalPolynomialBasis1D:
         self.ab = np.zeros([0, 2])
 
     def recurrence(self, N):
-        """
-        Returns the first N+1 orthogonal polynomial recurrence pairs.
+        """Returns the first N+1 orthogonal polynomial recurrence pairs.
+
         The orthonormal polynomial family satisfies the recurrence
 
           p_{-1}(x) = 0
@@ -446,31 +434,35 @@ class OrthogonalPolynomialBasis1D:
         Returns:
             The recurrence coefficient array with shape (N+1, 2).
         """
-
         if N+1 > self.ab.shape[0]:
             self.ab = self.recurrence_driver(N)
             return self.ab
         else:
             return self.ab[:(N+1), :]
 
-    # Recurrence coefficient functions should be defined as follows:
-    # The returned array has size (N+1) x 2. The [0,0] entry is not used
-    # and set to 0. If the array is ab, then the orthonormal version of
-    # the three-term recurrence with the degree-n polynomial p_n at x is:
-    #
-    #   ab[n+1, 1] * p_{n+1} = (x - ab[n+1,0]) * p_n - ab[n, 1] p_{n-1}
     def recurrence_driver(self, N):
+        """Computes recurrence coefficients; must be defined by subclasses.
+
+        Recurrence coefficient functions should be defined as follows: The
+        returned array has size (N+1) x 2. The [0,0] entry is not used and set
+        to 0. If the array is ab, then the orthonormal version of the
+        three-term recurrence with the degree-n polynomial p_n at x is:
+
+          ab[n+1, 1] * p_{n+1} = (x - ab[n+1,0]) * p_n - ab[n, 1] p_{n-1}
+        """
         raise ValueError('Define this')
         return
 
     def eval(self, x, n, d=0):
-        # Evaluates univariate orthonormal polynomials given their
-        # three-term recurrence coefficients ab.
-        #
-        # Evaluates the d'th derivative. (Default = 0)
-        #
-        # Returns a numel(x) x numel(n) x numel(d) array.
+        """Evaluates univariate orthonormal polynomials or their derivatives.
 
+        Evaluates univariate orthonormal polynomials given their three-term
+        recurrence coefficients ab. Evaluates the d'th derivative (default =
+        0).
+
+        Returns:
+            A numel(x) x numel(n) x numel(d) array.
+        """
         n = np.atleast_1d(n)
         x = np.atleast_1d(x)
 
@@ -487,26 +479,21 @@ class OrthogonalPolynomialBasis1D:
         return eval_driver(x, n, d, ab)
 
     def jacobi_matrix_driver(ab, N):
-        """
-        Returns the N x N jacobi matrix associated to the input recurrence
-        coefficients ab. (Requires ab.shape[0] >= N+1.)
-        """
+        """Returns the N x N Jacobi matrix associated to the input recurrence coefficients ab.
 
+        Requires ab.shape[0] >= N+1.
+        """
         return np.diag(ab[1:N, 1], k=1) + np.diag(ab[1:(N+1), 0], k=0) + np.diag(ab[1:N, 1], k=-1)
 
     def jacobi_matrix(self, N):
-        """
-        Returns the N x N jacobi matrix associated to the polynomial family.
-        """
+        """Returns the N x N Jacobi matrix associated to the polynomial family."""
         return jacobi_matrix_driver(self.recurrence(N+1), N)
-        # J = np.diag(ab[1:N,1], k=1) + np.diag(ab[1:(N+1),0],k=0) + np.diag(ab[1:N,1], k=-1)
-        # return J
 
     def apply_jacobi_matrix(self, v):
-        """
-        Premultiplies the input array by the Jacobi matrix of the
-        appropriate size for the polynomial family. Applies the Jacobi
-        matrix across the first dimension of v.
+        """Premultiplies the input array by the Jacobi matrix.
+
+        Uses the Jacobi matrix of the appropriate size for the polynomial
+        family. Applies the Jacobi matrix across the first dimension of v.
 
         Args:
             v: Input vector or array.
@@ -515,15 +502,13 @@ class OrthogonalPolynomialBasis1D:
             The result of applying ``J*v``, where J is the Jacobi matrix of
             size ``v.shape[0]``.
         """
-
         N = v.shape[0]
         ab = self.recurrence(N+1)
 
-        # Rebroadcast v so we can take advantage of numpy's
-        # multiplication
+        # Rebroadcast v so we can take advantage of numpy's multiplication.
         v = np.moveaxis(v, 0, -1)
 
-        # J = np.diag(ab[1:N,1], k=1) + np.diag(ab[1:(N+1),0],k=0) + np.diag(ab[1:N,1], k=-1)
+        # Apply the tridiagonal J (diagonal ab[1:(N+1), 0], off-diagonals ab[1:N, 1]) without forming it.
         Jv = v*ab[1:(N+1), 0]
         Jv[..., :-1] += v[..., 1:]*ab[1:N, 1]
         Jv[..., 1:] += v[..., :-1]*ab[1:N, 1]
@@ -532,24 +517,21 @@ class OrthogonalPolynomialBasis1D:
         return Jv
 
     def gauss_quadrature(self, N):
-        """
-        Computes the N-point Gauss quadrature rule associated to the
-        recurrence coefficients ab.
-        """
-
+        """Computes the N-point Gauss quadrature rule associated to the recurrence coefficients ab."""
         return gauss_quadrature_driver(self.recurrence(N+1), N)
 
     def gauss_radau_quadrature(self, N, anchor=0.):
-        """
+        """Computes the N-point Gauss-Radau quadrature rule with a node at the anchor.
+
         Computes the N-point Gauss quadrature rule associated to the
         polynomial family, with a node at the specified anchor.
+
+        Note:
+            The quadrature weight underflows for anchor far outside the
+            support interval. This causes imprecise quadrature results for
+            large-degree polynomials evaluated far outside the support
+            interval.
         """
-
-        # ## Note: the quadrature weight underflows for anchor far
-        # ## outside the support interval. This causes imprecise quadrature
-        # ## results for large-degree polynomials evaluated far outside
-        # ## the support interval.
-
         ab = self.recurrence(N+1)
         c = self.r_eval(anchor, N)
 
@@ -562,22 +544,20 @@ class OrthogonalPolynomialBasis1D:
         return lamb, v[0, :]**2
 
     def leading_coefficient(self, N):
-        """
-        Returns the leading coefficients for the first N polynomial basis elements.
-        """
+        """Returns the leading coefficients for the first N polynomial basis elements."""
         assert N > 0
         return np.cumprod(1 / self.recurrence(N)[:, 1])
 
     def canonical_connection(self, N):
-        """
-        Returns the N x N matrix C, where row n of C contains expansion
-        coefficients for p_n in the monomial basis. I.e.,
+        """Returns the N x N connection matrix from the orthonormal to the monomial basis.
+
+        Row n of the returned matrix C contains expansion coefficients for p_n
+        in the monomial basis. I.e.,
 
          p_n(x) = sum_{j=0}^{n} C[n,j] x**j,
 
         for n = 0, ..., N-1.
         """
-
         ab = self.recurrence(N)
         C = np.zeros([N, N])
 
@@ -604,15 +584,15 @@ class OrthogonalPolynomialBasis1D:
         return C
 
     def canonical_connection_inverse(self, N):
-        """
-        Returns the N x N matrix C, where row n of C contains expansion
-        coefficients for x^n in the orthonormal basis . I.e.,
+        """Returns the N x N connection matrix from the monomial to the orthonormal basis.
+
+        Row n of the returned matrix C contains expansion coefficients for x^n
+        in the orthonormal basis. I.e.,
 
          x^n = sum_{j=0}^{n} C[n,j] p_j(x)
 
         for n = 0, ..., N-1.
         """
-
         ab = self.recurrence(N)
         C = np.zeros([N, N])
 
@@ -632,8 +612,7 @@ class OrthogonalPolynomialBasis1D:
         return C
 
     def tuple_product_generator(self, IC, ab=None):
-        """
-        Helper function that increments indices for a polynomial product expansion.
+        """Increments indices for a polynomial product expansion.
 
         IC is a vector with entries
 
@@ -658,7 +637,6 @@ class OrthogonalPolynomialBasis1D:
         Returns:
             The output coefficient expansion vector for beta.
         """
-
         N = IC.size
         ab = self.recurrence(N+1)
         C = np.zeros((N, N))
@@ -673,8 +651,9 @@ class OrthogonalPolynomialBasis1D:
         return C
 
     def tuple_product(self, N, alpha):
-        """
-        Computes integrals of polynomial products. Returns an N x N matrix C with entries
+        """Computes integrals of polynomial products.
+
+        Returns an N x N matrix C with entries
 
             C[n,m] = < p_n p_m, p_alpha >,
 
@@ -692,20 +671,17 @@ class OrthogonalPolynomialBasis1D:
         Returns:
             The matrix with shape (N, N) containing integral values.
         """
-
         M = alpha.size
         if M == 0:
             return np.eye(N)
 
-        # Nmax = max(N, np.max(alpha)+1)
         Nmax = N + np.sum(alpha) + 1
         C = np.zeros((Nmax, Nmax))
 
         ab = self.recurrence(Nmax+1)
 
-        # C[j,k] = delta_{j,k}
-        # Initial condition: IC[j] = < p_0 p_j, p_{alpha[0]} >
-        #                          = C[alpha[0],:]
+        # Start from C[j,k] = delta_{j,k}. The initial condition is
+        # IC[j] = < p_0 p_j, p_{alpha[0]} > = C[alpha[0],:].
         C[alpha[0], alpha[0]] = 1.
 
         for j in range(M):
@@ -714,56 +690,17 @@ class OrthogonalPolynomialBasis1D:
 
         return C[:N, :N]
 
-    def derivative_expansion(self, N, d):
-        """
-        Computes an N x N matrix with expansion coefficients for
-        derivatives of orthogonal polynomials. I.e., computes the numbers C[n,j] for
-
-          p_n^{(d)}(x) = sum_{j=0}^n C[n,j] p_j(x),
-
-        for j,n = 0, ..., N-1.
-
-        Args:
-            N: Size of matrix to return.
-            d: Derivative order.
-
-        Returns:
-            The matrix with shape (N, N) containing expansion coefficients.
-        """
-
-        assert N >= 0
-        assert d >= 0
-
-        if N == 0:
-            return np.zeros(0)
-
-        if d == 0:
-            return np.eye(N)
-
-        ab = self.recurrence(N+1)
-        C = np.eye(N+d+1)[:N, :]
-
-        for dj in range(1, d+1):
-            Cprev = C[:, :-1].copy()
-            C = np.zeros([N, N+d+1-dj])
-            C[dj, 0] = np.exp(gammaln(dj+1) - np.sum(np.log(ab[1:(dj+1), 1])))
-
-            for n in range(dj, N-1):
-                C[n+1, :] = 1/ab[n+1, 1] * (self.apply_jacobi_matrix(C[n, :])
-                                            - ab[n+1, 0]*C[n, :] - ab[n, 1]*C[n-1, :] + dj*Cprev[n, :])
-
-        return C[:, :-1]
-
     def r_eval(self, x, n, d=0):
-        """
-        Evalutes ratios of orthonormal polynomials. These are given by
+        """Evaluates ratios of orthonormal polynomials.
+
+        These are given by
 
           r_n(x) = p_n(x) / p_{n-1}(x),  n >= 1
 
-        The output is a x.size x n.size array.
+        Returns:
+            An x.size x n.size array.
         """
         n = np.atleast_1d(n)
-
         x = np.atleast_1d(x)
 
         if n.size < 1 or x.size < 1:
@@ -779,8 +716,9 @@ class OrthogonalPolynomialBasis1D:
         return ratio_driver(x, n, d, ab)
 
     def s_eval(self, x, n):
-        """
-        The output is a x.size x (n+1) array.
+        """Evaluates the normalized polynomials s_n(x).
+
+        These are given by
 
         s_n(x) = p_n(x) / sqrt(sum_{j=0}^{n-1} p_j^2(x)), n >= 0
 
@@ -790,10 +728,12 @@ class OrthogonalPolynomialBasis1D:
 
         s_2(x) = 1 / (b_2 * sqrt(1+s_1^2)) * ((x - a_2)*s_1 - b_1)
 
-        Need {a_k, b_k} k up to n
+        This needs {a_k, b_k} for k up to n.
+
+        Returns:
+            An x.size x (n+1) array.
         """
         n = np.atleast_1d(n)
-
         x = np.atleast_1d(x)
 
         nmax = np.max(n)
@@ -805,15 +745,15 @@ class OrthogonalPolynomialBasis1D:
         return s_driver(x, n, ab)
 
     def qpoly1d_eval(self, x, n, d=0):
-        """
-        Evalutes Christoffel-function normalized polynomials. These are
-        given by
+        """Evaluates Christoffel-function normalized polynomials.
+
+        These are given by
 
           q_k(x) = p_k(x) / sqrt( sum_{j=0}^{n-1} p_j^2 ), k = 0, ..., n-1
 
-        The output is a x.size x n array
+        Returns:
+            An x.size x n array.
         """
-
         assert n > 0
 
         ab = self.recurrence(n-1)
@@ -830,7 +770,7 @@ class OrthogonalPolynomialBasis1D:
             qt = 1/ab[j+1, 1] * ((x - ab[j+1, 0])*q[:, j] - ab[j, 1] * q[:, j-1] / np.sqrt(1 + qt**2))
             q[:, j+1] = qt / np.sqrt(1 + qt**2)
 
-        if type(d) == int:
+        if type(d) is int:
             if d == 0:
                 return q
             else:
@@ -850,8 +790,9 @@ class OrthogonalPolynomialBasis1D:
         return qreturn
 
     def christoffel_function(self, x, k):
-        """
-        Computes the normalized (inverse) Christoffel function lambda, defined as
+        """Computes the normalized (inverse) Christoffel function lambda.
+
+        It is defined as
 
           lambda**2 = k / sum(p**2, axi=1),
 
@@ -859,21 +800,21 @@ class OrthogonalPolynomialBasis1D:
         polynomial family up to degree k-1, defined by the recurrence
         coefficients ab.
         """
-
         assert k > 0
 
         p = self.eval(x, range(k))
         return np.sqrt(float(k) / np.sum(p**2, axis=1))
 
     def derivative_expansion(self, s, N, K=None):
-        """
-        Computes the coefficients 
+        """Computes expansion coefficients of polynomial derivatives.
+
+        Computes the coefficients
 
         .. math::
 
           \\sigma^{(s)}_{n,k} = \\left\\langle p_n^{(s)}, p_k \\right\\rangle,
 
-        where :math:`p_n^{(s)}` is the :math:`s`th derivative of the 
+        where :math:`p_n^{(s)}` is the :math:`s`th derivative of the
         degree-:math:`k` orthonormal polynomial :math:`p_k`. These are,
         equivalently, expansion coefficients of :math:`p_n^{(s)}` in the basis
         :math:`\\{p_k\\}_k`.
@@ -883,30 +824,27 @@ class OrthogonalPolynomialBasis1D:
             N: Computes coefficients for :math:`n \\leq N`
             K: Computes coefficients for :math:`k \\leq K` (optional). If not
               given, is set to N.
+
         Returns:
             Coefficient array with shape (N+1, K+1).
         """
-
-
         if K is None:
             K = N
 
-        assert N > -1 and K > -1 
+        assert N > -1 and K > -1
 
-        ab = self.recurrence(max(N,K))
+        ab = self.recurrence(max(N, K))
         return derivative_expansion_driver(ab, s, N, K=K)
 
 
 if __name__ == "__main__":
-
-    import pdb
     from families import JacobiPolynomials
 
     J = JacobiPolynomials()
     N = 10
     K = 10
     s = 3
-    ab = J.recurrence(max(N,K))
+    ab = J.recurrence(max(N, K))
 
     x, w = J.gauss_quadrature(2*N)
     Vd = J.eval(x, range(N+1), d=s)
@@ -915,4 +853,4 @@ if __name__ == "__main__":
     C = J.derivative_expansion(s, N, K)
 
     C2 = Vd.T @ np.diag(w) @ V
-    C2[np.abs(C2)<1e-8] = 0
+    C2[np.abs(C2) < 1e-8] = 0

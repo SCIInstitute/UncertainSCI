@@ -5,15 +5,13 @@ import UncertainSCI.transformations as transformations
 
 
 class AffineMapTestCase(unittest.TestCase):
-    """
-    Performs tests for affine maps.
-    """
+    """Performs tests for affine maps."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_map(self):
-        """Test the forward affine map."""
+        """Tests the forward affine map."""
         d = np.random.randint(1, 10 + 1)
         N = np.random.randint(1, 100 + 1)
 
@@ -45,7 +43,7 @@ class AffineMapTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(errs, ord=np.inf), 0, delta=delta)
 
     def test_mapinv(self):
-        """Test the inverse affine map."""
+        """Tests the inverse affine map."""
         d = np.random.randint(1, 10 + 1)
         N = np.random.randint(1, 100 + 1)
 

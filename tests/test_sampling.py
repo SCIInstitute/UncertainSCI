@@ -7,17 +7,13 @@ import UncertainSCI.pce as pce
 
 
 class SamplingTestCase(unittest.TestCase):
-    """
-    Testing Sampling constructions.
-    """
+    """Tests sampling constructions."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_gq(self):
-        """
-        Tests construction of a bivariate Gauss quadrature rule.
-        """
+        """Tests construction of a bivariate Gauss quadrature rule."""
         a1 = 10 * np.random.rand()
         b1 = 10 * np.random.rand()
         a2 = 10 * np.random.rand()

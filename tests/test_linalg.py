@@ -6,43 +6,39 @@ import UncertainSCI.utils.linalg
 
 
 class LinalgTestCase(unittest.TestCase):
-    """
-    Performs basis tests for linear algebra routines.
-    """
+    """Performs basic tests for linear algebra routines."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_msg_pivot_restart(self):
-        """Test restarted Modified Gram-Schmidt."""
+        """Tests restarted Modified Gram-Schmidt."""
         M = np.random.randint(20, 100)
         N = M + np.random.randint(20, 100)
 
-        Nstartpivots = np.random.randint(5, M - 5)
-        Ntotalpivots = np.random.randint(Nstartpivots + 1, M)
+        n_start_pivots = np.random.randint(5, M - 5)
+        n_total_pivots = np.random.randint(n_start_pivots + 1, M)
         A = np.random.randn(M, N) / np.sqrt(M)
 
-        print(('({0:d}, {1:d}, '
-               '{2:d}, {3:d})').format(M, N, Nstartpivots, Ntotalpivots))
+        print('({0:d}, {1:d}, {2:d}, {3:d})'.format(M, N, n_start_pivots, n_total_pivots))
 
         _, _, pivots = scipy.linalg.qr(A, pivoting=True)
 
         pivots_computed = UncertainSCI.utils.linalg.mgs_pivot_restart(
             A,
-            p=Ntotalpivots,
-            pstart=pivots[:Nstartpivots]
+            p=n_total_pivots,
+            pstart=pivots[:n_start_pivots],
         )
 
         errstr = (
             'Failed for (M,N,Nstartpivots,Ntotalpivots) = '
-            '({0:d}, {1:d}, {2:d}, {3:d})'.format(M, N, Nstartpivots, Ntotalpivots)
+            '({0:d}, {1:d}, {2:d}, {3:d})'.format(M, N, n_start_pivots, n_total_pivots)
         )
 
-        self.assertEqual(np.linalg.norm(pivots[:Ntotalpivots] -
-                                        pivots_computed[:Ntotalpivots]), 0, msg=errstr)
+        self.assertEqual(np.linalg.norm(pivots[:n_total_pivots] - pivots_computed[:n_total_pivots]), 0, msg=errstr)
 
     def test_greedy_d_optimal(self):
-        """Test greedy D-optimal designs."""
+        """Tests greedy D-optimal designs."""
         N = int(200 * np.random.random_sample())
         M = N + int(100 * np.random.random_sample())
         c = np.random.random_sample()
@@ -70,7 +66,7 @@ class LinalgTestCase(unittest.TestCase):
         self.assertEqual(np.linalg.norm(P - P2[:p], ord=np.inf), 0, msg=errstr)
 
     def test_greedy_d_optimal_restart(self):
-        """Test greedy D-optimal designs with restart."""
+        """Tests greedy D-optimal designs with restart."""
         N = int(200 * np.random.random_sample())
         M = N + int(100 * np.random.random_sample())
         c = np.random.random_sample()
@@ -98,7 +94,7 @@ class LinalgTestCase(unittest.TestCase):
         self.assertEqual(np.linalg.norm(P - P2[:p], ord=np.inf), 0, msg=errstr)
 
     def test_lstsq_loocv_error(self):
-        """Test leave-one-out cross validation for least-squares."""
+        """Tests leave-one-out cross validation for least-squares."""
         delta = 1e-8
 
         M = 100

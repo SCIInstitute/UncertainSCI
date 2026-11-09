@@ -16,10 +16,13 @@ sys.path.insert(0, str((pathlib.Path(__file__) / '../').resolve()))
 
 project = 'UncertainSCI'
 copyright = '2020, The Scientific Computing and Imaging Institute at the University of Utah'
-author = 'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sumientra Rampersad, Lindsay Rupp, Jess Tate, Dan White'
+author = (
+    'Jake Bergquist, Dana Brooks, Zexin Liu, Rob MacLeod, Akil Narayan, Sumientra Rampersad, '
+    'Lindsay Rupp, Jess Tate, Dan White'
+)
 
-# FIXME: This versioning makes no sense: we should import it from a local import of
-# module itself; also need to clarify what "version" vs "release" means and adopt
+# TODO: This versioning makes no sense; we should import it from a local import of the
+# module itself. We also need to clarify what "version" vs "release" means and adopt
 # [semver](https://semver.org/).
 version = '1.0'
 release = '1.0.1'
@@ -58,7 +61,7 @@ autosummary_generate = True
 autosummary_imported_members = True
 autoclass_content = 'both'
 
-# Path for bibtex files
+# Paths of the bibtex files.
 bibtex_bibfiles = [
     'references.bib',
 ]

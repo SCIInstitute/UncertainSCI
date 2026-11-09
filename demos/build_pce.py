@@ -1,4 +1,4 @@
-# Demonstrates generation of a PCE for a simple model
+"""Demonstrates generation of a PCE for a simple model."""
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -9,28 +9,29 @@ from UncertainSCI.pce import PolynomialChaosExpansion
 
 from UncertainSCI.vis import piechart_sensitivity, quantile_plot, mean_stdev_plot
 
-# # 3 things must be specified:
-# - A parameter distribution
-# - The capacity of the PCE model (here, polynomial space)
-# - The physical model
-#
-# # Distribution setup
+# Three things must be specified:
+# - A parameter distribution.
+# - The capacity of the PCE model (here, polynomial space).
+# - The physical model.
 
-# Number of parameters
-Nparams = 3
+# Distribution setup.
 
-# Three independent parameters with different Beta distributions
+# Number of parameters.
+n_params = 3
+
+# Three independent parameters with different Beta distributions.
 p1 = BetaDistribution(alpha=0.5, beta=1.)
 p2 = BetaDistribution(alpha=1., beta=0.5)
 p3 = BetaDistribution(alpha=1., beta=1.)
 
 plabels = ['a', 'b', 'z']
 
-# # Polynomial order
+# Polynomial order.
 order = 5
 
-# # Model:
-# -d/dx a(x,p) d/dx u(x,p) = f(x)
+# Model:
+#
+#   -d/dx a(x,p) d/dx u(x,p) = f(x)
 #
 # with x in [-1,1] discretized with N points, where a(x,p) is a
 # Fourier-Series-parameterized diffusion model with the variables pj.
@@ -38,10 +39,10 @@ order = 5
 # details.
 
 N = 100
-x, model = laplace_ode_1d(Nparams, N=N)
+x, model = laplace_ode_1d(n_params, N=N)
 
-# # Building the PCE
-# Generate samples first, then manually query model, then give model output to pce.
+# Building the PCE.
+# Generate samples first, then manually query the model, then give the model output to the pce.
 pce = PolynomialChaosExpansion(distribution=[p1, p2, p3], order=order, plabels=plabels)
 pce.generate_samples()
 
@@ -52,13 +53,13 @@ for ind in range(pce.samples.shape[0]):
     model_output[ind, :] = model(pce.samples[ind, :])
 pce.build(model_output=model_output)
 
-## Postprocess PCE: statistics are computable:
+# Postprocess the PCE: statistics are computable.
 mean = pce.mean()
 stdev = pce.stdev()
 global_sensitivity, variable_interactions = pce.global_sensitivity()
-quantiles = pce.quantile([0.25, 0.5, 0.75]) #  0.25, median, 0.75 quantile
+quantiles = pce.quantile([0.25, 0.5, 0.75])  # 0.25, median, 0.75 quantile.
 
-## Visualization
+# Visualization.
 mean_stdev_plot(pce, ensemble=50)
 quantile_plot(pce, bands=3, xvals=x, xlabel='$x$')
 piechart_sensitivity(pce)

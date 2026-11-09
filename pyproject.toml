@@ -59,6 +59,7 @@ interactive = [
     "jupyter",
 ]
 dev = [
+    "autopep8",
     "flake8",
     "ipykernel",
     "ipython",

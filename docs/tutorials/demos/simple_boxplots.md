@@ -88,7 +88,7 @@ The PCE objects are computationally efficient emulators for evaluting `f(p)`. In
 
 ```python
 ensembles = []
-pvals = p.MC_samples(M=ensemble_size)
+pvals = p.mc_samples(M=ensemble_size)
 
 ensembles.append(pce.pce_eval(pvals))
 ```

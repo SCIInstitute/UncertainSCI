@@ -1,16 +1,22 @@
-# Contains some rudimentary (physical-space) models for testing PCE
-# approximations. All these functions support the syntax output = f(p), where p
-# is a d-dimensional vector, and output is a vector whose size is the dimension
-# of the model output.
+"""Rudimentary (physical-space) models for testing PCE approximations.
+
+All these functions support the syntax output = f(p), where p is a
+d-dimensional vector, and output is a vector whose size is the dimension of the
+model output.
+"""
 
 import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg as splinalg
 import scipy.optimize
 
+from UncertainSCI.utils.deprecation import deprecated_alias
+
+
 def ishigami_function(a, b):
-    """
-    Returns the Ishigami function,
+    """Returns the Ishigami function.
+
+    The Ishigami function is
 
     .. math::
 
@@ -26,9 +32,11 @@ def ishigami_function(a, b):
 
     return f
 
+
 def borehole_function():
-    """
-    Returns the Borehole function,
+    """Returns the Borehole function.
+
+    The Borehole function is
 
     .. math::
 
@@ -54,27 +62,27 @@ def borehole_function():
 
     def f(p):
         g2val = g2(p)
-        return g1(p)/(g2val * g3(p,g2val))
+        return g1(p)/(g2val * g3(p, g2val))
 
     return f
 
-def taylor_frequency(p):
-    """
-    Returns ( \\sum_{j=1}^d p_j^j )
-    """
 
+def taylor_frequency(p):
+    """Returns ( \\sum_{j=1}^d p_j^j )."""
     return np.sum(p**(1 + np.arange(p.size)))
 
 
 def sine_modulation(left=-1, right=1, N=100):
-    """
+    """Defines a sine-modulation model for a d-dimensional parameter p.
+
     For a d-dimensional parameter p, defines the model,
 
       f(x,p) = sin [ pi * ( \\sum_{j=1}^d p_j^j ) * x ],
 
     where x is N equispaced points on the interval [left, right].
 
-    Returns a function pointer with the syntax p ----> f(p).
+    Returns:
+        A function pointer with the syntax p ----> f(p).
     """
 
     x = np.linspace(left, right, N)
@@ -83,7 +91,8 @@ def sine_modulation(left=-1, right=1, N=100):
 
 
 def mercer_eigenvalues_exponential_kernel(N, a, b):
-    """
+    """Computes the first N eigenvalues of a 1D exponential-kernel Mercer operator.
+
     For a 1D exponential covariance kernel,
 
       K(s,t) = exp(-|t-s| / a),     s, t \\in [-b,b],
@@ -99,8 +108,9 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
 
     The eigenvalues are subsequently defined through these solutions.
 
-    Returns (1) the N eigenvalues lamb, (2) the first ceil(N/2) solutions for
-    v, (3) the first floor(N/2) solutions for w.
+    Returns:
+        A tuple containing (1) the N eigenvalues lamb, (2) the first ceil(N/2)
+        solutions for v, (3) the first floor(N/2) solutions for w.
     """
 
     assert N > 0 and a > 0 and b > 0
@@ -109,25 +119,22 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
     w = np.zeros(M)
     v = np.zeros(M)
 
-    # First equation transformed:
-    # vt = v b
-    #
-    #  -(b/a) / vt + tan(vt) = 0
+    # With the substitution vt = v b, the first equation becomes -(b/a) / vt + tan(vt) = 0.
 
     def f(x):
         return -(b/a)/x + np.tan(x)
 
     for n in range(M):
-        # Compute bracketing interval
-        # root somewhere in right-hand part of [2*n-1, 2*n+1]*pi/2 interval
-        RH_value = -1
+        # Compute a bracketing interval; the root is somewhere in the right-hand part of the
+        # [2*n-1, 2*n+1]*pi/2 interval.
+        rh_value = -1
         k = 4
-        while RH_value < 0:
+        while rh_value < 0:
             k += 1
             right = (2*n+1)*np.pi/2 - 1/k
-            RH_value = f(right)
+            rh_value = f(right)
 
-        # Root can't be on LHS of interval
+        # The root can't be on the LHS of the interval.
         if n == 0:
             left = 1/k
             while f(left) > 0:
@@ -140,54 +147,50 @@ def mercer_eigenvalues_exponential_kernel(N, a, b):
 
     v /= b
 
-    # Second equation transformed:
-    # wt = w b
-    #
-    #  (a/b) wt + tan(wt) = 0
+    # With the substitution wt = w b, the second equation becomes (a/b) wt + tan(wt) = 0.
 
     def f(x):
         return (a/b)*x + np.tan(x)
 
     for n in range(M):
-
-        # Compute bracketing interval
-        # root somewhere in [2*n+1, 2*n+3]*pi/2
-        LH_value = 1
+        # Compute a bracketing interval; the root is somewhere in [2*n+1, 2*n+3]*pi/2.
+        lh_value = 1
         k = 4
-        while LH_value > 0:
+        while lh_value > 0:
             k += 1
             left = (2*n+1)*np.pi/2 + 1/k
-            LH_value = f(left)
+            lh_value = f(left)
 
-        # Root can't be on RHS of interval
+        # The root can't be on the RHS of the interval.
         right = (n+1)*np.pi
 
         w[n] = scipy.optimize.brentq(f, left, right)
 
     w /= b
 
-    if (N % 2) == 1:  # Don't need last root for w
+    if (N % 2) == 1:  # The last root for w is not needed.
         w = w[:-1]
 
     lamb = np.zeros(N)
-    oddinds = [i for i in range(N) if (i % 2) == 0]  # Well, odd for 1-based indexing
+    oddinds = [i for i in range(N) if (i % 2) == 0]  # Well, odd for 1-based indexing.
     lamb[oddinds] = 2*a/(1+(a*v)**2)
-    eveninds = [i for i in range(N) if (i % 2) == 1]  # even for 1-based indexing
+    eveninds = [i for i in range(N) if (i % 2) == 1]  # Even for 1-based indexing.
     lamb[eveninds] = 2*a/(1+(a*w)**2)
 
     return lamb, v, w
 
 
-def KLE_exponential_covariance_1d(N, a, b, mn):
-    """
-    Returns a pointer to a function the evaluates an N-term Karhunen-Loeve
-    Expansion of a stochastic process with exponential covariance function on a
-    bounded interval [-b,b]. Let the GP have the covariance function,
+def kle_exponential_covariance_1d(N, a, b, mn):
+    """Returns a function that evaluates an N-term Karhunen-Loeve expansion.
+
+    The expansion is of a stochastic process with exponential covariance
+    function on a bounded interval [-b,b]. Let the GP have the covariance
+    function::
 
         C(s,t) = exp(-|t-s| / a),
 
     and mean function given by mn. Then the N-term KLE of the process is given
-    by
+    by::
 
         K_N(x,P) = mn(x) + \\sum_{n=1}^N P_n sqrt(\\lambda_n) \\phi_n(x),
 
@@ -196,9 +199,9 @@ def KLE_exponential_covariance_1d(N, a, b, mn):
     mercer_eigenvalues_exponential_kernel. The (P_n) are iid standard normal
     Gaussian random variables.
 
-    Returns a function lamb(x,P) that takes in a 1D np.ndarray x and a 1D
-    np.ndarray vector P and returns the KLE realization on x for that value of
-    P.
+    Returns:
+        A function lamb(x,P) that takes in a 1D np.ndarray x and a 1D np.ndarray
+        vector P and returns the KLE realization on x for that value of P.
     """
 
     lamb, v, w = mercer_eigenvalues_exponential_kernel(N, a, b)
@@ -212,14 +215,14 @@ def KLE_exponential_covariance_1d(N, a, b, mn):
             i2 = int((i-1)/2)
             efuns[i] = (lambda i2: lambda x: np.sin(w[i2]*x) / np.sqrt(b - np.sin(2*w[i2]*b)/(2*w[i2])))(i2)
 
-    def KLE(x, p):
+    def kle(x, p):
         return mn(x) + np.array([np.sqrt(lamb[i])*efuns[i](x) for i in range(N)]).T @ p
 
-    return KLE
+    return kle
 
 
 def laplace_ode_diffusion(x, p):
-    """ Parameterized diffusion coefficient for 1D ODE
+    """Returns the parameterized diffusion coefficient for a 1D ODE.
 
     For a d-dimensional parameter p, the diffusion coefficient a(x,p) has the form
 
@@ -235,17 +238,14 @@ def laplace_ode_diffusion(x, p):
 
 
 def laplace_grid_x(left, right, N):
-    """
-    Computes one-dimensional equispaced grid with N points on the interval
-    (left, right).
-    """
+    """Computes a one-dimensional equispaced grid with N points on the interval (left, right)."""
     return np.linspace(left, right, N)
 
 
 def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusion):
-    """
+    """Computes the solution to a parameterized 1D diffusion ODE.
 
-    Computes the solution to the ODE:
+    The ODE is
 
       -d/dx [ a(x,p) d/dx u(x,p) ] = f(x),
 
@@ -254,7 +254,6 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
     For a d-dimensional parameter p, a(x,p) is the function defined in laplace_ode_diffusion.
 
     Uses an equispaced finite-difference discretization of the ODE.
-
     """
 
     assert N > 2
@@ -267,35 +266,34 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
     h = x[1] - x[0]
     fx = f(x)
 
-    # Set homogeneous Dirichlet conditions
+    # Set homogeneous Dirichlet conditions.
     fx[0], fx[-1] = 0., 0.
 
-    # i+1/2 points
+    # Compute the i+1/2 points.
     xh = x[:-1] + h/2.
 
     def create_system(p):
-        nonlocal x, xh, N
         a = diffusion(xh, p)
         number_nonzeros = 1 + 1 + (N-2)*3
         rows = np.zeros(number_nonzeros, dtype=int)
         cols = np.zeros(number_nonzeros, dtype=int)
         vals = np.zeros(number_nonzeros, dtype=float)
 
-        # Set the homogeneous Dirichlet conditions
+        # Set the homogeneous Dirichlet conditions.
         rows[0], cols[0], vals[0] = 0, 0, 1.
         rows[1], cols[1], vals[1] = N-1, N-1, 1.
         ind = 2
 
         for q in range(1, N-1):
-            # Column q-1
+            # Column q-1.
             rows[ind], cols[ind], vals[ind] = q, q-1, -a[q-1]
             ind += 1
 
-            # Column q
+            # Column q.
             rows[ind], cols[ind], vals[ind] = q, q, a[q-1] + a[q]
             ind += 1
 
-            # Column q+1
+            # Column q+1.
             rows[ind], cols[ind], vals[ind] = q, q+1, -a[q]
             ind += 1
 
@@ -304,15 +302,15 @@ def laplace_ode(left=-1., right=1., N=100, f=None, diffusion=laplace_ode_diffusi
         return A
 
     def solve_system(p):
-        nonlocal fx, h
         return splinalg.spsolve(create_system(p), fx*(h**2))
 
     return lambda p: solve_system(p)
 
-def laplace_ode_1d(Nparams, a=1., b=1., abar=3., N=100):
-    """ Generates a 1D Laplace ODE model with parameterized diffusion.
 
-    Define model:
+def laplace_ode_1d(Nparams, a=1., b=1., abar=3., N=100):
+    """Generates a 1D Laplace ODE model with parameterized diffusion.
+
+    Defines the model:
 
     -d/dx a(x,p) d/dx u(x,p) = f(x)
 
@@ -328,19 +326,23 @@ def laplace_ode_1d(Nparams, a=1., b=1., abar=3., N=100):
     The Y_j are modeled as iid random variables.
     """
 
-    abarfun = lambda x: abar*np.ones(np.shape(x))
-    KLE = KLE_exponential_covariance_1d(Nparams, a, b, abarfun)
+    def abarfun(x):
+        return abar*np.ones(np.shape(x))
 
-    diffusion = lambda x, p: KLE(x, p)
+    kle = kle_exponential_covariance_1d(Nparams, a, b, abarfun)
+
+    def diffusion(x, p):
+        return kle(x, p)
     x = laplace_grid_x(-b, b, N)
 
     return x, laplace_ode(left=-b, right=b, N=N, diffusion=diffusion)
 
+
 def laplace_grid_xy(left, right, N1, down, up, N2):
-    """
-    Computes two-dimensional tensorial equispaced grid corresponding to the
-    tensorization of N1 equispaced points on the interval (left, right) and N2
-    equispaced points on the interval (down, up).
+    """Computes a two-dimensional tensorial equispaced grid.
+
+    The grid corresponds to the tensorization of N1 equispaced points on the
+    interval (left, right) and N2 equispaced points on the interval (down, up).
     """
     x = np.linspace(left, right, N1)
     y = np.linspace(down, up, N2)
@@ -351,7 +353,7 @@ def laplace_grid_xy(left, right, N1, down, up, N2):
 
 
 def laplace_pde_diffusion(x, p):
-    """ Parameterized diffusion coefficient for 2D PDE
+    """Returns the parameterized diffusion coefficient for a 2D PDE.
 
     For a d-dimensional parameter p, the diffusion coefficient a(x,p) has the form
 
@@ -367,8 +369,9 @@ def laplace_pde_diffusion(x, p):
 
 
 def genz_oscillatory(w=0., c=None):
-    """
-    Returns a pointer to the "oscillatory" Genz test function defined as
+    """Returns a pointer to the "oscillatory" Genz test function.
+
+    The function is defined as
 
        f(p) = \\cos{ 2\\pi w + \\sum_{i=1}^dim c_i p_i }
 
@@ -386,7 +389,6 @@ def genz_oscillatory(w=0., c=None):
 
 
 if __name__ == "__main__":
-
     from matplotlib import pyplot as plt
     import scipy as sp
 
@@ -398,10 +400,10 @@ if __name__ == "__main__":
     def mn(x):
         return np.zeros(x.shape)
 
-    KLE = KLE_exponential_covariance_1d(dim, a, b, mn)
+    kle = kle_exponential_covariance_1d(dim, a, b, mn)
 
     def diffusion(x, p):
-        return np.exp(KLE(x, p))
+        return np.exp(kle(x, p))
 
     left = -1.
     right = 1.
@@ -416,12 +418,10 @@ if __name__ == "__main__":
 
     for k in range(K):
         p[k] = np.random.rand(dim)*2 - 1
-        # a[k] = laplace_ode_diffusion(x, p[k])
         a[k] = diffusion(x, p[k])
         u[k] = model(p[k])
 
     for k in range(K):
-
         row = np.floor(k/2) + 1
         col = k % (K/2) + 1
 
@@ -450,3 +450,7 @@ if __name__ == "__main__":
     plt.semilogy(np.abs(np.diag(r)[:100]), 'b')
     plt.legend(["Singular values", "Orthogonalization residuals"])
     plt.show()
+
+
+# Deprecated aliases for names that predate the snake_case naming convention.
+KLE_exponential_covariance_1d = deprecated_alias(kle_exponential_covariance_1d, 'KLE_exponential_covariance_1d')

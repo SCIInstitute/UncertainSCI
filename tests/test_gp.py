@@ -6,20 +6,18 @@ import UncertainSCI.gp as gp
 
 
 class GaussianProcessTestCase(unittest.TestCase):
-    """
-    Performs basic tests for Gaussian process routines.
-    """
+    """Performs basic tests for Gaussian process routines."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_gaussian_kernel_uses_full_metric(self):
-        """The Gaussian distance includes off-diagonal metric entries."""
+        """Tests that the Gaussian distance includes off-diagonal metric entries."""
         k = gp.kernel.Gaussian(
             dim=2,
             cdim=1,
             D=jnp.array([[2.0, 0.5], [0.5, 1.0]]),
-            D_is_static=True
+            D_is_static=True,
         )
         x = jnp.array([[1.0, 1.0], [1.0, -1.0]])
         y = jnp.array([[0.0, 0.0]])
@@ -28,26 +26,26 @@ class GaussianProcessTestCase(unittest.TestCase):
         self.assertTrue(jnp.allclose(k(x, y), expected))
 
     def test_get_sample_point_optimizes_posterior_variance(self):
-        """Test posterior-variance sampling over an interval."""
+        """Tests posterior-variance sampling over an interval."""
         mu = gp.mean.Affine(
             dim=1,
             cdim=1,
             a=jnp.zeros((1, 1)),
             b=0.0,
             a_is_static=True,
-            b_is_static=True
+            b_is_static=True,
         )
         k = gp.kernel.Gaussian(
             dim=1,
             cdim=1,
             D=jnp.eye(1),
-            D_is_static=True
+            D_is_static=True,
         )
         g = gp.GaussianProcess(dim=1, cdim=1, mu=mu, k=k, seed=0)
         g.condition(
             jnp.array([[0.0]]),
             jnp.array([[0.0]]),
-            1e-8
+            1e-8,
         )
 
         x_start = jnp.array([0.25])
@@ -55,7 +53,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             x_start,
             ranges=jnp.array([[0.0], [2.0]]),
             n=100,
-            optim_kwargs={'learning_rate': 0.05}
+            optim_kwargs={'learning_rate': 0.05},
         )
 
         x_start = x_start.reshape((1, 1))
@@ -68,20 +66,20 @@ class GaussianProcessTestCase(unittest.TestCase):
         self.assertGreater(float(sample_variance), float(start_variance))
 
     def test_get_sample_point_accepts_domain_predicate(self):
-        """Test posterior-variance sampling with a custom domain predicate."""
+        """Tests posterior-variance sampling with a custom domain predicate."""
         mu = gp.mean.Affine(
             dim=1,
             cdim=1,
             a=jnp.zeros((1, 1)),
             b=0.0,
             a_is_static=True,
-            b_is_static=True
+            b_is_static=True,
         )
         k = gp.kernel.Gaussian(
             dim=1,
             cdim=1,
             D=jnp.eye(1),
-            D_is_static=True
+            D_is_static=True,
         )
         g = gp.GaussianProcess(dim=1, cdim=1, mu=mu, k=k, seed=0)
         g.condition(jnp.array([[0.0]]), jnp.array([[0.0]]), 1e-8)
@@ -96,7 +94,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             jnp.array([0.25]),
             inside_domain=inside_domain,
             n=100,
-            optim_kwargs={'learning_rate': 0.05}
+            optim_kwargs={'learning_rate': 0.05},
         )
 
         self.assertTrue(shapes)
@@ -105,20 +103,20 @@ class GaussianProcessTestCase(unittest.TestCase):
         self.assertLessEqual(float(x_sample[0, 0]), 0.75)
 
     def test_get_sample_point_requires_one_domain_specification(self):
-        """Test that domain specifications are mutually exclusive."""
+        """Tests that domain specifications are mutually exclusive."""
         mu = gp.mean.Affine(
             dim=1,
             cdim=1,
             a=jnp.zeros((1, 1)),
             b=0.0,
             a_is_static=True,
-            b_is_static=True
+            b_is_static=True,
         )
         k = gp.kernel.Gaussian(
             dim=1,
             cdim=1,
             D=jnp.eye(1),
-            D_is_static=True
+            D_is_static=True,
         )
         g = gp.GaussianProcess(dim=1, cdim=1, mu=mu, k=k, seed=0)
         g.condition(jnp.array([[0.0]]), jnp.array([[0.0]]), 1e-8)
@@ -130,17 +128,17 @@ class GaussianProcessTestCase(unittest.TestCase):
                 jnp.array([0.25]),
                 ranges=jnp.array([[0.0], [1.0]]),
                 inside_domain=lambda x: True,
-                n=1
+                n=1,
             )
 
     def test_kronecker_scalar_noise_factor_matches_dense_solve(self):
-        """Test Kronecker structured solves with scalar observation noise."""
+        """Tests Kronecker structured solves with scalar observation noise."""
         x = jnp.array([[0.0], [0.5], [1.0]])
         base = gp.kernel.Gaussian(
             dim=1,
             cdim=1,
             D=jnp.eye(1),
-            D_is_static=True
+            D_is_static=True,
         )
         c = jnp.array([[2.0, 0.3], [0.3, 1.5]])
         k = gp.kernel.Kronecker(
@@ -148,7 +146,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             cdim=2,
             k=base,
             C=c,
-            C_is_static=True
+            C_is_static=True,
         )
 
         s = 1e-4
@@ -165,30 +163,30 @@ class GaussianProcessTestCase(unittest.TestCase):
                 factor.solve(rhs),
                 jnp.linalg.solve(dense_covariance, rhs),
                 rtol=1e-4,
-                atol=1e-4
+                atol=1e-4,
             )
         )
         self.assertAlmostEqual(
             float(factor.log_sqrt_det()),
             float(dense_log_sqrt_det),
-            places=4
+            places=4,
         )
 
     def test_kronecker_posterior_handles_vector_outputs(self):
-        """Test posterior calculations for vector-valued Kronecker kernels."""
+        """Tests posterior calculations for vector-valued Kronecker kernels."""
         mu = gp.mean.Affine(
             dim=1,
             cdim=2,
             a=jnp.zeros((2, 1)),
             b=jnp.zeros(2),
             a_is_static=True,
-            b_is_static=True
+            b_is_static=True,
         )
         base = gp.kernel.Gaussian(
             dim=1,
             cdim=1,
             D=jnp.eye(1),
-            D_is_static=True
+            D_is_static=True,
         )
         c = jnp.array([[2.0, 0.3], [0.3, 1.5]])
         k = gp.kernel.Kronecker(
@@ -196,7 +194,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             cdim=2,
             k=base,
             C=c,
-            C_is_static=True
+            C_is_static=True,
         )
         g = gp.GaussianProcess(dim=1, cdim=2, mu=mu, k=k, seed=0)
         x_train = jnp.array([[0.0], [0.5], [1.0]])
@@ -228,7 +226,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             jnp.allclose(
                 g.posterior_covariance(x_test, x_test),
                 expected_covariance,
-                atol=1e-4
+                atol=1e-4,
             )
         )
 

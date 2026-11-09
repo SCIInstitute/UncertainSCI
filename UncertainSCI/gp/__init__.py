@@ -1,6 +1,4 @@
-"""
-Build Gaussian processes.
-"""
+"""Builds Gaussian processes."""
 
 from collections.abc import Callable
 
@@ -14,7 +12,7 @@ import optax
 
 from . import kernel
 from . import mean
-from . import vis
+from . import vis  # noqa: F401  (exposes gp.vis as part of the public API)
 
 
 DEFAULT_OPTIM = optax.adam
@@ -22,16 +20,16 @@ DEFAULT_OPTIM_KWARGS = {
     'learning_rate': 1e-2
 }
 
+
 class GaussianProcess:
-    """
-    A Gaussian process emulator.
+    """A Gaussian process emulator.
 
     Builds a distribution on functions like
 
     .. math::
 
         f \\sim \\mathcal{GP}(\\mu, k)
-    
+
     where :math:`f` is an unknown function, :math:`\\mu` is a mean function and
     :math:`k` is a positive definite covariance kernel.
 
@@ -39,6 +37,7 @@ class GaussianProcess:
     or `Kanagawa et al. (2018) <https://doi.org/10.48550/arXiv.1807.02582>`_ for more
     information.
     """
+
     dim: int
     cdim: int
     mu: mean.Mean
@@ -63,7 +62,8 @@ class GaussianProcess:
         nugget: float = 1e-3,
         seed: int | None = None
     ) -> None:
-        """
+        """Initializes the Gaussian process.
+
         Args:
             dim (int):
                 Dimension of the domain of unknown function :math:`f`.
@@ -107,9 +107,9 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ):
-        """
-        Condition this Gaussian process from data ``(x, y, s)`` where ``s`` is the
-        variance of the observation pair ``(x, y)``.
+        """Conditions this Gaussian process on data ``(x, y, s)``.
+
+        Here ``s`` is the variance of the observation pair ``(x, y)``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -132,7 +132,7 @@ class GaussianProcess:
 
         self.train_x = jnp.asarray(x)
         self.train_y = jnp.asarray(y)
-        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+        # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
         self.train_s = jnp.asarray(s)
 
         self.train_cov_factor = GaussianProcess._get_train_cov_factor(
@@ -151,8 +151,7 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ):
-        """
-        Validate shapes of arguments to various methods.
+        """Validates shapes of arguments to various methods.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -188,8 +187,7 @@ class GaussianProcess:
             raise ValueError
 
     def validate_input_shape(self, x: jax.Array | npt.NDArray) -> tuple[int, int]:
-        """
-        Validate shapes of input-type arguments to various methods (e.g., x values).
+        """Validates shapes of input-type arguments to various methods (e.g., x values).
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -202,7 +200,7 @@ class GaussianProcess:
         """
         if x.ndim != 2:
             raise ValueError
-        
+
         n, d = x.shape
         if x.shape[1] != self.dim:
             raise ValueError
@@ -210,8 +208,7 @@ class GaussianProcess:
         return n, d
 
     def validate_output_shape(self, y: jax.Array | npt.NDArray) -> tuple[int, int]:
-        """
-        Validate shapes of output-type arguments to various methods (e.g., y values).
+        """Validates shapes of output-type arguments to various methods (e.g., y values).
 
         Args:
             y (jax.Array or numpy.ndarray):
@@ -237,8 +234,7 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ) -> kernel.CovarianceFactor:
-        """
-        Get training covariance factor associated with the data ``(x, y, s)``.
+        """Gets the training covariance factor associated with the data ``(x, y, s)``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -261,13 +257,13 @@ class GaussianProcess:
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
-        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+        # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         return GaussianProcess._get_train_cov_factor((self.mu, self.k), x, y, s)
 
-    # TODO: may want to change args for this function, but it's nice to maintain the same signature as
-    # other core/mathematical routines.
+    # TODO: We may want to change the args for this function, but it's nice to maintain the same
+    # signature as other core/mathematical routines.
     @staticmethod
     @jax.jit
     def _get_train_cov_factor(
@@ -282,15 +278,22 @@ class GaussianProcess:
     def tune(
         self,
         n: int = 1000,
-        optim = DEFAULT_OPTIM,
+        optim=DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
     ) -> jax.Array:
-        """
+        """Tunes the mean and kernel hyperparameters by minimizing the hyperparameter loss.
+
         Args:
+            n (int):
+                Number of steps to take in optimization.
             optim (callable):
                 Optax or Optax-style optimizer.
             optim_kwargs (dict):
                 kwargs for ``optim``.
+
+        Returns:
+            jax.Array:
+                The loss at each optimization step.
         """
         optim = optim(**optim_kwargs)
         optim_state = optim.init(eqx.filter((self.mu, self.k), eqx.is_inexact_array))
@@ -337,8 +340,7 @@ class GaussianProcess:
         y: jax.Array | npt.NDArray,
         s: jax.Array | npt.NDArray | float | int
     ) -> jax.Array:
-        """
-        Compute the loss of Gaussian process' prior given data ``(x, y, s)``.
+        """Computes the loss of the Gaussian process' prior given data ``(x, y, s)``.
 
         This is the negative log marginal likelihood of the Gaussian process given data
         ``(x, y, s)``, discarding constants.
@@ -364,7 +366,7 @@ class GaussianProcess:
 
         x = jnp.asarray(x)
         y = jnp.asarray(y)
-        # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+        # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
         s = jnp.asarray(s)
 
         return GaussianProcess._loss_hyperparameters((self.mu, self.k), x, y, s)
@@ -385,6 +387,50 @@ class GaussianProcess:
             cov_factor.log_sqrt_det()
         )
 
+    @staticmethod
+    def _make_domain_predicate(
+        dim: int,
+        hull: spatial.ConvexHull | None,
+        ranges: jax.Array | npt.NDArray | None,
+        inside_domain: Callable[[jax.Array], bool | jax.Array] | None,
+        tol: float,
+    ) -> Callable[[jax.Array], bool | jax.Array]:
+        """Returns the domain inclusion predicate for :meth:`get_sample_point`.
+
+        Validates the mutually exclusive domain specifications of
+        :meth:`get_sample_point` and returns the corresponding inclusion
+        predicate.
+        """
+        domain_specs = (hull, ranges, inside_domain)
+        if sum(spec is not None for spec in domain_specs) != 1:
+            raise ValueError(
+                'Supply exactly one of hull, ranges, or inside_domain.'
+            )
+
+        if inside_domain is not None:
+            domain_contains = inside_domain
+        elif hull is not None:
+            equations = jnp.asarray(hull.equations)
+
+            def domain_contains(x_cand: jax.Array) -> jax.Array:
+                return jnp.all(
+                    x_cand @ equations[:, :-1].T + equations[:, -1] <= tol
+                )
+        else:
+            ranges = jnp.asarray(ranges)
+            if ranges.shape != (2, dim):
+                raise ValueError(
+                    f'ranges must have shape (2, {dim}).'
+                )
+
+            def domain_contains(x_cand: jax.Array) -> jax.Array:
+                return jnp.all(
+                    (x_cand >= ranges[0] - tol) &
+                    (x_cand <= ranges[1] + tol)
+                )
+
+        return domain_contains
+
     def get_sample_point(
         self,
         x: jax.Array | npt.NDArray,
@@ -392,12 +438,11 @@ class GaussianProcess:
         ranges: jax.Array | npt.NDArray | None = None,
         tol: float = 1e-6,
         n: int = 1000,
-        optim = DEFAULT_OPTIM,
+        optim=DEFAULT_OPTIM,
         optim_kwargs: dict = DEFAULT_OPTIM_KWARGS,
         inside_domain: Callable[[jax.Array], bool | jax.Array] | None = None,
     ) -> jax.Array:
-        """
-        Optimize a coordinate ``x`` to maximize posterior variance.
+        """Optimizes a coordinate ``x`` to maximize posterior variance.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -435,33 +480,9 @@ class GaussianProcess:
             raise ValueError
         x = x.reshape((1, self.dim))
 
-        domain_specs = (hull, ranges, inside_domain)
-        if sum(spec is not None for spec in domain_specs) != 1:
-            raise ValueError(
-                'Supply exactly one of hull, ranges, or inside_domain.'
-            )
-
-        if inside_domain is not None:
-            domain_contains = inside_domain
-        elif hull is not None:
-            equations = jnp.asarray(hull.equations)
-
-            def domain_contains(x_cand: jax.Array) -> jax.Array:
-                return jnp.all(
-                    x_cand @ equations[:, :-1].T + equations[:, -1] <= tol
-                )
-        else:
-            ranges = jnp.asarray(ranges)
-            if ranges.shape != (2, self.dim):
-                raise ValueError(
-                    f'ranges must have shape (2, {self.dim}).'
-                )
-
-            def domain_contains(x_cand: jax.Array) -> jax.Array:
-                return jnp.all(
-                    (x_cand >= ranges[0] - tol) &
-                    (x_cand <= ranges[1] + tol)
-                )
+        domain_contains = GaussianProcess._make_domain_predicate(
+            self.dim, hull, ranges, inside_domain, tol
+        )
 
         if not domain_contains(x):
             raise ValueError('Initial coordinate is outside the domain.')
@@ -495,7 +516,7 @@ class GaussianProcess:
         train_cov_factor: kernel.CovarianceFactor,
         x: jax.Array
     ) -> tuple[jax.Array, jax.Array, jax.Array]:
-        def loss_fn(x):  # Posterior variance:
+        def loss_fn(x):  # Negative posterior variance.
             covariance = (
                 k(x, x) -
                 k(x, train_x) @ train_cov_factor.solve(k(train_x, x))
@@ -508,8 +529,7 @@ class GaussianProcess:
         return optim_state, x, -loss
 
     def prior_mean(self, x):
-        """
-        Evaluate the prior mean at ``x``.
+        """Evaluates the prior mean at ``x``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -517,12 +537,10 @@ class GaussianProcess:
                 of the domain.
         """
         self.validate_input_shape(x)
-
         return self.mu(x)
 
     def prior_covariance(self, u, v):
-        """
-        Evaluate the prior covariance as :math:`k(\\texttt{u}, \\texttt{v})`.
+        """Evaluates the prior covariance as :math:`k(\\texttt{u}, \\texttt{v})`.
 
         Args:
             u (jax.Array or numpy.ndarray):
@@ -534,13 +552,11 @@ class GaussianProcess:
         """
         self.validate_input_shape(u)
         self.validate_input_shape(v)
-
         return self.k(u, v)
 
     def prior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
-        """
-        Produce ``p`` realizations of the prior at locations ``x``.
-        
+        """Produces ``p`` realizations of the prior at locations ``x``.
+
         Args:
             x (jax.Array or numpy.ndarray):
                 x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
@@ -561,13 +577,12 @@ class GaussianProcess:
             self.prior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
         return (
-            self.prior_mean(x).reshape(n, self.cdim, 1) + 
+            self.prior_mean(x).reshape(n, self.cdim, 1) +
             (L @ jax.random.normal(key, (n * self.cdim, p))).reshape(n, self.cdim, p)
         )
 
     def posterior_mean(self, x) -> jax.Array:
-        """
-        Evaluate the posterior mean at ``x``.
+        """Evaluates the posterior mean at ``x``.
 
         Args:
             x (jax.Array or numpy.ndarray):
@@ -581,8 +596,7 @@ class GaussianProcess:
         return self.mu(x) + correction.reshape((-1, self.cdim))
 
     def posterior_covariance(self, u, v) -> jax.Array:
-        """
-        Evaluate the posterior covariance at ``(u, v)``.
+        """Evaluates the posterior covariance at ``(u, v)``.
 
         Args:
             u (jax.Array or numpy.ndarray):
@@ -601,9 +615,8 @@ class GaussianProcess:
         )
 
     def posterior_realization(self, x: jax.Array | npt.NDArray, p: int = 1) -> jax.Array:
-        """
-        Produce ``p`` realizations of the posterior at locations ``x``.
-        
+        """Produces ``p`` realizations of the posterior at locations ``x``.
+
         Args:
             x (jax.Array or numpy.ndarray):
                 x coordinates.  Must have shape ``(n, d)`` where ``d`` is the dimension
@@ -624,6 +637,6 @@ class GaussianProcess:
             self.posterior_covariance(x, x) + self.nugget * jnp.eye(n * self.cdim)
         )
         return (
-            self.posterior_mean(x).reshape(n, self.cdim, 1) + 
+            self.posterior_mean(x).reshape(n, self.cdim, 1) +
             (L @ jax.random.normal(key, (n * self.cdim, p))).reshape(n, self.cdim, p)
         )

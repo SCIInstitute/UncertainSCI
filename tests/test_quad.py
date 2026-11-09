@@ -7,17 +7,15 @@ import UncertainSCI.utils.quad as quad
 
 
 class QuadTestCase(unittest.TestCase):
-    """
-    Testing for quadrature routines.
-    """
+    """Tests quadrature routines."""
 
     def setUp(self):
         self.longMessage = True
 
     def test_gq_modification_global(self):
-        """Test gq_modification for a global integral.
+        """Tests gq_modification for a global integral.
 
-        Testing of gq_modification on an interval [-1,1] with specified
+        Tests gq_modification on an interval [-1,1] with specified
         integrand.
         """
         alpha = -1. + 6 * np.random.rand()
@@ -43,7 +41,7 @@ class QuadTestCase(unittest.TestCase):
                     -1,
                     1,
                     math.ceil(1 + (n + m) / 2.),
-                    gamma=[alpha, beta]
+                    gamma=[alpha, beta],
                 )
 
         errstr = 'Failed for (N,alpha,beta) = ({0:d}, {1:1.6f}, {2:1.6f})'.format(N, alpha, beta)
@@ -51,9 +49,9 @@ class QuadTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(G - np.eye(N), ord=np.inf), 0, delta=delta, msg=errstr)
 
     def test_gq_modification_composite(self):
-        """Test gq_modification using a composite strategy.
+        """Tests gq_modification using a composite strategy.
 
-        Testing of gq_modification on an interval [-1,1] using a composite
+        Tests gq_modification on an interval [-1,1] using a composite
         quadrature rule over a partition of [-1,1].
         """
         alpha = -1. + 6 * np.random.rand()
@@ -102,7 +100,7 @@ class QuadTestCase(unittest.TestCase):
                     subintervals=subintervals,
                     roots=zeros,
                     quadroots=quadzeros,
-                    leading_coefficient=leading_coefficient
+                    leading_coefficient=leading_coefficient,
                 )
 
         errstr = 'Failed for (N,alpha,beta) = ({0:d}, {1:1.6f}, {2:1.6f})'.format(N, alpha, beta)

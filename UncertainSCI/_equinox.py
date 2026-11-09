@@ -6,12 +6,12 @@ import numpy.typing as npt
 
 
 class ComputedArray(eqx.Module, metaclass=abc.ABCMeta):
-    """
-    Computed array base class.
+    """Computed array base class.
 
     Primarily used to detect if PyTree nodes require (further) resolution to reach
     underlying objects or data.
     """
+
     is_static: bool = eqx.field(static=True)
 
     @abc.abstractmethod
@@ -20,8 +20,9 @@ class ComputedArray(eqx.Module, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_array(cls, a: jax.Array, is_static: bool=False, **kwargs):
-        """
+    def from_array(cls, a: jax.Array, is_static: bool = False, **kwargs):
+        """Constructs an instance from an array.
+
         Convenience method for in-place replacement of types of
         :class:`ComputedArray`, though not generally intended for use as a long-lived
         instance; prefer direct instantiation when possible.
@@ -39,8 +40,7 @@ class ComputedArray(eqx.Module, metaclass=abc.ABCMeta):
 
 
 class PositiveDefinite(ComputedArray):
-    """
-    A positive-definite matrix.
+    """A positive-definite matrix.
 
     Module contains some niceties that guarantee matrix remains positive definite
     during training.
@@ -51,19 +51,19 @@ class PositiveDefinite(ComputedArray):
         L_off_diag (array or None):
             Elements below main diagonal of Cholesky factor of positive definite.
     """
+
     L_log_diag: jax.Array
     L_off_diag: jax.Array
 
     def __init__(
         self,
-        *,  # TODO: make this NOT kwargs-only.
+        *,  # TODO: Make this not kwargs-only.
         D: jax.Array | npt.NDArray | None = None,
         L_log_diag: jax.Array | npt.NDArray | None = None,
         L_off_diag: jax.Array | npt.NDArray | None = None,
         is_static: bool = False,
     ):
-        """
-        Create a positive definite matrix.
+        """Creates a positive definite matrix.
 
         All args must be passed as kwargs to avoid name collisions with parent
         methods.
@@ -107,7 +107,6 @@ class PositiveDefinite(ComputedArray):
                 raise ValueError(
                     f'Expected ndim = 1 for L_off_diag, got L_off_diag.ndim = {L_off_diag.ndim}!'
                 )
-            
 
             n = L_log_diag.shape[0]
             if L_off_diag.shape[0] != (n) * (n - 1) / 2:
@@ -130,7 +129,6 @@ class PositiveDefinite(ComputedArray):
         L = jnp.diag(jnp.exp(self.L_log_diag))
         L = L.at[jnp.tril_indices(n, k=-1)].set(self.L_off_diag)
         D = L @ L.T
-
         return jax.lax.stop_gradient(D) if self.is_static else D
 
     @classmethod

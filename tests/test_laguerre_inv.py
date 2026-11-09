@@ -5,12 +5,10 @@ import UncertainSCI.families as families
 
 
 class IDistTestCase(unittest.TestCase):
-    """
-    Tests for (Laguerre polynomial) inversed induced distributions.
-    """
+    """Tests (Laguerre polynomial) inversed induced distributions."""
 
     def test_idistinv_laguerre(self):
-        """Evaluation of Laguerre inversed induced distribution function."""
+        """Tests evaluation of the Laguerre inversed induced distribution function."""
         rho = 11 * np.random.random() - 1
         L = families.LaguerrePolynomials(rho=rho)
 

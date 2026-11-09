@@ -1,6 +1,4 @@
-"""
-Mean functions for Gaussian processes.
-"""
+"""Mean functions for Gaussian processes."""
 
 import abc
 import equinox as eqx
@@ -10,8 +8,7 @@ import numpy.typing as npt
 
 
 class Mean(eqx.Module, metaclass=abc.ABCMeta):
-    """
-    Mean function base class.
+    """Mean function base class.
 
     Attributes:
         dim (int):
@@ -19,6 +16,7 @@ class Mean(eqx.Module, metaclass=abc.ABCMeta):
         cdim (int):
             Dimension of the codomain.
     """
+
     dim: int = eqx.field(static=True)
     cdim: int = eqx.field(static=True)
 
@@ -27,10 +25,9 @@ class Mean(eqx.Module, metaclass=abc.ABCMeta):
         self,
         x: jax.Array | npt.NDArray
     ) -> jax.Array:
-        """
-        Evaluate the mean.
+        """Evaluates the mean.
 
-        Arguments:
+        Args:
             x (array):
                 x values of evaluation.
         """
@@ -50,16 +47,17 @@ class Affine(Mean):
     b_is_static: bool = eqx.field(static=True)
 
     def __init__(
-            self,
-            dim: int,
-            cdim: int,
-            a: jax.Array | npt.NDArray,
-            b: jax.Array | npt.NDArray | float | int,
-            a_is_static: bool = False,
-            b_is_static: bool = False
-        ):
-        """
-        Like:
+        self,
+        dim: int,
+        cdim: int,
+        a: jax.Array | npt.NDArray,
+        b: jax.Array | npt.NDArray | float | int,
+        a_is_static: bool = False,
+        b_is_static: bool = False
+    ):
+        """Initializes an affine mean function.
+
+        The mean function is
 
         .. math::
 
@@ -86,7 +84,7 @@ class Affine(Mean):
 
         a = jnp.asarray(a)
         if isinstance(b, (float, int)):
-            # FIXME: Ensure integer inputs have an inexact dtype when traced by JAX.
+            # TODO: Ensure integer inputs have an inexact dtype when traced by JAX.
             b = b * jnp.ones((cdim,))
         else:
             b = jnp.asarray(b)
@@ -102,9 +100,9 @@ class Affine(Mean):
         self.b_is_static = b_is_static
 
     def __call__(
-            self,
-            x: jax.Array | npt.NDArray
-        ) -> jax.Array:
+        self,
+        x: jax.Array | npt.NDArray
+    ) -> jax.Array:
         a = jax.lax.stop_gradient(self.a) if self.a_is_static else self.a
         b = jax.lax.stop_gradient(self.b) if self.b_is_static else self.b
         return jnp.einsum('id,cd->ic', x.reshape(-1, self.dim), a) + b

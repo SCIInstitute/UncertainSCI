@@ -7,21 +7,12 @@ on:
       - 'v[0-9]+'
 
 jobs:
-  lint:
-    uses: ./.github/workflows/lint.yml
-
-  build:
-    uses: ./.github/workflows/build.yml
-
-  test:
-    uses: ./.github/workflows/test.yml
-
   publish-test:
     uses: ./.github/workflows/publish-test.yml
 
-  upload_pypi:
+  upload-pypi:
     name: Publish build to PyPI
-    needs: [lint, build, test, publish-test]
+    needs: publish-test
     runs-on: ubuntu-latest
     environment:
       name: pypi

@@ -5,10 +5,12 @@ from UncertainSCI.opoly1d import OrthogonalPolynomialBasis1D
 from UncertainSCI.utils.linalg import greedy_d_optimal
 from UncertainSCI.sampling import mixture_tensor_discrete_sampling
 
-def opolynd_eval(x, lambdas, ab):
-    # Evaluates tensorial orthonormal polynomials associated with the
-    # univariate recurrence coefficients ab.
 
+def opolynd_eval(x, lambdas, ab):
+    """Evaluates tensorial orthonormal polynomials.
+
+    The polynomials are associated with the univariate recurrence coefficients ab.
+    """
     try:
         M, d = x.shape
     except Exception:
@@ -30,11 +32,10 @@ def opolynd_eval(x, lambdas, ab):
 
 class TensorialPolynomials:
     def __init__(self, polys1d=None, dim=None):
-
         if polys1d is None:
             raise TypeError('A one-dimemsional polynomial family is required.')
 
-        # Isotropic tensorization of 1D family
+        # Isotropic tensorization of 1D family.
         elif isinstance(polys1d, OrthogonalPolynomialBasis1D):
             self.polys1d = polys1d
             self.isotropic = True
@@ -43,7 +44,7 @@ class TensorialPolynomials:
             else:
                 self.dim = dim
 
-        # Anistropic tensorization of 1D family
+        # Anisotropic tensorization of 1D family.
         elif isinstance(polys1d, list) or isinstance(polys1d, tuple):
             if dim is not None:
                 raise ValueError('If polys1d is a list/tuple, the scalar dim \
@@ -60,10 +61,7 @@ class TensorialPolynomials:
             raise TypeError('Unrecognized type for input polys1d')
 
     def eval(self, x, lambdas, d=None):
-        """
-        Evaluates tensorial orthonormal polynomials.
-        """
-
+        """Evaluates tensorial orthonormal polynomials."""
         try:
             M, dim = x.shape
         except Exception:
@@ -79,8 +77,10 @@ class TensorialPolynomials:
         if d is None:
             d = [0, ]*dim
 
-        assert len(d) == dim, 'Derivative order must be a list-type ' \
-                              'with length equal to dimension.'
+        assert len(d) == dim, (
+            'Derivative order must be a list-type '
+            'with length equal to dimension.'
+        )
 
         p = np.ones([M, N])
 
@@ -93,28 +93,18 @@ class TensorialPolynomials:
 
         return p
 
-    def idist_mixture_sampling(self, M, Lambdas, weights=None,
-                               fast_sampler=True):
+    def idist_mixture_sampling(self, M, Lambdas, weights=None, fast_sampler=True):
+        """Performs tensorial inverse transform sampling from a mixture of induced distributions.
+
+        Generates M samples from an additive mixture of tensorial induced
+        distributions.  The measure this samples from is the order-Lambdas
+        induced measure, which is an additive mixture of tensorial measures.
+        Each tensorial measure is defined by a row of Lambdas.
+
+        Args:
+            M: Number of samples to generate.
+            Lambdas: Sample from the order-Lambdas induced measure.
         """
-        Performs tensorial inverse transform sampling from an additive mixture
-        of tensorial induced distributions, generating M samples
-
-        The measure this samples from is the order-Lambdas induced measure,
-        which is an additive mixture of tensorial measures
-
-        Each tensorial measure is defined a row of Lambdas
-
-        Parameters
-        ------
-        param1: M
-        Number of samples to generate
-        param2: Lambdas
-        Sample from the order-Lambdas induced measure
-
-        Returns
-        ------
-        """
-
         from UncertainSCI.utils.prob import discrete_sampling
 
         K, d = Lambdas.shape
@@ -132,7 +122,6 @@ class TensorialPolynomials:
         Lambdas = Lambdas[ks, :]
 
         if self.isotropic:
-
             fidistinv = getattr(self.polys1d, "fidistinv", None)
             if callable(fidistinv):
                 has_fidistinv = True
@@ -149,7 +138,6 @@ class TensorialPolynomials:
         else:
             x = np.zeros([M, d])
             for qd in range(self.dim):
-
                 fidistinv = getattr(self.polys1d[qd], "fidistinv", None)
                 if callable(fidistinv):
                     has_fidistinv = True
@@ -165,12 +153,11 @@ class TensorialPolynomials:
             return x
 
     def idist_gq_sampling(self, K, iset, M=None):
-        """
-        Generates K random samples from the induced distribution defined
-        by Lambdas, restricted to the tensorial Gauss quadrature grid
-        defined by M.
-        """
+        """Generates K random samples from an induced distribution on a Gauss grid.
 
+        The induced distribution is defined by Lambdas, restricted to the
+        tensorial Gauss quadrature grid defined by M.
+        """
         max_degrees = iset.max_univariate_degree()
 
         if M is None:
@@ -179,36 +166,34 @@ class TensorialPolynomials:
         else:
             try:
                 iter(M)
-            except:
+            except Exception:
                 M = [M,]*self.dim
 
-        # Construct all tensorial measures
+        # Construct all tensorial measures.
         grids = [None,]*self.dim
         weights = [None,]*self.dim
         for j in range(self.dim):
-            # Gauss grid
+            # Gauss grid.
             grids[j], w = self.polys.polys1d[j].gauss_quadrature(M[j])
 
-            # Measures
+            # Measures.
             kj = max_degrees[j]+1
             weights[j] = np.zeros([grids[j].size, kj])
             V = self.polys1d[j].eval(grids[j], range(max_degrees[j]+1))**2
             V = V * (np.tile(w, [kj, 1]).T)
 
             for k in range(kj):
-                # Ensure probabilities sum to 1
-                weights[:,k] = V[:,k]/np.sum(V[:,k])
+                # Ensure probabilities sum to 1.
+                weights[:, k] = V[:, k]/np.sum(V[:, k])
 
         return mixture_tensor_discrete_sampling(K, grids, weights, iset)
 
-    def wafp_sampling(self, indices, oversampling=10, weights=None,
-                      sampler='idist', K=None, fast_sampler=True):
-        """
-        Computes (indices.shape[0] + oversampling) points using the WAFP
-        strategy. This requires forming K random samples; the input sampler
-        determines which measure to take these random samples from.
-        """
+    def wafp_sampling(self, indices, oversampling=10, weights=None, sampler='idist', K=None, fast_sampler=True):
+        """Computes (indices.shape[0] + oversampling) points using the WAFP strategy.
 
+        This requires forming K random samples; the input sampler determines
+        which measure to take these random samples from.
+        """
         M = indices.shape[0] + oversampling
 
         if K is None:
@@ -217,47 +202,40 @@ class TensorialPolynomials:
             K = max(K, M)
 
         if sampler == 'idist':
-            x = self.idist_mixture_sampling(K, indices, weights=weights,
-                                            fast_sampler=fast_sampler)
+            x = self.idist_mixture_sampling(K, indices, weights=weights, fast_sampler=fast_sampler)
         else:
             raise ValueError('Unrecognized string "{0:s}" for input \
                              "sampler"'.format(sampler))
 
         V = self.eval(x, indices)
 
-        # Precondition rows to have unit norm
+        # Precondition rows to have unit norm.
         V = np.multiply(V.T, 1/np.sqrt(np.sum(V**2, axis=1))).T
 
         P = greedy_d_optimal(V, M)
 
         return x[P, :]
 
-    def wafp_sampling_restart(self, indices, samples, Nnewsamples,
-                              weights=None, sampler='idist',
-                              fast_sampler=True):
-        """
-        Computes Nnewsamples from a "restarted" WAFP procedure, from which the
-        input samples are already prescribed.
-        """
+    def wafp_sampling_restart(self, indices, samples, Nnewsamples, weights=None, sampler='idist', fast_sampler=True):
+        """Computes Nnewsamples from a "restarted" WAFP procedure.
 
+        In the restarted procedure, the input samples are already prescribed.
+        """
         if Nnewsamples == 0:
             return samples
 
-        Mold = samples.shape[0]
+        m_old = samples.shape[0]
         V = self.eval(samples, indices)
-        # Precondition rows to have unit norm
+        # Precondition rows to have unit norm.
         V = np.multiply(V.T, 1/np.sqrt(np.sum(V**2, axis=1))).T
 
         # We'll do this slowly since adaptivity is hard.
-        # Generate Ncandidate new candidates, choose 1 new sample, repeat.
-        Ncandidates = 100
+        # Generate n_candidates new candidates, choose 1 new sample, and repeat.
+        n_candidates = 100
 
         for q in range(Nnewsamples):
-
             if sampler == 'idist':
-                x = self.idist_mixture_sampling(Ncandidates, indices,
-                                                weights=weights,
-                                                fast_sampler=fast_sampler)
+                x = self.idist_mixture_sampling(n_candidates, indices, weights=weights, fast_sampler=fast_sampler)
             else:
                 raise ValueError('Unrecognized string "{0:s}" for input \
                                   "sampler"'.format(sampler))
@@ -266,16 +244,16 @@ class TensorialPolynomials:
             temp = np.multiply(temp.T, 1/np.sqrt(np.sum(temp**2, axis=1))).T
 
             A = np.vstack((V, temp))
-            P = greedy_d_optimal(A, Mold+q+1, pstart=range(Mold+q))
+            P = greedy_d_optimal(A, m_old+q+1, pstart=range(m_old+q))
 
-            # Append the new sample to both V and samples
+            # Append the new sample to both V and samples.
             V = np.vstack((V, A[P[-1], :]))
-            samples = np.vstack((samples, x[P[-1]-Mold-q, :]))
+            samples = np.vstack((samples, x[P[-1]-m_old-q, :]))
 
         return samples
 
     def tensor_gauss_quadrature(self, N):
-        """ Tensorial Gaussian quadrature
+        """Computes a tensorial Gaussian quadrature rule.
 
         Generates a self.dim-dimensional tensorial rule constructed from the
         univariate Gaussian quadrature rules from each polynomial family.
@@ -284,13 +262,13 @@ class TensorialPolynomials:
             N: If given as an integer, specifies an equal number of points in
               each dimension. If a size-len(self.dim) iterable of integers,
               specifies the number of points in each separate dimension.
+
         Returns:
             x: A shape-(K x self.dim) numpy array, where each row corresponds
               to a quadrature node.
             w: A size-K numpy array containing corresponding quadrature
               weights.
         """
-
         try:
             iter(N)
         except Exception:
@@ -318,7 +296,7 @@ class TensorialPolynomials:
         return x, w
 
     def get_univariate_recurrence(self, N, dim):
-        """ Returns univariate three-term recurrence coefficient
+        """Returns univariate three-term recurrence coefficients.
 
         Returns the first N+1 recurrence coefficients for the family in
         dimension dim.
@@ -327,12 +305,14 @@ class TensorialPolynomials:
             N: Integer, determining the maximum index of the coefficients
                 desired.
             dim: Integer, the dimension index, satisfying 0 <= dim < self.dim
+
         Returns:
             ab: A shape-(N+1 x 2) numpy array containing the coefficients.
         """
-
-        assert dim < self.dim, 'Requested dimension index larger' \
-                               'than allowed.'
+        assert dim < self.dim, (
+            'Requested dimension index larger'
+            'than allowed.'
+        )
 
         if self.isotropic:
             return self.polys1d.recurrence(N)
@@ -340,7 +320,7 @@ class TensorialPolynomials:
             return self.polys1d[dim].recurrence(N)
 
     def get_univariate_derivative_expansion(self, dim, s, N, K=None):
-        """ Returns univariate derivative expansion coefficients
+        """Returns univariate derivative expansion coefficients.
 
         Returns the (N+1) x (K+1) s-th derivative expansion array associated to
         the given dimension dim.
@@ -351,11 +331,14 @@ class TensorialPolynomials:
             N: Computes coefficients for :math:`n \\leq N`
             K: Computes coefficients for :math:`k \\leq K` (optional). If not
               given, is set to N.
+
         Returns:
             C: (N+1) x (K+1) numpy array containing coefficients.
         """
-        assert dim < self.dim, 'Requested dimension index larger' \
-                               'than allowed.'
+        assert dim < self.dim, (
+            'Requested dimension index larger'
+            'than allowed.'
+        )
 
         if self.isotropic:
             return self.polys1d.derivative_expansion(s, N, K=K)
@@ -364,5 +347,4 @@ class TensorialPolynomials:
 
 
 if __name__ == "__main__":
-
     pass

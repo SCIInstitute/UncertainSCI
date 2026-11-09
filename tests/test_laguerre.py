@@ -6,12 +6,10 @@ import UncertainSCI.families as families
 
 
 class IDistTestCase(unittest.TestCase):
-    """
-    Tests for (Laguerre polynomial) induced distributions.
-    """
+    """Tests (Laguerre polynomial) induced distributions."""
 
     def test_idist_laguerre(self):
-        """Evaluation of Laguerre induced distribution function."""
+        """Tests evaluation of the Laguerre induced distribution function."""
         rho = 11 * np.random.random() - 1
         L = families.LaguerrePolynomials(rho=rho)
 
@@ -34,7 +32,7 @@ class IDistTestCase(unittest.TestCase):
             wquad = w * (xval / 2)**(1 + rho)
             F2[xind] = np.dot(
                 wquad,
-                np.exp(-yquad) / scipy.special.gamma(1 + rho) * L.eval(yquad, n).flatten()**2
+                np.exp(-yquad) / scipy.special.gamma(1 + rho) * L.eval(yquad, n).flatten()**2,
             )
 
         delta = 1e-3
